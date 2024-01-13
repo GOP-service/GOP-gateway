@@ -23,5 +23,13 @@ export class CustomerService {
   async findAll(): Promise<CustomerDocument[]> {
     return this.customerModel.find();
   }
+
+  async update(id: string, dto: UpdateCustomerDto): Promise<CustomerDocument> {
+    return this.customerModel.findByIdAndUpdate(id, dto, { new: true }).exec();
+  }
+
+  async remove(id: string) {
+    await this.customerModel.findByIdAndDelete(id).exec();
+  }
   
 }

@@ -1,26 +1,35 @@
 import { Injectable } from '@nestjs/common';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
+import { Restaurant, RestaurantDocument } from './entities/restaurant.schema';
+import { Model } from 'mongoose';
+import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class RestaurantService {
-  create(createRestaurantDto: CreateRestaurantDto) {
-    return 'This action adds a new restaurant';
+  constructor(
+    @InjectModel(Restaurant.name) private readonly restaurantModel: Model<RestaurantDocument>,
+  ) {}
+
+  async create(dto: CreateRestaurantDto): Promise<RestaurantDocument> {
+    const createdRestaurant = new this.restaurantModel(dto);
+    return createdRestaurant.save();
   }
 
-  findAll() {
-    return `This action returns all restaurant`;
+  async findAll(): Promise<RestaurantDocument[]> {
+    return this.restaurantModel.find().exec();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} restaurant`;
+  async findOne(id: string): Promise<RestaurantDocument> {
+    return this.restaurantModel.findById(id).exec();
   }
 
-  update(id: number, updateRestaurantDto: UpdateRestaurantDto) {
-    return `This action updates a #${id} restaurant`;
+  async update(id: string, dto: UpdateRestaurantDto): Promise<RestaurantDocument> {
+    return this.restaurantModel.findByIdAndUpdate(id, dto, {new: true}).exec();
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} restaurant`;
-  }
+  async remove(id: string) {
+    return this.restaurantModel.findByIdAndDelete(id).exec();
+  }1
+
 }

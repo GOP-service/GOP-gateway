@@ -4,7 +4,7 @@ import { CustomerService } from 'src/customer/customer.service';
 import { DriverService } from 'src/driver/driver.service';
 import { RestaurantService } from 'src/restaurant/restaurant.service';
 import { RoleType } from 'src/utils/enums';
-import { SigninCustomerDto, SignupCustomerDto, SignupDriverDto } from './dto';
+import { SigninDto, SignupCustomerDto, SignupDriverDto } from './dto';
 import { RequestWithUser } from 'src/utils/interfaces';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -39,6 +39,8 @@ export class AuthController {
       const newCustomer = await this.customerService.create({
         account: checkExist,
         full_name: body.full_name,
+        address: body.address,
+        avatar: body.avatar,
       });
       
       await this.accountService.updateRole(checkExist._id, RoleType.CUSTOMER, newCustomer._id);
@@ -56,6 +58,8 @@ export class AuthController {
       const newCustomer = await this.customerService.create({
         account: newAccount,
         full_name: body.full_name,
+        address: body.address,
+        avatar: body.avatar,
       });
 
       await this.accountService.updateRole(newAccount._id, RoleType.CUSTOMER, newCustomer._id);
@@ -65,7 +69,7 @@ export class AuthController {
   }
 
   @Post('customer/signin')
-  async signinCustomer(@Body() body: SigninCustomerDto ) {
+  async signinCustomer(@Body() body: SigninDto ) {
     const account = await this.accountService.checkPassword_Phone(body.phone, body.password);
     if (!account) {
       throw new BadRequestException('Password is incorrect or phone number does not exist');
@@ -155,6 +159,30 @@ export class AuthController {
     }
   }
 
+  @Post('driver/signin')
+  async signinDriver(@Body() body: SigninDto ) {
+    const account = await this.accountService.checkPassword_Phone(body.phone, body.password);
+    if (!account) {
+      throw new BadRequestException('Password is incorrect or phone number does not exist');
+    }
+
+    if (account.role[RoleType.DRIVER] === '') {
+      throw new BadRequestException('This phone number is not registered as driver');
+    }
+
+    const token = await this.accountService.updateRefreshToken(account._id, account.toObject().role);
+    return token;
+  }
+
+  @UseGuards(AuthGuard('jwt-refresh'))
+  @Post('driver/refresh')
+  async refreshDriver(@Req() req: RequestWithUser) {
+    const token = await this.accountService.check_updateRefreshToken(req.user.sub, req.user.role, req.user.refreshToken);
+    if (!token) {
+      throw new UnauthorizedException('Refresh token is incorrect, please login again');
+    } 
+    return token;
+  }
 
   // * RESTAURANT
 

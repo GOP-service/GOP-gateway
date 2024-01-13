@@ -7,6 +7,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
         virtuals: true,
     },
     timestamps: true,
+
 })
 export class DriverProfile {
     @Prop({ })

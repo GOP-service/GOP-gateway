@@ -1,7 +1,15 @@
 import { Schema,Prop, SchemaFactory } from "@nestjs/mongoose"
 import { Coordinates } from "src/utils/subschemas/location.schema"
 
-@Schema()
+@Schema({
+    toJSON: {
+        getters: true,
+        virtuals: true,
+    },
+    _id: false,
+    id: false,
+    timestamps: false,
+})
 export class TransportOrder {
     @Prop({ required: true})
     pickup_address: string

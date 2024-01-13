@@ -20,4 +20,16 @@ export class DriverService {
   async findOneId(id: string): Promise<DriverDocument> {
     return this.driverModel.findById(id);
   }
+
+  async findAll(): Promise<DriverDocument[]> {
+    return this.driverModel.find().exec();
+  }
+
+  async update(id: string, updateDriverDto: UpdateDriverDto): Promise<DriverDocument> {
+    return this.driverModel.findByIdAndUpdate(id, updateDriverDto, {new: true}).exec();
+  }
+
+  async remove(id: string) {
+    return this.driverModel.findByIdAndDelete(id).exec();
+  }
 }

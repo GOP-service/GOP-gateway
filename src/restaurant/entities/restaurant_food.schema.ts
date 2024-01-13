@@ -1,4 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { RestaurantFoodReview } from "./restaurant_food_review.schema";
 
 @Schema()
 export class RestaurantFood {
@@ -18,8 +19,8 @@ export class RestaurantFood {
         price: number
     }[]
 
-    @Prop()
-    reviews: {}
+    @Prop({ type: [RestaurantFoodReview], _id: true, ref: RestaurantFoodReview.name})
+    reviews: RestaurantFoodReview[]
 }
 
 export const RestaurantFoodSchema = SchemaFactory.createForClass(RestaurantFood);

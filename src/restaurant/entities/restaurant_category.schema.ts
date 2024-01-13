@@ -12,10 +12,7 @@ export type RestaurantCategoryDocument = RestaurantCategory & Document;
     timestamps: true,
 })
 export class RestaurantCategory {
-    @Prop({ required: true, unique: true })
-    _id: string
-
-    @Prop({ required: true})
+    @Prop({ })
     name: string
 
     @Prop()
@@ -31,7 +28,7 @@ export class RestaurantCategory {
         price: number
     }[]
 
-    @Prop({ type: RestaurantFoodSchema, _id: true, ref: RestaurantFood.name })
+    @Prop({ type: [RestaurantFoodSchema], _id: true, ref: RestaurantFood.name })
     food_items: RestaurantFood[]
 }
 
