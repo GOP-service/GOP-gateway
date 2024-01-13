@@ -1,17 +1,9 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, IntersectionType, OmitType, PickType } from "@nestjs/swagger";
 import { IsNotEmpty } from "class-validator";
+import { SigninDto } from "./signin.dto";
+import { CustomerDto } from "src/customer/dto/customer.dto";
 
-export class SignupCustomerDto {
-    @ApiProperty()
-    @IsNotEmpty()
-    phone: string;
-
-    @ApiProperty()
-    @IsNotEmpty()
-    password: string;
-
-    @ApiProperty()
-    @IsNotEmpty()
-    full_name: string;
-
-}
+export class SignupCustomerDto extends IntersectionType(
+    SigninDto,
+    CustomerDto
+){}

@@ -1,5 +1,4 @@
 import { INestApplication, Module } from '@nestjs/common';
-import { AppController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
 import { CustomerModule } from './customer/customer.module';
 import { DriverModule } from './driver/driver.module';
@@ -10,6 +9,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AzureStorageModule } from './utils/auzre/storage-blob.module';
+import { AdminModule } from './admin/admin.module';
+import { AppController } from './app.controller';
 
 
 @Module({
@@ -38,7 +39,8 @@ import { AzureStorageModule } from './utils/auzre/storage-blob.module';
     RestaurantModule, 
     BillModule, 
     OrderModule,
-    AzureStorageModule
+    AzureStorageModule,
+    AdminModule
   ],
   controllers: [AppController],
   providers: [],

@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document, Schema as MongooseSchema } from "mongoose";
-import { Account } from "src/auth/entities/account.schema";
+import { Document } from "mongoose";
+import { Account, AccountSchema } from "src/auth/entities/account.schema";
 
 export type CustomerDocument = Customer & Document;
 
@@ -21,7 +21,7 @@ export class Customer {
     @Prop()
     avatar: string
 
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: Account.name, required: true })
+    @Prop({ type: AccountSchema, ref: Account.name, required: true })
     account: Account
 }
 

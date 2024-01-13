@@ -1,9 +1,9 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document, Schema as MongooseSchema } from "mongoose";
+import { Document } from "mongoose";
 import { DriverStatus, VehicleType } from "src/utils/enums";
 import { Rating, RatingSchema } from "src/utils/subschemas/rating.schema";
 import { DriverProfile, DriverProfileSchema } from "./driver_profile.schema";
-import { Account } from "src/auth/entities/account.schema";
+import { Account, AccountSchema } from "src/auth/entities/account.schema";
 
 export type DriverDocument = Driver & Document;
 
@@ -33,13 +33,13 @@ export class Driver {
     @Prop({ type: RatingSchema, default: new Rating()})
     rating: Rating
     
-    @Prop({ type: DriverProfileSchema})
+    @Prop({ type: DriverProfileSchema, default: new DriverProfile(), select: false})
     profile: DriverProfile
 
     @Prop({ })
     avatar: string
 
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: Account.name, required: true })
+    @Prop({ type: AccountSchema, ref: Account.name, required: true })
     account: Account
 }
 

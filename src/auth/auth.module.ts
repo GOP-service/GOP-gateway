@@ -1,7 +1,7 @@
 import { Module, Res } from '@nestjs/common';
 import { AccountService } from './account.service';
 import { AuthController } from './auth.controller';
-import { AccountSchema } from './entities/account.schema';
+import { Account, AccountSchema } from './entities/account.schema';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CustomerModule } from 'src/customer/customer.module';
 import { DriverModule } from 'src/driver/driver.module';
@@ -14,7 +14,7 @@ import { RefreshTokenStrategy } from './strategies/refreshToken.strategy';
 @Module({
   imports: [
     MongooseModule.forFeature([
-      { name: 'Account',schema: AccountSchema, },
+      { name: Account.name, schema: AccountSchema, },
     ]),
     JwtModule.register({}),
     CustomerModule,

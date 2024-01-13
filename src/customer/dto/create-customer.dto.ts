@@ -1,6 +1,7 @@
+import { PartialType } from "@nestjs/swagger";
 import { Account } from "src/auth/entities/account.schema";
+import { CustomerDto } from "./customer.dto";
 
-export interface CreateCustomerDto {
+export class CreateCustomerDto extends CustomerDto{
     account: Account;
-    full_name: string;
 }

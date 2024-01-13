@@ -1,17 +1,8 @@
 import { Account } from "src/auth/entities/account.schema";
-import { VehicleType } from "src/utils/enums";
+import { DriverDto } from "./driver.dto";
 import { DriverProfile } from "../entities/driver_profile.schema";
 
-export interface CreateDriverDto {
+export interface CreateDriverDto extends DriverDto{
     account: Account;
-
-    full_name: string;
-
-    vehicle_type: VehicleType;
-
-    vehicle_model: string;
-
-    vehicle_plate_number: string;
-
     profile: DriverProfile;
 }
