@@ -2,12 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Account, AccountDocument } from './entities/account.schema';
 import { Model } from 'mongoose';
-import { CreateAccountDto } from './dto/create-acc.dto';
 import * as argon2 from 'argon2'
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { Role } from './entities/role.schema';
 import { RoleType } from 'src/utils/enums';
+import { CreateAccountDto } from './dto';
+import { Role } from './entities/role.schema';
 
 @Injectable()
 export class AccountService {
@@ -17,45 +17,55 @@ export class AccountService {
     private configService: ConfigService,
   ) {}
 
-  async create(dto: CreateAccountDto): Promise<AccountDocument> {
-    dto.password = await argon2.hash(dto.password);
-    const createdAccount = new this.accountModel(dto);
-    return createdAccount.save();
+  getRoles(roles: Role) {
+    return Object.keys(roles).filter(
+      (key) => roles[key] !== undefined 
+            && roles[key] !== null
+            && roles[key] !== false
+            && roles[key] !== '');
   }
 
-  async getTokens(userId: string,role: RoleType) {
+  async create(dto: CreateAccountDto): Promise<AccountDocument> {
+    dto.password = await argon2.hash(dto.password);
+
+    const createdAccount = new this.accountModel(dto);
+
+    return createdAccount.save();
+  }
+  
+  async getTokens(userId: string,role: string[]) {
     const [ accessToken, refreshToken ] = await Promise.all([
-        this.jwtService.signAsync(
-            {
-                sub: userId,
-                role: role
-            },
+      this.jwtService.signAsync(
+        {
+          sub: userId,
+          role: role
+        },
             {
                 secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
-                expiresIn: '15m'
+                expiresIn: '15y' // !!!! nhớ đổi lại
             }
         ),
         this.jwtService.signAsync(
-            {
+          {
                 sub: userId,
                 role: role
-            },
+              },
             {
-                secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-                expiresIn: '70d'
+              secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+              expiresIn: '7d'
             }
-        )
-    ])
-
-    return {
-        accessToken,
-        refreshToken
-    }
+            )
+          ])
+          
+          return {
+            accessToken,
+            refreshToken
+          }
 }
 
-  async checkPassword_Phone(phone: string, password: string): Promise<AccountDocument> {
-    const account = await this.accountModel.findOne({ phone:phone }).exec();
-    if (!account) {
+async checkPassword_Phone(phone: string, password: string): Promise<AccountDocument> {
+  const account = await this.accountModel.findOne({ phone:phone }, 'password role').exec();
+  if (!account) {
       return null;
     } else {
       const isMatch = await argon2.verify(account.password, password);
@@ -66,41 +76,60 @@ export class AccountService {
       }
     }
   }
-
-  async findOnePhone(phone: string,role: RoleType): Promise<AccountDocument> {
+  
+  async findOnePhone(phone: string): Promise<AccountDocument> {
     const account = await this.accountModel.findOne({ phone:phone }).exec();
-    switch (role) {
-      case RoleType.CUSTOMER:
-        if (account.role.customer && account.role.customer !== '') {
-          return account;
-        } else {
-          return null;
-        }
-      case RoleType.DRIVER:
-        if (account.role.driver && account.role.driver !== '') {
-          return account;
-        } else {
-          return null;
-        }
-      case RoleType.RESTAURANT:
-        if (account.role.restaurant && account.role.restaurant !== '') {
-          return account;
-        } else {
-          return null;
-        }
-      case RoleType.ADMIN:
-        if (account.role.admin) {
-          return account;
-        } else {
-          return null;
-        }
-      default:
-        return null;
-    }
-
+    return account;
   }
 
-  async updateRefreshToken(phone: string, refreshToken: string): Promise<AccountDocument> {
-    return await this.accountModel.findOneAndUpdate({ phone:phone }, { refreshToken: refreshToken }).exec();
+  async findOneId(id: string): Promise<AccountDocument> {
+    const account = await this.accountModel.findById(id).exec();
+    return account;
+  }
+  
+  async check_updateRefreshToken(userId: string, role: RoleType[], refreshToken: string) {
+    const account = await this.accountModel.findById(userId).exec();
+    if (!account) {
+      return null;
+    } else {
+      if (account.refreshToken === refreshToken) {
+        const token = await this.getTokens(userId,role);
+        
+        account.refreshToken = token.refreshToken;
+        account.save();
+        return token;
+      } else {
+        account.refreshToken = null;
+        account.save();
+        return false;
+      }
+    }
+  }
+
+  async updateRole(id: string, role_type: RoleType, role_id: string) {
+    const account = await this.accountModel.findById(id).exec();
+    if (!account) {
+      return null;
+    }
+
+    if (this.getRoles(account.role).includes(role_type)) {
+      return null;
+    }
+
+    account.role[role_type.toString()] = role_id;
+
+    await account.save();
+
+    return await this.updateRefreshToken(account._id,account.toObject().role)
+  }
+  
+  async updateRefreshToken(userId: string,role: Role) {
+    const roleArray = this.getRoles(role);
+    const token = await this.getTokens(userId,roleArray);
+    if (this.accountModel.findByIdAndUpdate(userId, { refreshToken: token.refreshToken }).exec()){
+      return token;
+      
+    }
+    return null;
   }
 }

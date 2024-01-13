@@ -1,7 +1,15 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 
 
-@Schema()
+@Schema({
+    toJSON: {
+        getters: true,
+        virtuals: true,
+    },
+    _id: false,
+    id: false,
+    timestamps: false,
+})
 export class Rating {
     @Prop({ default: 0 })
     rating_scores: number

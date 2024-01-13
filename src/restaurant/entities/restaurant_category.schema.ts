@@ -12,6 +12,9 @@ export type RestaurantCategoryDocument = RestaurantCategory & Document;
     timestamps: true,
 })
 export class RestaurantCategory {
+    @Prop({ required: true, unique: true })
+    _id: string
+
     @Prop({ required: true})
     name: string
 

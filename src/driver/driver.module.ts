@@ -12,5 +12,6 @@ import { MongooseModule } from '@nestjs/mongoose';
   ],
   controllers: [DriverController],
   providers: [DriverService],
+  exports: [DriverService],
 })
 export class DriverModule {}
