@@ -6,6 +6,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { RestaurantCategory, RestaurantCategorySchema } from './entities/restaurant_category.schema';
 import { RestaurantFoodReview, RestaurantFoodReviewSchema } from './entities/restaurant_food_review.schema';
 import { RestaurantProfile, RestaurantProfileSchema } from './entities/restaurant_profile.schema';
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { RestaurantProfile, RestaurantProfileSchema } from './entities/restauran
       { name: RestaurantCategory.name, schema: RestaurantCategorySchema, },
       { name: RestaurantFoodReview.name, schema: RestaurantFoodReviewSchema, },
     ]),
+    
   ],
   controllers: [RestaurantController],
   providers: [RestaurantService],

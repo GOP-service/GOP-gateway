@@ -1,9 +1,8 @@
-import { IntersectionType } from "@nestjs/swagger";
-import { SigninDto } from "./signin.dto";
+import { IntersectionType, OmitType } from "@nestjs/swagger";
 import { DriverDto } from "src/driver/dto/driver.dto";
+import { CreateAccountDto } from "./create-acc.dto";
 
 export class SignupDriverDto extends IntersectionType(
-    SigninDto,
-    DriverDto
-){
-}
+    CreateAccountDto,
+    OmitType(DriverDto, ['avatar'] as const),
+){}

@@ -7,7 +7,6 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
         virtuals: true,
     },
     _id: false,
-    id: false,
     timestamps: false,
 })
 export class Rating {

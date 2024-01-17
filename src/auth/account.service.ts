@@ -33,34 +33,34 @@ export class AccountService {
     return createdAccount.save();
   }
   
-  async getTokens(userId: string,role: string[]) {
+  async getTokens(userId: string,role: Role) {
+    const roleArray = this.getRoles(role);
     const [ accessToken, refreshToken ] = await Promise.all([
       this.jwtService.signAsync(
         {
           sub: userId,
-          role: role
+          role: roleArray,
+          role_id: role
         },
-            {
-                secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
-                expiresIn: '15y' // !!!! nhớ đổi lại
-            }
-        ),
-        this.jwtService.signAsync(
-          {
-                sub: userId,
-                role: role
-              },
-            {
-              secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-              expiresIn: '7d'
-            }
-            )
-          ])
-          
-          return {
-            accessToken,
-            refreshToken
-          }
+        {
+            secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
+            expiresIn: '15y' // !!!! nhớ đổi lại
+        }),
+      this.jwtService.signAsync(
+        {
+          sub: userId,
+          role: roleArray,
+          role_id: role
+        },
+        {
+          secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+          expiresIn: '7d'
+        })
+      ])
+    return {
+      accessToken,
+      refreshToken
+    }
 }
 
 async checkPassword_Phone(phone: string, password: string): Promise<AccountDocument> {
@@ -87,7 +87,7 @@ async checkPassword_Phone(phone: string, password: string): Promise<AccountDocum
     return account;
   }
   
-  async check_updateRefreshToken(userId: string, role: RoleType[], refreshToken: string) {
+  async check_updateRefreshToken(userId: string, role: Role, refreshToken: string) {
     const account = await this.accountModel.findById(userId).exec();
     if (!account) {
       return null;
@@ -124,11 +124,9 @@ async checkPassword_Phone(phone: string, password: string): Promise<AccountDocum
   }
   
   async updateRefreshToken(userId: string,role: Role) {
-    const roleArray = this.getRoles(role);
-    const token = await this.getTokens(userId,roleArray);
+    const token = await this.getTokens(userId, role);
     if (this.accountModel.findByIdAndUpdate(userId, { refreshToken: token.refreshToken }).exec()){
       return token;
-      
     }
     return null;
   }
