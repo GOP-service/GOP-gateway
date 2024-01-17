@@ -38,9 +38,6 @@ export class Driver {
 
     @Prop({ })
     avatar: string
-
-    @Prop({ type: AccountSchema, ref: Account.name, required: true })
-    account: Account
 }
 
 export const DriverSchema = SchemaFactory.createForClass(Driver);

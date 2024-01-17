@@ -6,14 +6,18 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose"
         virtuals: true,
     },
     _id: false,
-    id: false,
-    timestamps: false,
+    timestamps: true,
 })
 export class Coordinates{
-    @Prop({ default: 106.77195728296408})
+    constructor(lat = 106.77195728296408, long = 10.850739590040357){
+        this.lat = lat;
+        this.long = long;
+    }
+
+    @Prop({ })
     lat: number
 
-    @Prop({ default: 10.850739590040357})
+    @Prop({ })
     long: number
 }
 

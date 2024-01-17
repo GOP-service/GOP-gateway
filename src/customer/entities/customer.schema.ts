@@ -20,9 +20,6 @@ export class Customer {
 
     @Prop()
     avatar: string
-
-    @Prop({ type: AccountSchema, ref: Account.name, required: true })
-    account: Account
 }
 
 export const CustomerSchema = SchemaFactory.createForClass(Customer);

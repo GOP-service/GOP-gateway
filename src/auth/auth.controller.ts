@@ -4,13 +4,14 @@ import { CustomerService } from 'src/customer/customer.service';
 import { DriverService } from 'src/driver/driver.service';
 import { RestaurantService } from 'src/restaurant/restaurant.service';
 import { RoleType } from 'src/utils/enums';
-import { SigninDto, SignupCustomerDto, SignupDriverDto } from './dto';
+import { SigninDto, SignupCustomerDto, SignupDriverDto, SignupRestaurantDto } from './dto';
 import { RequestWithUser } from 'src/utils/interfaces';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles } from 'src/utils/decorators/roles.decorator';
 import { RolesGuard } from 'src/utils/guards/roles.guard';
 import { DriverProfile } from 'src/driver/entities/driver_profile.schema';
+import { RestaurantProfile } from 'src/restaurant/entities/restaurant_profile.schema';
 
 @ApiBearerAuth()
 @ApiTags('Authentications')
@@ -39,8 +40,6 @@ export class AuthController {
       const newCustomer = await this.customerService.create({
         account: checkExist,
         full_name: body.full_name,
-        address: body.address,
-        avatar: body.avatar,
       });
       
       await this.accountService.updateRole(checkExist._id, RoleType.CUSTOMER, newCustomer._id);
@@ -58,8 +57,6 @@ export class AuthController {
       const newCustomer = await this.customerService.create({
         account: newAccount,
         full_name: body.full_name,
-        address: body.address,
-        avatar: body.avatar,
       });
 
       await this.accountService.updateRole(newAccount._id, RoleType.CUSTOMER, newCustomer._id);
@@ -95,7 +92,7 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt-refresh'))
   @Post('customer/refresh')
   async refreshCustomer(@Req() req: RequestWithUser) {
-    const token = await this.accountService.check_updateRefreshToken(req.user.sub, req.user.role, req.user.refreshToken);
+    const token = await this.accountService.check_updateRefreshToken(req.user.sub, req.user.role_id, req.user.refreshToken);
     if (!token) {
       throw new UnauthorizedException('Refresh token is incorrect, please login again');
     } 
@@ -120,7 +117,6 @@ export class AuthController {
       profile.vehicle_image = 'link ảnh';
 
       const newDriver = await this.driverService.create({
-        account: checkExist,
         full_name: body.full_name,
         vehicle_type: body.vehicle_type,
         vehicle_model: body.vehicle_model,
@@ -130,9 +126,8 @@ export class AuthController {
       
       await this.accountService.updateRole(checkExist._id, RoleType.DRIVER, newDriver._id);
       
-      const token = await this.accountService.updateRefreshToken(checkExist._id, checkExist.toObject().role);
+      return await this.accountService.updateRefreshToken(checkExist._id, checkExist.toObject().role);
       
-      return token;
     } else { 
       // account chưa tồn tại nên tạo mới
       const newAccount = await this.accountService.create({
@@ -145,7 +140,6 @@ export class AuthController {
       profile.vehicle_image = 'link ảnh';
 
       const newDriver = await this.driverService.create({
-        account: newAccount,
         full_name: body.full_name,
         vehicle_type: body.vehicle_type,
         vehicle_model: body.vehicle_model,
@@ -177,7 +171,7 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt-refresh'))
   @Post('driver/refresh')
   async refreshDriver(@Req() req: RequestWithUser) {
-    const token = await this.accountService.check_updateRefreshToken(req.user.sub, req.user.role, req.user.refreshToken);
+    const token = await this.accountService.check_updateRefreshToken(req.user.sub, req.user.role_id, req.user.refreshToken);
     if (!token) {
       throw new UnauthorizedException('Refresh token is incorrect, please login again');
     } 
@@ -185,7 +179,68 @@ export class AuthController {
   }
 
   // * RESTAURANT
+  @Post('restaurant/signup')
+  async createRestaurant(@Body() body: SignupRestaurantDto) {
+    const checkExist = await this.accountService.findOnePhone(body.phone);
+    if (checkExist) {
+      // account đã tồn tại nên chỉ update role và tạo restaurant
 
+      if (checkExist.role[RoleType.RESTAURANT] !== '') {
+        throw new ConflictException('This phone number is already registered as Restaurant');
+      }
+      
+      // todo: xử lí nhét anh ở đây
+      const profile = new RestaurantProfile();
+      profile.license_image = 'link ảnh';
+
+      const newRestaurant = await this.restaurantService.create({
+        profile: profile,
+        name: body.name,
+        address: body.address,
+        bio: body.bio,
+        cuisine_categories: body.cuisine_categories,
+      });
+
+      return await this.accountService.updateRole(checkExist._id, RoleType.RESTAURANT, newRestaurant._id);
+    } else {
+      // account chưa tồn tại nên tạo mới
+      const newAccount = await this.accountService.create({
+        phone: body.phone,
+        password: body.password,
+      });
+
+      //todo: xử lí nhét anh ở đây
+      const profile = new RestaurantProfile();
+      profile.license_image = 'link ảnh';
+
+      const newRestaurant = await this.restaurantService.create({
+        profile: profile,
+        name: body.name,
+        address: body.address,
+        bio: body.bio,
+        cuisine_categories: body.cuisine_categories,
+      });
+
+      await this.accountService.updateRole(newAccount._id, RoleType.RESTAURANT, newRestaurant._id);
+
+      return await this.accountService.updateRefreshToken(newAccount._id, newAccount.toObject().role);
+    }
+  }
+
+  @Post('restaurant/signin')
+  async signinRestaurant(@Body() body: SigninDto ) {
+    const account = await this.accountService.checkPassword_Phone(body.phone, body.password);
+    if (!account) {
+      throw new BadRequestException('Password is incorrect or phone number does not exist');
+    }
+
+    if (account.role[RoleType.RESTAURANT] === '') {
+      throw new BadRequestException('This phone number is not registered as restaurant');
+    }
+
+    const token = await this.accountService.updateRefreshToken(account._id, account.toObject().role);
+    return token;
+  }
 
 
 }

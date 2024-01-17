@@ -5,6 +5,7 @@ import {
     SWAGGER_API_NAME,
     SWAGGER_API_DESCRIPTION,
     SWAGGER_API_CURRENT_VERSION,
+    SWAGGER_API_SITE_TITLE,
 } from './constants';
 import { SwaggerDocumentOptions } from './option.type';
 
@@ -41,6 +42,12 @@ export function setupSwagger(app: INestApplication): void {
           'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.10.5/swagger-ui.min.css',
           'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.10.5/swagger-ui.css',
         ],
+        customSiteTitle: SWAGGER_API_SITE_TITLE,
+        swaggerOptions: {
+          docExpansion: 'none',
+          filter: true,
+          showRequestDuration: true,
+        },
       }
     );
 }

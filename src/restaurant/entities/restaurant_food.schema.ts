@@ -1,8 +1,21 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { RestaurantFoodReview } from "./restaurant_food_review.schema";
+import { RestaurantFoodReview, RestaurantFoodReviewSchema } from "./restaurant_food_review.schema";
+import { PriceOption, PriceOptionSchema } from "src/utils/subschemas/priceoption.schema";
 
-@Schema()
+@Schema({
+    toJSON: {
+        getters: true,
+        virtuals: true,
+    },
+    timestamps: true,
+})
 export class RestaurantFood {
+    constructor(name = '', bio = '', options = []){
+        this.name = name;
+        this.bio = bio;
+        this.options = options;
+    }
+
     @Prop({ required: true})
     name: string
 
@@ -12,14 +25,10 @@ export class RestaurantFood {
     @Prop()
     image: string
 
-    @Prop()
-    options: {
-        name: string,
-        bio: string,
-        price: number
-    }[]
+    @Prop({ type: [PriceOptionSchema], default: []})
+    options: PriceOption[]
 
-    @Prop({ type: [RestaurantFoodReview], _id: true, ref: RestaurantFoodReview.name})
+    @Prop({ type: [RestaurantFoodReviewSchema], ref: RestaurantFoodReview.name, default: []})
     reviews: RestaurantFoodReview[]
 }
 

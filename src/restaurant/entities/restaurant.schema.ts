@@ -47,8 +47,6 @@ export class Restaurant {
     @Prop({ type: RestaurantProfileSchema, default: new RestaurantProfile(), select: false})
     profile: RestaurantProfile
 
-    @Prop({ type: AccountSchema, ref: Account.name, required: true })
-    account: Account
 }
 
 

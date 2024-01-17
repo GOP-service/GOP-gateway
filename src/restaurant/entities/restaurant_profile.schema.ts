@@ -5,6 +5,7 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
         getters: true,
         virtuals: true,
     },
+    _id: false,
     timestamps: true,
 })
 export class RestaurantProfile {

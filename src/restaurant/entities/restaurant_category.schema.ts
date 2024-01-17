@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document } from "mongoose";
 import { RestaurantFood, RestaurantFoodSchema } from "./restaurant_food.schema";
+import { PriceOption, PriceOptionSchema } from "src/utils/subschemas/priceoption.schema";
 
 export type RestaurantCategoryDocument = RestaurantCategory & Document;
 
@@ -21,14 +22,10 @@ export class RestaurantCategory {
     @Prop()
     bio: string
 
-    @Prop()
-    options: {
-        name: string,
-        bio: string,
-        price: number
-    }[]
+    @Prop({ type: [PriceOptionSchema], default: []})
+    options: PriceOption[]
 
-    @Prop({ type: [RestaurantFoodSchema], _id: true, ref: RestaurantFood.name })
+    @Prop({ type: [RestaurantFoodSchema], ref: RestaurantFood.name })
     food_items: RestaurantFood[]
 }
 
