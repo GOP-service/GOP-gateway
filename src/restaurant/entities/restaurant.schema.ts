@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document } from "mongoose";
-import { CuisinesCategory, RestaurantStatus } from "src/utils/enums";
+import { CuisinesCategory, RestaurantStatus, RestaurantTier } from "src/utils/enums";
 import { RestaurantProfile, RestaurantProfileSchema } from "./restaurant_profile.schema";
 import { Rating, RatingSchema } from "src/utils/subschemas/rating.schema";
 import { Coordinates } from "src/utils/subschemas/location.schema";
@@ -32,17 +32,24 @@ export class Restaurant {
     @Prop({ required: true, default: 'số 1 VVN' })
     address: string
 
+    @Prop({ required: true, default: new Coordinates() })
+    location: Coordinates
+
     @Prop({ required: true , default: 'say oh yeahhhhhhh'})
     bio: string
 
     @Prop({  })
     avatar: string
-
+    
     @Prop({  })
     cover_image: string
 
+    @Prop({ enum: RestaurantTier, default: RestaurantTier.STANDARD})
+    tier: RestaurantTier
+
     @Prop({ type: RatingSchema, default: new Rating() })
     rating: Rating
+    
 
     @Prop({ type: RestaurantProfileSchema, default: new RestaurantProfile(), select: false})
     profile: RestaurantProfile

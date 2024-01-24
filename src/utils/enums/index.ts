@@ -1,3 +1,4 @@
+// * Role
 export enum RoleType  {
     CUSTOMER = "customer",
     DRIVER = "driver",
@@ -5,6 +6,19 @@ export enum RoleType  {
     ADMIN = "admin"
 }
 
+// * Account
+export enum OTPVerifyStatus {
+    OTP_WRONG = "WRONG OTP! PLEASE TRY AGAIN",
+    OTP_EXPIRED = "OTP EXPIRED! PLEASE TRY AGAIN",
+    SUCCESS = "SUCCESS"
+}
+
+export enum OTPType {
+    VERIFY_ACCOUNT = "Verify your account",
+    FORGOT_PASSWORD = "Change your account password"
+}
+
+// * Driver
 export enum VehicleType {
     BIKE = "MOTORBIKE",
     CAR = "CAR"
@@ -13,6 +27,13 @@ export enum VehicleType {
 export enum DriverStatus {
     AVAILABLE = "AVAILABLE",
     UNAVAILABLE = "UNAVAILABLE"
+}
+
+// * Restaurant
+export enum RestaurantTier {
+    STANDARD = "STANDARD",
+    PREMIUM = "PREMIUM",
+    DELUXE = "DELUXE"
 }
 
 export enum RestaurantStatus {
@@ -36,6 +57,7 @@ export enum CuisinesCategory {
     CHINESE_FOOD = "CHINESE_FOOD",
 }
 
+// * Order
 export enum OrderStatus {
     PENDING = "PENDING",
     ACCEPTED = "ACCEPTED",
@@ -60,13 +82,4 @@ export enum PaymentMethod {
     CARD = "CARD"
 }
 
-export enum OTPVerifyStatus {
-    OTP_WRONG = "WRONG OTP! PLEASE TRY AGAIN",
-    OTP_EXPIRED = "OTP EXPIRED! PLEASE TRY AGAIN",
-    SUCCESS = "SUCCESS"
-}
-
-export enum OTPType {
-    VERIFY_ACCOUNT = "Verify your account",
-    FORGOT_PASSWORD = "Change your account password"
-}
+// * 

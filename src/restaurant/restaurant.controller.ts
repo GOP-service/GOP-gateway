@@ -1,8 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query, BadRequestException } from '@nestjs/common';
 import { RestaurantService } from './restaurant.service';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/utils/guards/roles.guard';
 import { Roles } from 'src/utils/decorators/roles.decorator';
@@ -13,23 +13,31 @@ import { CreateRestaurantCategoryDto } from './dto/create-restaurant-category.dt
 
 
 @ApiBearerAuth()
-@Roles(RoleType.RESTAURANT)
 @UseGuards(AuthGuard('jwt'),RolesGuard)
 @ApiTags('Restaurants')
 @Controller('restaurant')
 export class RestaurantController {
   constructor(
     private readonly restaurantService: RestaurantService,
-  ) {}
-  
-  @Get('info')
-  info(@Req() req: RequestWithUser) {
-    return this.restaurantService.findOneId(req.user.role_id.restaurant);
-  }
-
+    ) {}
+    
+    @Roles(RoleType.DRIVER)
+    @Get('info')
+    info(@Req() req: RequestWithUser) {
+      return this.restaurantService.findOneId(req.user.role_id.restaurant);
+    }
+    
+  @ApiQuery({
+    name: 'index', 
+    type: Number,
+    example: 0,
+  })
   @Patch('categories')
-  updateCategories(@Req() req: RequestWithUser, @Body() body: CreateRestaurantCategoryDto) {
-    return this.restaurantService.updateCategories(req.user.role_id.restaurant, body);
+  updateCategories(@Req() req: RequestWithUser, @Body() body: CreateRestaurantCategoryDto, @Query() query: {index: number}) {
+    if (query.index === undefined || query.index === null || query.index < 0) {
+      throw new BadRequestException('index is required and must be a positive number');
+    }
+    return this.restaurantService.updateCategories(req.user.role_id.restaurant, body, query.index);
   }
 
 }
