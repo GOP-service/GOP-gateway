@@ -18,7 +18,7 @@ export class DriverService {
   }
 
   async findOneId(id: string): Promise<DriverDocument> {
-    return this.driverModel.findById(id);
+    return this.driverModel.findById(id).exec();
   }
 
   async findAll(): Promise<DriverDocument[]> {

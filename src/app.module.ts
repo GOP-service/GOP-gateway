@@ -11,6 +11,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AzureStorageModule } from './utils/auzre/storage-blob.module';
 import { AdminModule } from './admin/admin.module';
 import { AppController } from './app.controller';
+import { MailerModule } from '@nestjs-modules/mailer';
 
 
 @Module({
@@ -33,6 +34,22 @@ import { AppController } from './app.controller';
         ignoreErrors: false,
       }
     ),
+    MailerModule.forRootAsync({
+      useFactory: () => ({
+          transport: {
+              host: 'smtp.nbphuoc.id.vn',
+              port: 465,
+              secure: true,
+              auth: {
+                  user: 'nbphuoc@nbphuoc.id.vn',
+                  pass: 'kq82h3d6'
+              },
+          },
+          defaults: {
+              from: '"GoP Authentication" <nbphuoc@nbphuoc.id.vn>',
+          },
+      })
+  }),
     AuthModule,
     CustomerModule, 
     DriverModule, 

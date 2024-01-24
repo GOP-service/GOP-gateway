@@ -1,13 +1,13 @@
 import { CreateAccountDto } from "./create-acc.dto";
+import { OtpVerifyDto } from "./otp-verify.dto";
+import { OtpDto } from "./otp.dto";
 import { SigninDto } from "./signin.dto";
-import { SignupCustomerDto } from "./signup-customer.dto";
-import { SignupDriverDto } from "./signup-driver.dto";
-import { SignupRestaurantDto } from "./signup-restaurant.dto";
+import { UpdateAccountDto } from "./update-acc.dto";
 
 export {
-    SignupCustomerDto,
     SigninDto,
-    SignupDriverDto,
-    SignupRestaurantDto,
-    CreateAccountDto
+    CreateAccountDto,
+    OtpDto,
+    OtpVerifyDto,
+    UpdateAccountDto
 } 

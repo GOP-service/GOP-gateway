@@ -3,7 +3,6 @@ import { RoleType } from "../enums"
 
 export interface JwtPayload {
     sub: string
-    role: RoleType[]
     role_id: Role
     refreshToken: string
 }

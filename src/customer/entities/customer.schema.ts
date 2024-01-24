@@ -12,13 +12,13 @@ export type CustomerDocument = Customer & Document;
     timestamps: true,
 })
 export class Customer {
-    @Prop({ required: true })
-    full_name: string
-
-    @Prop()
+    @Prop({ default: 'số 1 VVN, Linh Chiểu, Thủ Đức, TP.HCM' })
     address: string
 
-    @Prop()
+    @Prop({ default: true })
+    gender: boolean //* male: true
+
+    @Prop({ default: 'https://gopstorage0.blob.core.windows.net/appicon/default_avt.jpg' })
     avatar: string
 }
 

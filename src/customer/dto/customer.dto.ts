@@ -1,13 +1,22 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsString } from "class-validator";
+import { IsBoolean, IsNotEmpty, IsString } from "class-validator";
 
 export class CustomerDto{
-    @ApiProperty()
-    @IsNotEmpty()
+    @ApiProperty({
+        description: 'Customer address',
+        example: 'số 1 VVN, Linh Chiểu, Thủ Đức, TP.HCM'
+    })
     @IsString()
-    full_name: string;
+    address: string;
 
     @ApiProperty()
     @IsString()
-    address: string;
+    avatar: string;
+
+    @ApiProperty({
+        description: 'Customer gender',
+        example: true
+    })
+    @IsBoolean()
+    gender: boolean;
 }

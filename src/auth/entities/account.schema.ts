@@ -14,14 +14,17 @@ export type AccountDocument = Account & Document;
     timestamps: true,
 })
 export class Account {
-    @Prop({ required: true, unique: true })
+    @Prop({ unique: true })
     phone: string
 
-    @Prop({ })
+    @Prop({ required: true, unique: true })
     email: string
 
     @Prop({ required: true, select: false })
     password: string
+
+    @Prop({ required: true })
+    full_name: string
 
     @Prop({ type: RoleSchema , default: new Role()})
     role: Role
@@ -31,6 +34,9 @@ export class Account {
 
     @Prop({ type: CoordinatesSchema, default: new Coordinates() })
     location: Coordinates
+
+    @Prop({ default: false })
+    verified: boolean
 
 }
 

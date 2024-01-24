@@ -1,17 +1,23 @@
-import { IsNotEmpty, IsPhoneNumber, IsString } from "class-validator";
-import { Role } from "../entities/role.schema";
+import { IsEmail, IsNotEmpty, IsString } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 
 export class CreateAccountDto {
     @ApiProperty({
-        example: '0333495017',
+        example: 'phcnguyenba@gmail.com',
     })
     @IsNotEmpty()
-    @IsPhoneNumber('VN')
-    phone: string;
+    @IsEmail()
+    email: string;
 
     @ApiProperty()
     @IsNotEmpty()
     @IsString()
     password: string;
+
+    @ApiProperty({
+        example: 'Nguyễn Bá Phước',
+    })
+    @IsNotEmpty()
+    @IsString()
+    full_name: string;
 }

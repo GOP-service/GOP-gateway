@@ -8,11 +8,6 @@ export class DriverDto{
     @ApiProperty()
     @IsNotEmpty()
     @IsString()
-    full_name: string;
-
-    @ApiProperty()
-    @IsNotEmpty()
-    @IsString()
     vehicle_model: string;
 
     @ApiProperty()
