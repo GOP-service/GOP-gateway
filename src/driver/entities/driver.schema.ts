@@ -14,10 +14,7 @@ export type DriverDocument = Driver & Document;
     },
     timestamps: true,
 })
-export class Driver {
-    @Prop({ required: true })
-    full_name: string
-    
+export class Driver {  
     @Prop({ enum: VehicleType, default: VehicleType.BIKE })
     vehicle_type: VehicleType
 

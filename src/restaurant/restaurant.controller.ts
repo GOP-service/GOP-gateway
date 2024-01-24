@@ -24,7 +24,7 @@ export class RestaurantController {
   
   @Get('info')
   info(@Req() req: RequestWithUser) {
-    return this.restaurantService.findOne(req.user.role_id.restaurant);
+    return this.restaurantService.findOneId(req.user.role_id.restaurant);
   }
 
   @Patch('categories')

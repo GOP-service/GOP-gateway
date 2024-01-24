@@ -59,3 +59,14 @@ export enum PaymentMethod {
     CASH = "CASH",
     CARD = "CARD"
 }
+
+export enum OTPVerifyStatus {
+    OTP_WRONG = "WRONG OTP! PLEASE TRY AGAIN",
+    OTP_EXPIRED = "OTP EXPIRED! PLEASE TRY AGAIN",
+    SUCCESS = "SUCCESS"
+}
+
+export enum OTPType {
+    VERIFY_ACCOUNT = "Verify your account",
+    FORGOT_PASSWORD = "Change your account password"
+}

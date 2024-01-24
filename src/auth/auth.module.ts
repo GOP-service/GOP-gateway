@@ -9,12 +9,14 @@ import { JwtModule } from '@nestjs/jwt';
 import { RestaurantModule } from 'src/restaurant/restaurant.module';
 import { AccessTokenStrategy } from './strategies/accessToken.strategy';
 import { RefreshTokenStrategy } from './strategies/refreshToken.strategy';
+import { Otp, OtpSchema } from './entities/otp.schema';
 
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Account.name, schema: AccountSchema, },
+      { name: Otp.name, schema: OtpSchema,}
     ]),
     JwtModule.register({}),
     CustomerModule,

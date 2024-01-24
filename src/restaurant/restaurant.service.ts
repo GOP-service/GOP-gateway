@@ -34,7 +34,7 @@ export class RestaurantService {
     return this.restaurantModel.find().exec();
   }
 
-  async findOne(id: string): Promise<RestaurantDocument> {
+  async findOneId(id: string): Promise<RestaurantDocument> {
     return this.restaurantModel.findById(id).exec();
   }
 

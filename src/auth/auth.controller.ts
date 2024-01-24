@@ -1,17 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ConflictException, InternalServerErrorException, BadRequestException, Req, UseGuards, Logger, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ConflictException, InternalServerErrorException, BadRequestException, Req, UseGuards, Logger, UnauthorizedException, Res, HttpCode, HttpStatus, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Response } from 'express';
 import { AccountService } from './account.service';
 import { CustomerService } from 'src/customer/customer.service';
 import { DriverService } from 'src/driver/driver.service';
 import { RestaurantService } from 'src/restaurant/restaurant.service';
-import { RoleType } from 'src/utils/enums';
-import { SigninDto, SignupCustomerDto, SignupDriverDto, SignupRestaurantDto } from './dto';
+import { OTPType, OTPVerifyStatus, RoleType } from 'src/utils/enums';
+import { CreateAccountDto, OtpVerifyDto, SigninDto, } from './dto';
 import { RequestWithUser } from 'src/utils/interfaces';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { Roles } from 'src/utils/decorators/roles.decorator';
-import { RolesGuard } from 'src/utils/guards/roles.guard';
-import { DriverProfile } from 'src/driver/entities/driver_profile.schema';
-import { RestaurantProfile } from 'src/restaurant/entities/restaurant_profile.schema';
+import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger';
+import { MailerService } from '@nestjs-modules/mailer';
+import { OtpTemplate } from 'src/utils/mail-template/otp';
+import { CreateDriverDto } from 'src/driver/dto/create-driver.dto';
+import { CreateRestaurantDto } from 'src/restaurant/dto/create-restaurant.dto';
+import { createCustomerDto } from 'src/customer/dto/create-customer.dto';
 
 @ApiBearerAuth()
 @ApiTags('Authentications')
@@ -22,225 +24,189 @@ export class AuthController {
     private readonly customerService: CustomerService,
     private readonly driverService: DriverService,
     private readonly restaurantService: RestaurantService,
+    private readonly mailerService: MailerService,
   ) {}
 
   logger = new Logger('AuthController'); 
-  
-  // * CUSTOMER
-  @Post('customer/signup')
-  async createCustomer(@Body() body: SignupCustomerDto) {
-    const checkExist = await this.accountService.findOnePhone(body.phone);
+
+  async sendOTPMail(mail: string, usename: string, otp: string, type: OTPType) {
+    return await this.mailerService.sendMail({
+      to: mail,
+      subject: 'OTP verification',
+      text: 'OTP verification',
+      html: OtpTemplate(usename,otp,'',type),
+    });
+  }
+
+
+  @Get('test/:type')
+  async test(@Param() param) {
+    const type = param.type;
+    
+    if (Object.values(RoleType).includes(type as RoleType)){
+      return type;
+    } else {
+      throw new BadRequestException('Role type is not valid');
+    }
+  }
+
+  // * SIGN UP ACCOUNT
+  @Post('signup')
+  async signup(@Body() body: CreateAccountDto, @Res() res: Response) {
+    const checkExist = await this.accountService.findOneEmail(body.email);
     if (checkExist) {
-      // account đã tồn tại nên chỉ update role và tạo customer
-
-      if (checkExist.role[RoleType.CUSTOMER] !== '') {
-        throw new ConflictException('This phone number is already registered as Customer');
-      }
-
-      const newCustomer = await this.customerService.create({
-        account: checkExist,
-        full_name: body.full_name,
-      });
-      
-      await this.accountService.updateRole(checkExist._id, RoleType.CUSTOMER, newCustomer._id);
-      
-      const token = await this.accountService.updateRefreshToken(checkExist._id, checkExist.toObject().role);
-      
-      return token;
-    } else { 
-      // account chưa tồn tại nên tạo mới
-      const newAccount = await this.accountService.create({
-        phone: body.phone,
-        password: body.password,
-      });
-
-      const newCustomer = await this.customerService.create({
-        account: newAccount,
-        full_name: body.full_name,
-      });
-
-      await this.accountService.updateRole(newAccount._id, RoleType.CUSTOMER, newCustomer._id);
-
-      return await this.accountService.updateRefreshToken(newAccount._id, newAccount.toObject().role);
-    }
-  }
-
-  @Post('customer/signin')
-  async signinCustomer(@Body() body: SigninDto ) {
-    const account = await this.accountService.checkPassword_Phone(body.phone, body.password);
-    if (!account) {
-      throw new BadRequestException('Password is incorrect or phone number does not exist');
-    }
-
-    if (account.role[RoleType.CUSTOMER] === '') {
-      throw new BadRequestException('This phone number is not registered as customer');
-    }
-
-    const token = await this.accountService.updateRefreshToken(account._id, account.toObject().role);
-    return token;
-  }
-
-  // ! RolesGuard TEST
-  @Roles(RoleType.CUSTOMER)
-  @UseGuards(AuthGuard('jwt'),RolesGuard)
-  @Get('customer/me')
-  async getMe(@Req() req: RequestWithUser) {
-    const customer = await this.accountService.findOneId(req.user['sub']);
-    return customer;
-  }
-
-  @UseGuards(AuthGuard('jwt-refresh'))
-  @Post('customer/refresh')
-  async refreshCustomer(@Req() req: RequestWithUser) {
-    const token = await this.accountService.check_updateRefreshToken(req.user.sub, req.user.role_id, req.user.refreshToken);
-    if (!token) {
-      throw new UnauthorizedException('Refresh token is incorrect, please login again');
-    } 
-    return token;
-  }
-  
-  // * DRIVER
-  
-  // todo: up ảnh 
-  @Post('driver/signup')
-  async createDriver(@Body() body: SignupDriverDto) {
-    const checkExist = await this.accountService.findOnePhone(body.phone);
-    if (checkExist) {
-      // account đã tồn tại nên chỉ update role và tạo driver
-
-      if (checkExist.role[RoleType.DRIVER] !== '') {
-        throw new ConflictException('This phone number is already registered as Driver');
-      }
-
-      // todo: xử lí nhét anh ở đây
-      const profile = new DriverProfile();
-      profile.vehicle_image = 'link ảnh';
-
-      const newDriver = await this.driverService.create({
-        full_name: body.full_name,
-        vehicle_type: body.vehicle_type,
-        vehicle_model: body.vehicle_model,
-        vehicle_plate_number: body.vehicle_plate_number,
-        profile: profile,
-      });
-      
-      await this.accountService.updateRole(checkExist._id, RoleType.DRIVER, newDriver._id);
-      
-      return await this.accountService.updateRefreshToken(checkExist._id, checkExist.toObject().role);
-      
-    } else { 
-      // account chưa tồn tại nên tạo mới
-      const newAccount = await this.accountService.create({
-        phone: body.phone,
-        password: body.password,
-      });
-
-      // todo: xử lí nhét anh ở đây
-      const profile = new DriverProfile();
-      profile.vehicle_image = 'link ảnh';
-
-      const newDriver = await this.driverService.create({
-        full_name: body.full_name,
-        vehicle_type: body.vehicle_type,
-        vehicle_model: body.vehicle_model,
-        vehicle_plate_number: body.vehicle_plate_number,
-        profile: profile,
-      });
-
-      await this.accountService.updateRole(newAccount._id, RoleType.DRIVER, newDriver._id);
-
-      return await this.accountService.updateRefreshToken(newAccount._id, newAccount.toObject().role);
-    }
-  }
-
-  @Post('driver/signin')
-  async signinDriver(@Body() body: SigninDto ) {
-    const account = await this.accountService.checkPassword_Phone(body.phone, body.password);
-    if (!account) {
-      throw new BadRequestException('Password is incorrect or phone number does not exist');
-    }
-
-    if (account.role[RoleType.DRIVER] === '') {
-      throw new BadRequestException('This phone number is not registered as driver');
-    }
-
-    const token = await this.accountService.updateRefreshToken(account._id, account.toObject().role);
-    return token;
-  }
-
-  @UseGuards(AuthGuard('jwt-refresh'))
-  @Post('driver/refresh')
-  async refreshDriver(@Req() req: RequestWithUser) {
-    const token = await this.accountService.check_updateRefreshToken(req.user.sub, req.user.role_id, req.user.refreshToken);
-    if (!token) {
-      throw new UnauthorizedException('Refresh token is incorrect, please login again');
-    } 
-    return token;
-  }
-
-  // * RESTAURANT
-  @Post('restaurant/signup')
-  async createRestaurant(@Body() body: SignupRestaurantDto) {
-    const checkExist = await this.accountService.findOnePhone(body.phone);
-    if (checkExist) {
-      // account đã tồn tại nên chỉ update role và tạo restaurant
-
-      if (checkExist.role[RoleType.RESTAURANT] !== '') {
-        throw new ConflictException('This phone number is already registered as Restaurant');
-      }
-      
-      // todo: xử lí nhét anh ở đây
-      const profile = new RestaurantProfile();
-      profile.license_image = 'link ảnh';
-
-      const newRestaurant = await this.restaurantService.create({
-        profile: profile,
-        name: body.name,
-        address: body.address,
-        bio: body.bio,
-        cuisine_categories: body.cuisine_categories,
-      });
-
-      return await this.accountService.updateRole(checkExist._id, RoleType.RESTAURANT, newRestaurant._id);
+      // account đã tồn tại
+      throw new ConflictException('This email is already registered');
     } else {
       // account chưa tồn tại nên tạo mới
-      const newAccount = await this.accountService.create({
-        phone: body.phone,
+      const newAccount = await this.accountService.createAccount({
+        email: body.email,
         password: body.password,
+        full_name: body.full_name,
       });
-
-      //todo: xử lí nhét anh ở đây
-      const profile = new RestaurantProfile();
-      profile.license_image = 'link ảnh';
-
-      const newRestaurant = await this.restaurantService.create({
-        profile: profile,
-        name: body.name,
-        address: body.address,
-        bio: body.bio,
-        cuisine_categories: body.cuisine_categories,
-      });
-
-      await this.accountService.updateRole(newAccount._id, RoleType.RESTAURANT, newRestaurant._id);
-
-      return await this.accountService.updateRefreshToken(newAccount._id, newAccount.toObject().role);
+      if (!newAccount) {
+        throw new InternalServerErrorException('Something went wrong');
+      }
+      const otp = await this.accountService.createOtp(newAccount.id, OTPType.VERIFY_ACCOUNT);
+      this.sendOTPMail(newAccount.email, newAccount.full_name, otp.otp, OTPType.VERIFY_ACCOUNT)
+      const message = 'Sign up successfully, please check your email for OTP to verify account';
+      return res.status(HttpStatus.CREATED).json({ message });
     }
   }
 
-  @Post('restaurant/signin')
-  async signinRestaurant(@Body() body: SigninDto ) {
-    const account = await this.accountService.checkPassword_Phone(body.phone, body.password);
+  // * SIGN IN ACCOUNT
+  @Post('signin')
+  async signin(@Body() body: SigninDto) {
+    const account = await this.accountService.checkPassword_Email(body.email, body.password);
     if (!account) {
-      throw new BadRequestException('Password is incorrect or phone number does not exist');
+      throw new BadRequestException('Password is incorrect or email does not exist');
+    } else {
+      if (!account.verified) {
+        const otp = await this.accountService.createOtp(account.id, OTPType.VERIFY_ACCOUNT);
+        this.sendOTPMail(account.email, account.full_name, otp.otp, OTPType.VERIFY_ACCOUNT)
+        throw new ForbiddenException('The account hasn\'t been verified, please check your email for OTP to verify account');
+      }
     }
-
-    if (account.role[RoleType.RESTAURANT] === '') {
-      throw new BadRequestException('This phone number is not registered as restaurant');
-    }
-
-    const token = await this.accountService.updateRefreshToken(account._id, account.toObject().role);
+    const token = await this.accountService.updateRefreshToken(account.id, account.toObject().role);
     return token;
   }
 
+  
+  // * OTP verify
+  @Post('verify/otp')
+  async verifyOTP(@Body() body: OtpVerifyDto, @Res() res: Response) {
+    const account = await this.accountService.findOneEmail(body.email);
+    if (!account) {
+      throw new BadRequestException('Account does not exist');
+    } else {
+      if (account.verified) {
+        throw new BadRequestException('Account has been verified');
+      } else {
+        const otp = await this.accountService.verifyOtp(account.id, body.otp, OTPType.VERIFY_ACCOUNT);
+        if (otp === OTPVerifyStatus.SUCCESS) {
+          this.accountService.updateVerifyAccount(account.id);
+          const message = 'Account verified successfully, please continue your sign in process' ;          
+          return res.status(HttpStatus.OK).json({ message });
+        } else {
+          throw new BadRequestException('OTP is incorrect or expired');
+        }
+      }
+    }
+  }
+
+  // * Refresh token
+  @UseGuards(AuthGuard('jwt-refresh'))
+  @Post('refresh')
+  async refreshToken(@Req() req: RequestWithUser, @Res() res: Response) {
+    const token = await this.accountService.check_updateRefreshToken(req.user.sub, req.user.role_id, req.user.refreshToken);
+    if (!token) {
+      throw new UnauthorizedException('Refresh token is incorrect, please login again');
+    } 
+    return res.status(HttpStatus.CREATED).json({ token });
+  }
+
+
+  // * Get Profile
+  @UseGuards(AuthGuard('jwt'))
+  @ApiParam({ name: 'type', enum: RoleType })
+  @Get('profile/:type')
+  async getProfile(@Req() req: RequestWithUser, @Param() param) {
+    const type = param.type;
+    if (Object.values(RoleType).includes(type as RoleType)){
+      const account = await this.accountService.findOneId_role(req.user.sub);
+      if (account.role[type]){
+        switch (type) {
+          case RoleType.CUSTOMER:
+            return await this.customerService.findOneId(req.user.sub);
+          case RoleType.DRIVER:
+            return await this.driverService.findOneId(req.user.sub);
+          case RoleType.RESTAURANT:
+            return await this.restaurantService.findOneId(req.user.sub);
+        }
+      } else {
+        throw new NotFoundException('You have not registered as ' + type+' yet!');
+      }
+    } else {
+      throw new NotFoundException('Role type is not valid');
+    }
+  }
+
+  // * Create new profile ROLE 
+  @UseGuards(AuthGuard('jwt'))
+  @Post('role/customer')
+  async createCustomer(@Body() body: createCustomerDto, @Req() req: RequestWithUser, @Res() res: Response) {
+    const account = await this.accountService.findOneId_role(req.user.sub);
+    if (account.role.customer){
+      throw new BadRequestException('You have already registered as customer');
+    } else {
+      const newCustomer = await this.customerService.create(body);
+      if (!newCustomer) {
+        throw new InternalServerErrorException('Something went wrong');
+      }
+      const updateAccount = await this.accountService.updateRole(req.user.sub, RoleType.CUSTOMER, newCustomer.id);
+      if (!updateAccount) {
+        throw new InternalServerErrorException('Something went wrong');
+      } 
+      return res.status(HttpStatus.CREATED).json({ message: 'Create new customer successfully' });
+    }
+  }  
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('role/driver')
+  async createDriver(@Body() body: CreateDriverDto, @Req() req: RequestWithUser, @Res() res: Response) {
+    const account = await this.accountService.findOneId_role(req.user.sub);
+    if (account.role.driver){
+      throw new BadRequestException('You have already registered as driver');
+    } else {
+      const newDriver = await this.driverService.create(body);
+      if (!newDriver) {
+        throw new InternalServerErrorException('Something went wrong');
+      }
+      const updateAccount = await this.accountService.updateRole(req.user.sub, RoleType.DRIVER, newDriver.id);
+      if (!updateAccount) {
+        throw new InternalServerErrorException('Something went wrong');
+      } 
+      return res.status(HttpStatus.CREATED).json({ message: 'Create new driver successfully' });
+    }
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('role/restaurant')
+  async createRestaurant(@Body() body: CreateRestaurantDto, @Req() req: RequestWithUser, @Res() res: Response) {
+    const account = await this.accountService.findOneId_role(req.user.sub);
+    if (account.role.restaurant){
+      throw new BadRequestException('You have already registered as restaurant');
+    } else {
+      const newRestaurant = await this.restaurantService.create(body);
+      if (!newRestaurant) {
+        throw new InternalServerErrorException('Something went wrong');
+      }
+      const updateAccount = await this.accountService.updateRole(req.user.sub, RoleType.RESTAURANT, newRestaurant.id);
+      if (!updateAccount) {
+        throw new InternalServerErrorException('Something went wrong');
+      } 
+      return res.status(HttpStatus.CREATED).json({ message: 'Create new restaurant successfully' });
+    }
+  }
 
 }
