@@ -13,6 +13,10 @@ export type RestaurantCategoryDocument = RestaurantCategory & Document;
     timestamps: true,
 })
 export class RestaurantCategory {
+    constructor(partial: Partial<RestaurantCategory>) {
+        Object.assign(this, partial);
+    }
+
     @Prop({ })
     name: string
 
@@ -25,7 +29,7 @@ export class RestaurantCategory {
     @Prop({ type: [PriceOptionSchema], default: []})
     options: PriceOption[]
 
-    @Prop({ type: [RestaurantFoodSchema], ref: RestaurantFood.name })
+    @Prop({ type: [RestaurantFoodSchema] })
     food_items: RestaurantFood[]
 }
 
