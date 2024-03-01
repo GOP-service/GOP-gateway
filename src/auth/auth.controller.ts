@@ -122,7 +122,7 @@ export class AuthController {
     if (!token) {
       throw new UnauthorizedException('Refresh token is incorrect, please login again');
     } 
-    return res.status(HttpStatus.CREATED).json({ token });
+    return res.status(HttpStatus.CREATED).json(token);
   }
 
 
@@ -137,11 +137,11 @@ export class AuthController {
       if (account.role[type]){
         switch (type) {
           case RoleType.CUSTOMER:
-            return await this.customerService.findOneId(req.user.sub);
+            return await this.customerService.findOneId(account.role.customer);
           case RoleType.DRIVER:
-            return await this.driverService.findOneId(req.user.sub);
+            return await this.driverService.findOneId(account.role.driver);
           case RoleType.RESTAURANT:
-            return await this.restaurantService.findOneId(req.user.sub);
+            return await this.restaurantService.findOneId(account.role.restaurant);
         }
       } else {
         throw new NotFoundException('You have not registered as ' + type+' yet!');

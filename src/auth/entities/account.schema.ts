@@ -14,7 +14,7 @@ export type AccountDocument = Account & Document;
     timestamps: true,
 })
 export class Account {
-    @Prop({ unique: true })
+    @Prop({ unique: true, sparse: true })
     phone: string
 
     @Prop({ required: true, unique: true })
