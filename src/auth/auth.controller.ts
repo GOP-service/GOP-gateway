@@ -14,6 +14,7 @@ import { OtpTemplate } from 'src/utils/mail-template/otp';
 import { CreateDriverDto } from 'src/driver/dto/create-driver.dto';
 import { CreateRestaurantDto } from 'src/restaurant/dto/create-restaurant.dto';
 import { createCustomerDto } from 'src/customer/dto/create-customer.dto';
+import { profile } from 'console';
 
 @ApiBearerAuth()
 @ApiTags('Authentications')
@@ -36,18 +37,6 @@ export class AuthController {
       text: 'OTP verification',
       html: OtpTemplate(usename,otp,'',type),
     });
-  }
-
-
-  @Get('test/:type')
-  async test(@Param() param) {
-    const type = param.type;
-    
-    if (Object.values(RoleType).includes(type as RoleType)){
-      return type;
-    } else {
-      throw new BadRequestException('Role type is not valid');
-    }
   }
 
   // * SIGN UP ACCOUNT
@@ -132,20 +121,25 @@ export class AuthController {
   @Get('profile/:type')
   async getProfile(@Req() req: RequestWithUser, @Param() param) {
     const type = param.type;
+    const account = await this.accountService.findOneId(req.user.sub);
+    let profile = {};
     if (Object.values(RoleType).includes(type as RoleType)){
-      const account = await this.accountService.findOneId_role(req.user.sub);
       if (account.role[type]){
         switch (type) {
           case RoleType.CUSTOMER:
-            return await this.customerService.findOneId(account.role.customer);
+            profile = await this.customerService.findOneId(account.role.customer);
+            return {account_id: account.id, full_name: account.full_name, email: account.email, phone: account.phone, profile };
           case RoleType.DRIVER:
-            return await this.driverService.findOneId(account.role.driver);
+            profile = await this.driverService.findOneId(account.role.driver);
+            return {account_id: account.id, full_name: account.full_name, email: account.email, phone: account.phone, profile };
           case RoleType.RESTAURANT:
-            return await this.restaurantService.findOneId(account.role.restaurant);
+            profile =  await this.restaurantService.findOneId(account.role.restaurant);
+            return {account_id: account.id, full_name: account.full_name, email: account.email, phone: account.phone, profile };
         }
       } else {
         throw new NotFoundException('You have not registered as ' + type+' yet!');
       }
+      
     } else {
       throw new NotFoundException('Role type is not valid');
     }
