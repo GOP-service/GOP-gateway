@@ -2,6 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 import { CuisinesCategory, RestaurantStatus } from "src/utils/enums";
 import { RestaurantCategory, RestaurantCategorySchema } from "../entities/restaurant_category.schema";
 import { IsEmpty, IsEnum, IsNotEmpty, IsObject, IsString } from "class-validator";
+import { LocationObject } from "src/utils/subschemas/location.schema";
 
 export class RestaurantDto{
     @ApiProperty(
@@ -15,29 +16,32 @@ export class RestaurantDto{
     @IsNotEmpty()
     @IsEnum(CuisinesCategory, { each: true })
     cuisine_categories: CuisinesCategory[]
-
-    @ApiProperty({})
-    restaurant_categories: RestaurantCategory[]
-
+    
     @ApiProperty()
     @IsNotEmpty()
     @IsString()
     name: string
-
-    @ApiProperty()
+    
+    @ApiProperty({
+        example: new LocationObject([10.850739590040357,106.77195728296408])
+    })
     @IsNotEmpty()
-    @IsString()
-    address: string
-
-    @ApiProperty()
+    location: LocationObject
+    
+    @ApiProperty({
+        example: 'say oh yeahhhhhhh'
+    })
     @IsNotEmpty()
     @IsString()
     bio: string
-
+    
     @ApiProperty()
     avatar: string
-
+    
     @ApiProperty()
     cover_image: string
-
+    
+    @ApiProperty({})
+    restaurant_categories: RestaurantCategory[]
+    
 }

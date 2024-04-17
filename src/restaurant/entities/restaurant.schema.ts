@@ -3,7 +3,7 @@ import { Document } from "mongoose";
 import { CuisinesCategory, RestaurantStatus, RestaurantTier } from "src/utils/enums";
 import { RestaurantProfile, RestaurantProfileSchema } from "./restaurant_profile.schema";
 import { Rating, RatingSchema } from "src/utils/subschemas/rating.schema";
-import { Coordinates } from "src/utils/subschemas/location.schema";
+import { LocationObject } from "src/utils/subschemas/location.schema";
 import { RestaurantCategory, RestaurantCategorySchema } from "./restaurant_category.schema";
 import { Account, AccountSchema } from "src/auth/entities/account.schema";
 
@@ -20,7 +20,7 @@ export class Restaurant {
     @Prop({ enum: CuisinesCategory , type: [String], default: []})
     cuisine_categories: CuisinesCategory[]
 
-    @Prop({ type: [RestaurantCategorySchema], ref: RestaurantCategory.name, default: [] })
+    @Prop({ type: [RestaurantCategorySchema], default: [] })
     restaurant_categories: RestaurantCategory[]
 
     @Prop({ enum: RestaurantStatus, default: RestaurantStatus.CLOSED })
@@ -29,11 +29,8 @@ export class Restaurant {
     @Prop({ required: true })
     name: string
 
-    @Prop({ required: true, default: 'số 1 VVN' })
-    address: string
-
-    @Prop({ required: true, default: new Coordinates() })
-    location: Coordinates
+    @Prop({ required: true })
+    location: LocationObject
 
     @Prop({ required: true , default: 'say oh yeahhhhhhh'})
     bio: string
@@ -45,11 +42,7 @@ export class Restaurant {
     cover_image: string
 
     @Prop({ enum: RestaurantTier, default: RestaurantTier.STANDARD})
-    tier: RestaurantTier
-
-    @Prop({ type: RatingSchema, default: new Rating() })
-    rating: Rating
-    
+    tier: RestaurantTier    
 
     @Prop({ type: RestaurantProfileSchema, default: new RestaurantProfile(), select: false})
     profile: RestaurantProfile

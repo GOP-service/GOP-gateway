@@ -12,6 +12,9 @@ import { AzureStorageModule } from './utils/auzre/storage-blob.module';
 import { AdminModule } from './admin/admin.module';
 import { AppController } from './app.controller';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { SocketModule } from './socket/socket.module';
+import { SocketGateway } from './socket/socket.gateway';
+import { VietMapModule } from './utils/map-api/viet-map.module';
 
 
 @Module({
@@ -57,7 +60,9 @@ import { MailerModule } from '@nestjs-modules/mailer';
     BillModule, 
     OrderModule,
     AzureStorageModule,
-    AdminModule
+    AdminModule,
+    SocketModule,
+    VietMapModule,
   ],
   controllers: [AppController],
   providers: [],

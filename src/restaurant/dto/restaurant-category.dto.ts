@@ -1,7 +1,8 @@
-import { PriceOption } from "src/utils/subschemas/priceoption.schema"
-import { RestaurantFood } from "../entities/restaurant_food.schema"
 import { ApiProperty } from "@nestjs/swagger"
-import { IsArray, IsNotEmpty, IsObject, IsString } from "class-validator"
+import { IsArray, IsNotEmpty, IsObject, IsString, min } from "class-validator"
+import { FoodItem } from "../entities/food_item.schema"
+import { ModifierGroup } from "../entities/modifier_groups.schema"
+import { Modifier } from "../entities/modifier.schema"
 
 export class RestaurantCategoryDto {
     @ApiProperty({
@@ -11,9 +12,6 @@ export class RestaurantCategoryDto {
     @IsString()
     name: string
 
-    @ApiProperty()
-    image: string
-
     @ApiProperty({
         example: 'say oh yeahhhhhh!!!'
     })
@@ -21,36 +19,58 @@ export class RestaurantCategoryDto {
     @IsString()
     bio: string
 
-    @ApiProperty({
-        example: [
-            new PriceOption('thêm mắm', '1 tý nước mắm', 10000), 
-            new PriceOption('thêm muối', '1 tý muối', 20000), 
-            new PriceOption('thêm ớt', '1 đống ớt', 30000)
-        ]
-    })
-    @IsNotEmpty()    
-    options: PriceOption[]
 
     @ApiProperty({
-        example:[
-            new RestaurantFood(
-                'Bánh mì', 
-                'Bánh mì thịt nguội', 
-                [
-                    new PriceOption('Nhỏ', 'size siu bé', 10000), 
-                    new PriceOption('Vừa', 'size human', 20000), 
-                    new PriceOption('Lớn', 'size khủng long', 30000)
+        example:
+        [
+            new FoodItem('Bún đậu mắm tôm', 'Bún đậu mắm tôm siu to khổng lồ', 30000, [
+                new ModifierGroup('Chọn thêm',[
+                    new Modifier('Đậu hủ', 5000),
+                    new Modifier('Nem chua', 5000),
+                    new Modifier('Chả cá', 5000),
                 ]),
-            new RestaurantFood(
-                'cơm 8', 
-                'cơm tấm thịt nướng', 
-                [
-                    new PriceOption('Nhỏ', 'size siu bé', 10000), 
-                    new PriceOption('Vừa', 'size human', 20000), 
-                    new PriceOption('Lớn', 'size khủng long', 30000)
+                new ModifierGroup('Chọn nước mắm', [
+                    new Modifier('Nước mắm', 5000),
+                    new Modifier('Nước mắm chua ngọt', 5000),
+                    new Modifier('Nước mắm pha', 5000),
+                ])
+            ]),
+            new FoodItem('Bún bò Huế', 'Bún bò Huế siu to khổng lồ', 30000, [
+                new ModifierGroup('Chọn thêm',[
+                    new Modifier('Bún', 5000),
+                    new Modifier('Thịt', 5000),
+                    new Modifier('Bò viên', 5000),
                 ]),
-        ]
+                new ModifierGroup('Chọn size', [
+                    new Modifier('Nhỏ', 0),
+                    new Modifier('To', 5000),
+                ])
+            ]),
+            new FoodItem('Trà sữa trân châu', 'Trà sữa trân châu phô mai hột vịt siu to khổng lồ', 30000, [
+                new ModifierGroup('Chọn thêm',[
+                    new Modifier('Trân châu', 5000),
+                    new Modifier('Phô mai', 5000),
+                    new Modifier('Hột vịt', 5000),
+                ]),
+                new ModifierGroup('Chọn size', [
+                    new Modifier('Nhỏ', 0),
+                    new Modifier('To', 5000),
+                ])
+            ]),
+            new FoodItem('Trà sữa thái đỏ', 'Trà sữa thái đỏ siu to khổng lồ', 30000, [
+                new ModifierGroup('Chọn thêm',[
+                    new Modifier('Trân châu', 5000),
+                    new Modifier('Phô mai', 5000),
+                    new Modifier('Hột vịt', 5000),
+                ]),
+                new ModifierGroup('Chọn size', [
+                    new Modifier('Nhỏ', 0),
+                    new Modifier('To', 5000),
+                ])
+            ]),
+        ],
+
     })
-    @IsNotEmpty()
-    food_items: RestaurantFood[]
+    @IsArray()
+    food_items: FoodItem[]
 }

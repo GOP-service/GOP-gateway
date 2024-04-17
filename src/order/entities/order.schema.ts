@@ -1,8 +1,8 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document } from "mongoose";
-import { OrderStatus, OrderType } from "src/utils/enums";
-import { DeliveryOrder } from "./delivery_order.schema";
-import { TransportOrder } from "./transport_order.schema";
+import { OrderType, OrderStatus } from "src/utils/enums";
+import { DeliveryOrder,DeliveryOrderSchema } from "./delivery_order.schema";
+import { TransportOrder,TransportOrderSchema } from "./transport_order.schema";
 import { Bill, BillSchema } from "src/bill/entities/bill.schema";
 
 export type OrderDocument = Order & Document;
@@ -15,33 +15,38 @@ type OrderDetails = DeliveryOrder | TransportOrder
         virtuals: true,
     },
     timestamps: true,
+    discriminatorKey: 'order_type',
 })
 export class Order {
-    @Prop({ required: true})
+    @Prop({})
     customer_id: string
 
-    @Prop({ required: true})
+    @Prop({})
     driver_id: string
 
-    @Prop({ enum: OrderStatus, default: OrderStatus.PENDING })
-    status: OrderStatus
+    @Prop({ enum: OrderStatus, required: true, type: String})
+    order_status: OrderStatus
 
-    @Prop({ enum: OrderType, required: true })
-    type: OrderType
+    @Prop({ required: true, type: Date })
+    order_time: Date
 
-    @Prop({ required: true, type: Object})
-    details: OrderDetails
+    @Prop({ type: Date })
+    submit_time: Date
 
-    @Prop({ type: BillSchema, ref: Bill.name })
-    bill: Bill
+    @Prop({ type: Date })
+    complete_time: Date
 
-    @Prop({ required: true})
-    distance: number
+    @Prop({ enum: OrderType, required: true, type: String, 
+        discriminators: [ 
+            { name: DeliveryOrder.name, schema: DeliveryOrderSchema }, 
+            { name: TransportOrder.name, schema: TransportOrderSchema } 
+        ]})
+    order_type: OrderType
 
-    @Prop({ required: true})
-    duration: number
+    // @Prop({ type: BillSchema, ref: Bill.name })
+    // bill: Bill
 
-    @Prop({ required: true})
+    @Prop({ })
     sub_total: number
 }
 

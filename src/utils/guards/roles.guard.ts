@@ -17,12 +17,19 @@ export class RolesGuard implements CanActivate {
         const request = context.switchToHttp().getRequest();
         const user: JwtPayload = request.user;
 
+        // bypass if user is admin
+        if (user.role_id.admin) {
+            return true;
+        }
+
         const hasRole = () => Object.keys(user.role_id)
             .filter((key) =>   user.role_id[key] !== undefined 
                             && user.role_id[key] !== null
                             && user.role_id[key] !== false
                             && user.role_id[key] !== ''
                     ).some((role) => roles.includes(role as RoleType));
+
+        
 
         if (user && user.role_id && hasRole()) {
             return true;

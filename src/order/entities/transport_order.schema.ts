@@ -1,5 +1,9 @@
 import { Schema,Prop, SchemaFactory } from "@nestjs/mongoose"
-import { Coordinates } from "src/utils/subschemas/location.schema"
+import { LocationObject } from "src/utils/subschemas/location.schema"
+import { VehicleType } from "src/utils/enums";
+import { OrderDocument } from "./order.schema";
+
+export type TransportOrderDocument = TransportOrder & OrderDocument
 
 @Schema({
     toJSON: {
@@ -8,20 +12,33 @@ import { Coordinates } from "src/utils/subschemas/location.schema"
     },
     _id: false,
     id: false,
-    timestamps: false,
 })
 export class TransportOrder {
+    order_type: string
+
+    @Prop({ required: true, enum: VehicleType })
+    vehicle_type: VehicleType
+
+    @Prop({ required: true})
+    pickup_location: LocationObject 
+
     @Prop({ required: true})
     pickup_address: string
 
     @Prop({ required: true})
+    dropoff_location: LocationObject
+
+    @Prop({ required: true})
     dropoff_address: string
+    
+    @Prop({ required: true})
+    distance: number
 
     @Prop({ required: true})
-    pickup_location: Coordinates 
+    duration: number
 
     @Prop({ required: true})
-    dropoff_location: Coordinates
+    trip_fare: number
 }
 
-export const TransportOrderSchema = SchemaFactory.createForClass(TransportOrder);1
+export const TransportOrderSchema = SchemaFactory.createForClass(TransportOrder);

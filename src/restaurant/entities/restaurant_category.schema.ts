@@ -1,7 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document } from "mongoose";
-import { RestaurantFood, RestaurantFoodSchema } from "./restaurant_food.schema";
-import { PriceOption, PriceOptionSchema } from "src/utils/subschemas/priceoption.schema";
+import { Document, SchemaTypes, Types } from "mongoose";
+import { FoodItem } from "./food_item.schema";
 
 export type RestaurantCategoryDocument = RestaurantCategory & Document;
 
@@ -13,24 +12,18 @@ export type RestaurantCategoryDocument = RestaurantCategory & Document;
     timestamps: true,
 })
 export class RestaurantCategory {
-    constructor(partial: Partial<RestaurantCategory>) {
-        Object.assign(this, partial);
+    constructor(data: Partial<RestaurantCategory>){
+        Object.assign(this, data);
     }
 
-    @Prop({ })
+    @Prop({ required: true})
     name: string
-
-    @Prop()
-    image: string
 
     @Prop()
     bio: string
 
-    @Prop({ type: [PriceOptionSchema], default: []})
-    options: PriceOption[]
-
-    @Prop({ type: [RestaurantFoodSchema] })
-    food_items: RestaurantFood[]
+    @Prop([{ type: SchemaTypes.ObjectId, ref: 'FoodItem'}])
+    food_items: FoodItem[]
 }
 
 export const RestaurantCategorySchema = SchemaFactory.createForClass(RestaurantCategory);

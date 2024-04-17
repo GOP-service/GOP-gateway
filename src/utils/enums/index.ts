@@ -15,7 +15,8 @@ export enum OTPVerifyStatus {
 
 export enum OTPType {
     VERIFY_ACCOUNT = "Verify your account",
-    FORGOT_PASSWORD = "Change your account password"
+    FORGOT_PASSWORD = "Change your account password",
+    VERIFY_PARCEL = "Verify parcel",
 }
 
 // * Driver
@@ -25,8 +26,9 @@ export enum VehicleType {
 }
 
 export enum DriverStatus {
-    AVAILABLE = "AVAILABLE",
-    UNAVAILABLE = "UNAVAILABLE"
+    ONLINE = "ONLINE",
+    OFFLINE = "OFFLINE",
+    BUSY = "BUSY",
 }
 
 // * Restaurant
@@ -59,16 +61,21 @@ export enum CuisinesCategory {
 
 // * Order
 export enum OrderStatus {
-    PENDING = "PENDING",
-    ACCEPTED = "ACCEPTED",
-    PICKED_UP = "PICKED_UP",
+    ALLOCATING = "ALLOCATING",
+    PENDING_PICKUP = "PENDING_PICKUP",
+    PICKING_UP = "PICKING_UP",
+    PENDING_DROP_OFF = "PENDING_DROP_OFF",
+    DROPPING_OFF = "DROPPING_OFF",
     COMPLETED = "COMPLETED",
-    CANCELLED = "CANCELLED"
+    CANCELLED = "CANCELLED",
+    FAILED = "FAILED"
 }
 
+
+
 export enum OrderType {
-    DELIVERY = "DELIVERY",
-    TRANSPORT = "TRANSPORT" 
+    DELIVERY = "DeliveryOrder",
+    TRANSPORT = "TransportOrder" 
 }
 
 export enum BillStatus {
@@ -80,6 +87,24 @@ export enum BillStatus {
 export enum PaymentMethod {
     CASH = "CASH",
     CARD = "CARD"
+}
+
+export const BikeFare : DistanceFare = {
+    First2Km : 4000,
+    Next8Km : 3000,
+    Over10Km : 2000
+}
+
+export const CarFare : DistanceFare = {
+    First2Km : 7000,
+    Next8Km : 5000,
+    Over10Km : 4000
+}
+
+export type DistanceFare = {
+    First2Km: number,
+    Next8Km: number,
+    Over10Km: number
 }
 
 // * 

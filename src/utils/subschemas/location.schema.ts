@@ -6,19 +6,19 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose"
         virtuals: true,
     },
     _id: false,
-    timestamps: true,
+    timestamps: false,
 })
-export class Coordinates{
-    constructor(lat = 106.77195728296408, long = 10.850739590040357){
-        this.lat = lat;
-        this.long = long;
+export class LocationObject{
+    constructor(coordinates: number[]){
+        this.coordinates = coordinates
     }
 
-    @Prop({ })
-    lat: number
+    @Prop({ type: String, default: 'Point', required: true})
+    type: string
 
-    @Prop({ })
-    long: number
+    @Prop({ type: [Number], required: true })
+    coordinates: number[]
+
 }
 
-export const CoordinatesSchema = SchemaFactory.createForClass(Coordinates);
+export const LocationSchema = SchemaFactory.createForClass(LocationObject);

@@ -1,28 +1,25 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 
+export type ModifierDocument = Modifier & Document;
+
 @Schema({
     toJSON: {
         getters: true,
         virtuals: true,
     },
-    _id: false,
     timestamps: true,
 })
-export class PriceOption {
-    constructor(name = '',bio = '',price = 0){
+export class Modifier {
+    constructor(name: string, price: number){
         this.name = name;
-        this.bio = bio;
         this.price = price;
-    }   
+    }
 
-    @Prop({})
+    @Prop({ required: true})
     name: string
 
-    @Prop({})
-    bio: string
-    
-    @Prop({})
+    @Prop({ required: true})
     price: number
 }
 
-export const PriceOptionSchema = SchemaFactory.createForClass(PriceOption);
+export const ModifierSchema = SchemaFactory.createForClass(Modifier);

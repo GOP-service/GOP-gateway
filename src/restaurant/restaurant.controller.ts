@@ -10,6 +10,7 @@ import { RoleType } from 'src/utils/enums';
 import { AccountService } from 'src/auth/account.service';
 import { RequestWithUser } from 'src/utils/interfaces';
 import { CreateRestaurantCategoryDto } from './dto/create-restaurant-category.dto';
+import { UpdateItemsRestaurantDto } from './dto/update-item-restaurant-category.dto';
 
 
 @ApiBearerAuth()
@@ -21,23 +22,34 @@ export class RestaurantController {
     private readonly restaurantService: RestaurantService,
     ) {}
     
-    @Roles(RoleType.DRIVER)
-    @Get('info')
-    info(@Req() req: RequestWithUser) {
-      return this.restaurantService.findOneId(req.user.role_id.restaurant);
-    }
-    
+  @Roles(RoleType.RESTAURANT)
+  @Get('info')
+  info(@Req() req: RequestWithUser) {
+    return this.restaurantService.findOneId(req.user.role_id.restaurant);
+  }
+  
+  @Roles(RoleType.RESTAURANT)
   @ApiQuery({
     name: 'index', 
     type: Number,
     example: 0,
   })
-  @Patch('categories')
-  updateCategories(@Req() req: RequestWithUser, @Body() body: CreateRestaurantCategoryDto, @Query() query: {index: number}) {
+  @Patch('categories/update')
+  updateCategories(@Req() req: RequestWithUser, @Body() body: UpdateItemsRestaurantDto, @Query() query: {index: number}) {
     if (query.index === undefined || query.index === null || query.index < 0) {
       throw new BadRequestException('index is required and must be a positive number');
     }
     return this.restaurantService.updateCategories(req.user.role_id.restaurant, body, query.index);
+  }
+
+  @Roles(RoleType.RESTAURANT)
+  @Post('categories/add')
+  addCategory(@Req() req: RequestWithUser, @Body() body: CreateRestaurantCategoryDto) {
+    try {
+      // return this.restaurantService.addCategory(req.user.role_id.restaurant, body);
+    } catch (error) {
+      return error;
+    }
   }
 
 }
