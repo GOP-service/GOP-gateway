@@ -8,10 +8,11 @@ import { RestaurantCategory, RestaurantCategoryDocument } from './entities/resta
 import { RestaurantFoodReview, RestaurantFoodReviewDocument, } from './entities/restaurant_food_review.schema';
 import { CreateRestaurantCategoryDto } from './dto/create-restaurant-category.dto';
 import { RestaurantDto } from './dto/restaurant.dto';
-import { RestaurantTier } from 'src/utils/enums';
+import { OTPType, OTPVerifyStatus, RestaurantTier } from 'src/utils/enums';
 import { UpdateItemsRestaurantDto } from './dto/update-item-restaurant-category.dto';
 import { ModifierGroup } from './entities/modifier_groups.schema';
 import { Modifier, ModifierDocument } from './entities/modifier.schema';
+import { Otp, OtpDocument } from 'src/auth/entities/otp.schema';
 
 @Injectable()
 export class RestaurantService {
@@ -21,7 +22,7 @@ export class RestaurantService {
     @InjectModel(RestaurantCategory.name) private readonly restaurantCategoryModel: Model<RestaurantCategoryDocument>,
     @InjectModel(ModifierGroup.name) private readonly modifieGroupModel: Model<ModifierDocument>,
     @InjectModel(Modifier.name) private readonly modifierModel: Model<ModifierDocument>,
-    
+    @InjectModel(Otp.name) private readonly otpModel: Model<OtpDocument>
   ) {}
 
   async create(dto: CreateRestaurantDto): Promise<RestaurantDocument> {
@@ -65,12 +66,8 @@ export class RestaurantService {
     return this.restaurantModel.find().exec();
   }
 
-  async findOneId(id: string): Promise<RestaurantDocument[]> {
-    // return this.restaurantModel.findById(id).exec();
-    const restaurant = await this.restaurantModel.aggregate([{
-      $match:{name:{$eq:'string'}}
-    }]);
-    return restaurant
+  async findOneId(id: string): Promise<RestaurantDocument> {
+    return this.restaurantModel.findById(id).exec();
   }
 
   async update(id: string, dto: UpdateRestaurantDto): Promise<RestaurantDocument> {
@@ -80,5 +77,4 @@ export class RestaurantService {
   async remove(id: string) {
     return this.restaurantModel.findByIdAndDelete(id).exec();
   }
-
 }

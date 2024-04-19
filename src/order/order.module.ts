@@ -6,6 +6,9 @@ import { Order, OrderSchema } from './entities/order.schema';
 import { DeliveryOrder, DeliveryOrderSchema } from './entities/delivery_order.schema';
 import { TransportOrder, TransportOrderSchema } from './entities/transport_order.schema';
 import { VietMapModule } from 'src/utils/map-api/viet-map.module';
+import { FoodItemsSchema, OrderFoodItems } from './entities/order_food_items.schema';
+import { Otp, OtpSchema } from 'src/auth/entities/otp.schema';
+import { AuthModule } from 'src/auth/auth.module';
 
 
 @Module({
@@ -17,8 +20,13 @@ import { VietMapModule } from 'src/utils/map-api/viet-map.module';
         discriminators: [
           { name: DeliveryOrder.name, schema: DeliveryOrderSchema },
           { name: TransportOrder.name, schema: TransportOrderSchema },
+          { name: OrderFoodItems.name, schema: FoodItemsSchema },
         ]
       },
+      {
+        name: Otp.name,
+        schema: OtpSchema
+      }
     ]),
     VietMapModule,
   ],

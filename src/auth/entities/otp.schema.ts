@@ -14,7 +14,7 @@ export type OtpDocument = Otp & Document;
 })
 export class Otp{
     @Prop({ required: true })
-    user_id: string
+    owner_id: string
 
     @Prop({ required: true, default: String(Date.now()).slice(-6) })
     otp: string
