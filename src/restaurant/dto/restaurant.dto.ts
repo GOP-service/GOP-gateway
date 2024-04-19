@@ -10,7 +10,7 @@ export class RestaurantDto{
             enum: CuisinesCategory,
             isArray: true,
             type: [String],
-            default: [CuisinesCategory.BANH_MI, CuisinesCategory.NOODLES, CuisinesCategory.RICE],
+            example: [CuisinesCategory.BANH_MI, CuisinesCategory.NOODLES, CuisinesCategory.RICE],
         }
     )
     @IsNotEmpty()

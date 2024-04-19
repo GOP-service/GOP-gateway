@@ -9,6 +9,8 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OrderService } from 'src/order/order.service';
 import { CreateTransportOrderDto } from 'src/order/dto/create-transport-order';
 import { RequestWithUser } from 'src/utils/interfaces';
+import { CreateDeliveryOrderDto } from 'src/order/dto/create-delivery-order';
+import { RestaurantService } from 'src/restaurant/restaurant.service';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'),RolesGuard)
@@ -18,6 +20,7 @@ export class CustomerController {
   constructor(
     private readonly customerService: CustomerService,
     private readonly orderService: OrderService,
+    private readonly restaurantService: RestaurantService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
   
@@ -48,4 +51,16 @@ export class CustomerController {
     }
   }
 
+  @Roles(RoleType.CUSTOMER)
+  @Post('food/place')
+  async placeFoodOrder(@Body() createOrderDto: CreateDeliveryOrderDto, @Req() req: RequestWithUser) {
+    try {      
+      let restaurant = await this.restaurantService.findOneId(createOrderDto.restaurant_id);
+      let new_delivery_order = await this.orderService.createDeliveryOrder(createOrderDto, req.user.role_id.customer, restaurant.location)
+      this.eventEmitter.emit('order.food.created', new_delivery_order);
+      return new_delivery_order;
+    } catch (e) {
+      return e
+    }
+  }
 }

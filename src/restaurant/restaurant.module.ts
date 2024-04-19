@@ -8,6 +8,9 @@ import { RestaurantFoodReview, RestaurantFoodReviewSchema } from './entities/res
 import { FoodItem, FoodItemSchema } from './entities/food_item.schema';
 import { ModifierGroup, ModifierGroupSchema } from './entities/modifier_groups.schema';
 import { Modifier, ModifierSchema } from './entities/modifier.schema';
+import { Order, OrderSchema } from 'src/order/entities/order.schema';
+import { OrderModule } from 'src/order/order.module';
+import { Otp, OtpSchema } from 'src/auth/entities/otp.schema';
 
 @Module({
   imports: [
@@ -17,8 +20,10 @@ import { Modifier, ModifierSchema } from './entities/modifier.schema';
       { name: RestaurantCategory.name, schema: RestaurantCategorySchema, },
       { name : FoodItem.name, schema: FoodItemSchema,},
       { name : ModifierGroup.name, schema: ModifierGroupSchema,},
-      { name : Modifier.name, schema: ModifierSchema,}
+      { name : Modifier.name, schema: ModifierSchema,},
+      { name: Otp.name, schema: OtpSchema}
     ]),
+    OrderModule
     
   ],
   controllers: [RestaurantController],

@@ -63,12 +63,49 @@ export class DriverController {
     }
   }
 
+  @Get('delivery/order/:id/accept')
+  async acceptDeliveryOrder(@Param('id') id: string, @Req() req: RequestWithUser){
+    try {
+      const result = await this.orderService.DeliveryOrderStatusChange(id, OrderStatus.PICKING_UP, req.user.role_id.driver);
+      this.eventEmitter.emit('order.driver.accept', result);
+      return result;
+    } catch (e) {
+      return e;
+    }
+  }
+
+  @Get('delivery/order/:id/reject')
+  async rejectDeliveryOrder(@Param('id') id: string, @Req() req: RequestWithUser){
+    try {
+      const result = await this.orderService.DeliveryOrderStatusChange(id, OrderStatus.FAILED, req.user.role_id.driver);
+      this.eventEmitter.emit('order.driver.reject', result);
+      return result;
+    } catch (e) {
+      return e;
+    }
+  }
+
   @Get('order/:id/reject')
   async rejectOrder(@Param('id') id: string, @Req() req: RequestWithUser){
     try {
       const result = await this.orderService.TransportOrderStatusChange_allocated(id,req.user.role_id.driver,OrderStatus.FAILED);
       this.eventEmitter.emit('order.driver.reject', result);
       return result;
+    } catch (e) {
+      return e;
+    }
+  }
+
+  @Get('order/:id/arrived-restaurant')
+  async arrivedRestaurant(@Param('id') id: string, @Req() req: RequestWithUser){
+    try {
+      const order = await this.orderService.DeliveryOrderStatusChange(id, OrderStatus.PENDING_DROP_OFF, req.user.role_id.driver);
+      let otp = await this.orderService.createOTPOrder(order.id)
+      this.eventEmitter.emit('order.arrived_restaurant', order);
+      return {
+        otp: otp.otp,
+        order
+      };
     } catch (e) {
       return e;
     }
@@ -107,5 +144,14 @@ export class DriverController {
     }
   }
 
-
+  @Get('delivery/order/:id/completed')
+  async completedDeliveryOrder(@Param('id') id: string, @Req() req: RequestWithUser){
+    try {
+      const result = await this.orderService.DeliveryOrderStatusChange(id, OrderStatus.COMPLETED, req.user.role_id.driver);
+      this.eventEmitter.emit('order.completed', result);
+      return result;
+    } catch (e) {
+      return e;
+    }
+  }
 }

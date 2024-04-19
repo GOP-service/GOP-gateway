@@ -61,6 +61,7 @@ export enum CuisinesCategory {
 
 // * Order
 export enum OrderStatus {
+    PENDING_COMFIRM = "PENDING_COMFIRM",
     ALLOCATING = "ALLOCATING",
     PENDING_PICKUP = "PENDING_PICKUP",
     PICKING_UP = "PICKING_UP",
