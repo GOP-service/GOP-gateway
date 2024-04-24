@@ -42,7 +42,7 @@ export class AccountService {
 
   async createOtp(user_id: string, type: OTPType): Promise<OtpDocument> {
     const newOtp = new this.otpModel({
-      user_id: user_id,
+      owner_id: user_id,
       type: type,
     })
     return await newOtp.save();
