@@ -48,7 +48,7 @@ export class AccountService {
   }
 
   async verifyOtp(user_id: string, otp: string, type: OTPType): Promise<OTPVerifyStatus> {
-    const otpCheck = await this.otpModel.findOne({ user_id: user_id, otp: otp, type: type }).exec();
+    const otpCheck = await this.otpModel.findOne({ owner_id: user_id, otp: otp, type: type }).exec();
     if (!otpCheck) {
       return OTPVerifyStatus.OTP_WRONG;
     } else {
