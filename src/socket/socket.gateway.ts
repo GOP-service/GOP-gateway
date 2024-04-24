@@ -225,6 +225,13 @@ export class SocketGateway implements NestGateway {
       this.driverService.updateLocation(data.driver_id, data.location);
   }
 
+  @SubscribeMessage('msg')
+  handleMessage(client: Socket, @MessageBody() payload: string) {
+    this.logger.log(payload);
+    this.server.emit('msg1', payload);
+  }
+
+
   // RESTAURANT ROOM SOCKET
   // @SubscribeMessage('restaurant.open')
   // handleRestaurantActiveStatus(@ConnectedSocket() client: Socket, @MessageBody() restaurant_id: string) {

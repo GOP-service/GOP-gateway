@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query, BadRequestException, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { RestaurantService } from './restaurant.service';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
@@ -13,6 +13,7 @@ import { CreateRestaurantCategoryDto } from './dto/create-restaurant-category.dt
 import { UpdateItemsRestaurantDto } from './dto/update-item-restaurant-category.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OrderService } from 'src/order/order.service';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 
 @ApiBearerAuth()
@@ -105,6 +106,20 @@ export class RestaurantController {
       else return {
         message: result
       };
+    } catch (error) {
+      return error;
+    }
+  }
+
+  @Roles(RoleType.RESTAURANT)
+  @UseInterceptors(FileInterceptor('file'))
+  @Patch('update/avatar')
+  async updateAvatar(@Req() req: RequestWithUser, @UploadedFile() file: Express.Multer.File) {
+    try {
+      if (!file) {
+        throw new BadRequestException('file is required');
+      }
+      return this.restaurantService.updateAvatar(req.user.role_id.restaurant, file)
     } catch (error) {
       return error;
     }

@@ -11,6 +11,7 @@ import { Modifier, ModifierSchema } from './entities/modifier.schema';
 import { Order, OrderSchema } from 'src/order/entities/order.schema';
 import { OrderModule } from 'src/order/order.module';
 import { Otp, OtpSchema } from 'src/auth/entities/otp.schema';
+import { AzureStorageModule } from 'src/utils/auzre/storage-blob.module';
 
 @Module({
   imports: [
@@ -23,7 +24,8 @@ import { Otp, OtpSchema } from 'src/auth/entities/otp.schema';
       { name : Modifier.name, schema: ModifierSchema,},
       { name: Otp.name, schema: OtpSchema}
     ]),
-    OrderModule
+    OrderModule,
+    AzureStorageModule
     
   ],
   controllers: [RestaurantController],

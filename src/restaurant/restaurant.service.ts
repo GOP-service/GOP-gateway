@@ -13,16 +13,19 @@ import { UpdateItemsRestaurantDto } from './dto/update-item-restaurant-category.
 import { ModifierGroup } from './entities/modifier_groups.schema';
 import { Modifier, ModifierDocument } from './entities/modifier.schema';
 import { Otp, OtpDocument } from 'src/auth/entities/otp.schema';
+import { AzureStorageService } from 'src/utils/auzre/storage-blob.service';
 
 @Injectable()
 export class RestaurantService {
+
   constructor(
     @InjectModel(Restaurant.name) private readonly restaurantModel: Model<RestaurantDocument>,
     @InjectModel(RestaurantFoodReview.name) private readonly restaurantFoodReviewModel: Model<RestaurantFoodReviewDocument>,
     @InjectModel(RestaurantCategory.name) private readonly restaurantCategoryModel: Model<RestaurantCategoryDocument>,
     @InjectModel(ModifierGroup.name) private readonly modifieGroupModel: Model<ModifierDocument>,
     @InjectModel(Modifier.name) private readonly modifierModel: Model<ModifierDocument>,
-    @InjectModel(Otp.name) private readonly otpModel: Model<OtpDocument>
+    @InjectModel(Otp.name) private readonly otpModel: Model<OtpDocument>,
+    private azureStorage: AzureStorageService
   ) {}
 
   async create(dto: CreateRestaurantDto): Promise<RestaurantDocument> {
@@ -77,4 +80,35 @@ export class RestaurantService {
   async remove(id: string) {
     return this.restaurantModel.findByIdAndDelete(id).exec();
   }
+
+  async updateAvatar(id: string, avatar: Express.Multer.File) {
+    const restaurant = await this.restaurantModel.findById(id).exec();
+    if (!restaurant) {
+      throw new Error('Restaurant not found');
+    }
+    const avatarUrl = await this.azureStorage.uploadFile(avatar, 'restaurant-avatar', restaurant._id);
+    restaurant.avatar = avatarUrl;
+    return restaurant.save();
+  }
+
+  //todo update cover image
+  async updateCover(id: string, cover: Express.Multer.File) {
+    const restaurant = await this.restaurantModel.findById(id).exec();
+    if (!restaurant) {
+      throw new Error('Restaurant not found');
+    }
+    const coverUrl = await this.azureStorage.uploadFile(cover, 'restaurant-cover-img', restaurant._id);
+    restaurant.cover_image = coverUrl;
+    return restaurant.save();
+  }
+
+  //todo update item image
+  async updateItemImg(id: string, item_id: string, img: Express.Multer.File) {
+
+    const imgURL = await this.azureStorage.uploadFile(img, 'restaurant-item-img', id);
+
+  }
+
+
+  
 }
