@@ -44,7 +44,7 @@ export class CustomerController {
   async placeTransportOrder(@Body() createOrderDto: CreateTransportOrderDto, @Req() req: RequestWithUser ) {
     try {
       const new_transport_order = await this.orderService.TransportOrderPlace(createOrderDto, req.user.sub);
-      this.eventEmitter.emit('order.created', new_transport_order);
+      this.eventEmitter.emit('order.trip.created', new_transport_order);
       return new_transport_order;
     } catch (e) {
       return e
