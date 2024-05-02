@@ -31,7 +31,7 @@ export class FoodItem {
     @Prop()
     price: number
 
-    @Prop({ type: [SchemaTypes.ObjectId], ref: 'ModifierGroup'})
+    @Prop([{ type: [SchemaTypes.ObjectId], ref: 'ModifierGroup'}])
     modifier_groups: ModifierGroup[]
 }
 

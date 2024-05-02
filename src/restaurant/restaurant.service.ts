@@ -14,6 +14,9 @@ import { ModifierGroup } from './entities/modifier_groups.schema';
 import { Modifier, ModifierDocument } from './entities/modifier.schema';
 import { Otp, OtpDocument } from 'src/auth/entities/otp.schema';
 import { AzureStorageService } from 'src/utils/auzre/storage-blob.service';
+import { FoodItem, FoodItemDocument } from './entities/food_item.schema';
+import { FoodItemDto } from './dto/food-item.dto';
+import { CreateFoodItemDto } from './dto/create-food-item.dto';
 
 @Injectable()
 export class RestaurantService {
@@ -25,6 +28,7 @@ export class RestaurantService {
     @InjectModel(ModifierGroup.name) private readonly modifieGroupModel: Model<ModifierDocument>,
     @InjectModel(Modifier.name) private readonly modifierModel: Model<ModifierDocument>,
     @InjectModel(Otp.name) private readonly otpModel: Model<OtpDocument>,
+    @InjectModel(FoodItem.name) private readonly foodItemModel: Model<FoodItemDocument>,
     private azureStorage: AzureStorageService
   ) {}
 
@@ -33,13 +37,20 @@ export class RestaurantService {
     return createdRestaurant.save();
   }
 
+  async createCategory(id: string,dto: CreateRestaurantCategoryDto): Promise<RestaurantDocument> {
+    const restaurant = await this.restaurantModel.findById(id).exec();
+    const category = new this.restaurantCategoryModel(dto);
+    category.save();
+    restaurant.restaurant_categories.push(category.id)
+    return restaurant.save();
+  }
+
   async updateCategories(id: string, dto: UpdateItemsRestaurantDto, index: number): Promise<RestaurantDocument> {
     const restaurant = await this.restaurantModel.findById(id).exec();
     const newCategories = new RestaurantCategory(dto);
     restaurant.restaurant_categories[index] = newCategories;
     
     return restaurant.save();
-    // return restaurant;
   }
   
   // async addCategory(id: string, dto: CreateRestaurantCategoryDto): Promise<RestaurantDocument> {
@@ -104,11 +115,45 @@ export class RestaurantService {
 
   //todo update item image
   async updateItemImg(id: string, item_id: string, img: Express.Multer.File) {
-
     const imgURL = await this.azureStorage.uploadFile(img, 'restaurant-item-img', id);
-
   }
 
+  async updateFoodItemImage(id: string, img: Express.Multer.File){
+    const foodItem = await this.foodItemModel.findById(id).exec();
+    if (!foodItem) {
+      throw new Error('Food item not found');
+    }
+    // const foodImg = await this.azureStorage.uploadFile(img, 'restaurant-food-items', foodItem.id);
+    // foodItem.image = foodImg;
+    // return foodItem.save();
+    return;
+  }
 
-  
+  async createFoodItem(id: string, foodItem: CreateFoodItemDto, img: Express.Multer.File): Promise<FoodItemDocument>{
+    const restaurant = await this.restaurantModel.findById(id).exec();
+    if (!restaurant) {
+      throw new Error('Restaurant not found');
+    }
+
+    const restaurantCategory = await this.restaurantCategoryModel.findById(foodItem.category_id).exec();
+    if (!restaurantCategory) {
+      throw new Error('Restaurant category not found');
+    }
+    const newFoodItem = new this.foodItemModel(foodItem);
+    if(newFoodItem){
+      const foodImg = await this.azureStorage.uploadFile(img, 'restaurant-food-items', newFoodItem.id);
+      if(!foodImg){
+        throw new Error('Upload image failed');
+      }
+
+      newFoodItem.image = foodImg;
+      restaurantCategory.food_items.push(newFoodItem.id)
+      restaurantCategory.save();
+      newFoodItem.save();
+      return newFoodItem
+    }  
+    else{
+      throw new Error('Create food item failed')
+    }
+  }
 }

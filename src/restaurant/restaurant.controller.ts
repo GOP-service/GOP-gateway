@@ -14,6 +14,8 @@ import { UpdateItemsRestaurantDto } from './dto/update-item-restaurant-category.
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OrderService } from 'src/order/order.service';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { FoodItemDto } from './dto/food-item.dto';
+import { CreateFoodItemDto } from './dto/create-food-item.dto';
 
 
 @ApiBearerAuth()
@@ -48,10 +50,11 @@ export class RestaurantController {
   }
 
   @Roles(RoleType.RESTAURANT)
-  @Post('categories/add')
+  @Post('categories/create')
   addCategory(@Req() req: RequestWithUser, @Body() body: CreateRestaurantCategoryDto) {
     try {
-      // return this.restaurantService.addCategory(req.user.role_id.restaurant, body);
+      const category = this.restaurantService.createCategory(req.user.role_id.restaurant, body);
+      return category;
     } catch (error) {
       return error;
     }
@@ -120,6 +123,20 @@ export class RestaurantController {
         throw new BadRequestException('file is required');
       }
       return this.restaurantService.updateAvatar(req.user.role_id.restaurant, file)
+    } catch (error) {
+      return error;
+    }
+  }
+
+  @Roles(RoleType.RESTAURANT)
+  @UseInterceptors(FileInterceptor('image'))
+  @Post('create/food-item')
+  async createFoodItem(@Req() req: RequestWithUser, @Body() body: CreateFoodItemDto, @UploadedFile() image){
+    try {
+      if (!image) {
+        throw new BadRequestException('file is required');
+      }
+      return this.restaurantService.createFoodItem(req.user.role_id.restaurant, body, image)
     } catch (error) {
       return error;
     }

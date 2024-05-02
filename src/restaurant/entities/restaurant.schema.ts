@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document } from "mongoose";
+import { Document, SchemaTypes } from "mongoose";
 import { CuisinesCategory, RestaurantStatus, RestaurantTier } from "src/utils/enums";
 import { RestaurantProfile, RestaurantProfileSchema } from "./restaurant_profile.schema";
 import { Rating, RatingSchema } from "src/utils/subschemas/rating.schema";
@@ -20,7 +20,7 @@ export class Restaurant {
     @Prop({ enum: CuisinesCategory , type: [String], default: []})
     cuisine_categories: CuisinesCategory[]
 
-    @Prop({ type: [RestaurantCategorySchema], default: [] })
+    @Prop([{ type: SchemaTypes.ObjectId, ref: 'RestaurantCategory'}])
     restaurant_categories: RestaurantCategory[]
 
     @Prop({ enum: RestaurantStatus, default: RestaurantStatus.CLOSED })
