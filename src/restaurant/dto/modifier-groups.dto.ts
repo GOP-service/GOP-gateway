@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNumber, IsString } from "class-validator";
+import { IsNotEmpty, IsString } from "class-validator";
 import { ModifierDto } from "./modifier.dto";
 
 export class ModifierGroupsDto {
@@ -12,13 +12,11 @@ export class ModifierGroupsDto {
     @ApiProperty({
         example: '0'
     })
-    @IsNumber()
     min: number
 
     @ApiProperty({
         example: '1'
     })
-    @IsNumber()
     max: number
 
     @ApiProperty({

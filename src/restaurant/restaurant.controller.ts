@@ -133,9 +133,6 @@ export class RestaurantController {
   @Post('create/food-item')
   async createFoodItem(@Req() req: RequestWithUser, @Body() body: CreateFoodItemDto, @UploadedFile() image){
     try {
-      if (!image) {
-        throw new BadRequestException('file is required');
-      }
       return this.restaurantService.createFoodItem(req.user.role_id.restaurant, body, image)
     } catch (error) {
       return error;

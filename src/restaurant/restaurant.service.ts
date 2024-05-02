@@ -10,13 +10,14 @@ import { CreateRestaurantCategoryDto } from './dto/create-restaurant-category.dt
 import { RestaurantDto } from './dto/restaurant.dto';
 import { OTPType, OTPVerifyStatus, RestaurantTier } from 'src/utils/enums';
 import { UpdateItemsRestaurantDto } from './dto/update-item-restaurant-category.dto';
-import { ModifierGroup } from './entities/modifier_groups.schema';
+import { ModifierGroup, ModifierGroupDocument } from './entities/modifier_groups.schema';
 import { Modifier, ModifierDocument } from './entities/modifier.schema';
 import { Otp, OtpDocument } from 'src/auth/entities/otp.schema';
 import { AzureStorageService } from 'src/utils/auzre/storage-blob.service';
 import { FoodItem, FoodItemDocument } from './entities/food_item.schema';
 import { FoodItemDto } from './dto/food-item.dto';
 import { CreateFoodItemDto } from './dto/create-food-item.dto';
+import { ModifierGroupsDto } from './dto/modifier-groups.dto';
 
 @Injectable()
 export class RestaurantService {
@@ -25,7 +26,7 @@ export class RestaurantService {
     @InjectModel(Restaurant.name) private readonly restaurantModel: Model<RestaurantDocument>,
     @InjectModel(RestaurantFoodReview.name) private readonly restaurantFoodReviewModel: Model<RestaurantFoodReviewDocument>,
     @InjectModel(RestaurantCategory.name) private readonly restaurantCategoryModel: Model<RestaurantCategoryDocument>,
-    @InjectModel(ModifierGroup.name) private readonly modifieGroupModel: Model<ModifierDocument>,
+    @InjectModel(ModifierGroup.name) private readonly modifieGroupModel: Model<ModifierGroupDocument>,
     @InjectModel(Modifier.name) private readonly modifierModel: Model<ModifierDocument>,
     @InjectModel(Otp.name) private readonly otpModel: Model<OtpDocument>,
     @InjectModel(FoodItem.name) private readonly foodItemModel: Model<FoodItemDocument>,
@@ -129,6 +130,9 @@ export class RestaurantService {
     return;
   }
 
+  async createModifierGroups() {
+
+  }
   async createFoodItem(id: string, foodItem: CreateFoodItemDto, img: Express.Multer.File): Promise<FoodItemDocument>{
     const restaurant = await this.restaurantModel.findById(id).exec();
     if (!restaurant) {
@@ -140,17 +144,32 @@ export class RestaurantService {
       throw new Error('Restaurant category not found');
     }
     const newFoodItem = new this.foodItemModel(foodItem);
+    newFoodItem.modifier_groups = []
     if(newFoodItem){
-      const foodImg = await this.azureStorage.uploadFile(img, 'restaurant-food-items', newFoodItem.id);
-      if(!foodImg){
-        throw new Error('Upload image failed');
+      newFoodItem.image = '';
+      if(img){
+        const foodImg = await this.azureStorage.uploadFile(img, 'restaurant-food-items', newFoodItem.id);
+        if(!foodImg){
+          throw new Error('Upload image failed');
+        }
+        newFoodItem.image = foodImg;
       }
-
-      newFoodItem.image = foodImg;
       restaurantCategory.food_items.push(newFoodItem.id)
-      restaurantCategory.save();
-      newFoodItem.save();
-      return newFoodItem
+      for(const modifierGr of foodItem.modifier_groups) {
+        const mGr = new this.modifieGroupModel(modifierGr)
+        mGr.modifier = []
+        if(mGr){
+          newFoodItem.modifier_groups.push(mGr.id)
+          for (const md of modifierGr.modifier) {
+            const modifier = new this.modifierModel(md);
+            await modifier.save();
+            mGr.modifier.push(modifier.id);
+          }
+          await mGr.save();
+        }
+      }
+      await restaurantCategory.save();
+      return newFoodItem.save();
     }  
     else{
       throw new Error('Create food item failed')
