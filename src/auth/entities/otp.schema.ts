@@ -16,7 +16,7 @@ export class Otp{
     @Prop({ required: true })
     owner_id: string
 
-    @Prop({ required: true, default: String(Date.now()).slice(-6) })
+    @Prop({ required: true })
     otp: string
 
     @Prop({ required: true, enum: OTPType})

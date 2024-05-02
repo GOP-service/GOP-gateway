@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Account, AccountDocument } from './entities/account.schema';
 import { Model } from 'mongoose';
@@ -8,10 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import { OTPType, OTPVerifyStatus, RoleType } from 'src/utils/enums';
 import { CreateAccountDto } from './dto';
 import { Role } from './entities/role.schema';
-import { MailerService } from '@nestjs-modules/mailer';
-import { OtpTemplate } from 'src/utils/mail-template/otp';
 import { Otp, OtpDocument } from './entities/otp.schema';
-import e from 'express';
 
 @Injectable()
 export class AccountService {
@@ -21,8 +18,6 @@ export class AccountService {
     private jwtService: JwtService,
     private configService: ConfigService,
   ) {}
-
-
 
   getRoles(roles: Role) {
     return Object.keys(roles).filter(
@@ -41,15 +36,19 @@ export class AccountService {
   }
 
   async createOtp(user_id: string, type: OTPType): Promise<OtpDocument> {
+    const random = Math.log(Math.round(Math.random()*Date.now()))
+
     const newOtp = new this.otpModel({
       owner_id: user_id,
       type: type,
+      otp: random.toString().slice(-6),
     })
+    Logger.log(newOtp.otp)
     return await newOtp.save();
   }
 
   async verifyOtp(user_id: string, otp: string, type: OTPType): Promise<OTPVerifyStatus> {
-    const otpCheck = await this.otpModel.findOne({ user_id: user_id, otp: otp, type: type }).exec();
+    const otpCheck = await this.otpModel.findOne({ owner_id: user_id, otp: otp, type: type }).exec();
     if (!otpCheck) {
       return OTPVerifyStatus.OTP_WRONG;
     } else {
