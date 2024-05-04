@@ -15,7 +15,6 @@ export class RestaurantCategoryDto {
     @ApiProperty({
         example: 'say oh yeahhhhhh!!!'
     })
-    @IsNotEmpty()
     @IsString()
     bio: string
 

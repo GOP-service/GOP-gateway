@@ -130,9 +130,32 @@ export class RestaurantService {
     return;
   }
 
-  async createModifierGroups() {
+  async fetchRestaurantMenu(restaurant_id: string) {
+    const restaurant = await this.restaurantModel.findById(restaurant_id).exec();
+  
+    const restaurantMenu = restaurant.restaurant_categories.map(async (cate_id) => {
+      const restaurant_category = await this.restaurantCategoryModel.findById(cate_id).exec();
 
+      const foodItems = await Promise.all( restaurant_category.food_items.map(async (item_id) => {
+        let food_item = await this.foodItemModel.findById(item_id).exec();
+
+        const modifier_groups = await Promise.all(food_item.modifier_groups.map(async (modifierGr_id) => {
+          const modifier_group = await this.modifieGroupModel.findById(modifierGr_id).exec()
+          const modifiers = await Promise.all(modifier_group.modifier.map(async (modifier_id) => await this.modifierModel.findById(modifier_id)))
+          
+          return { ...modifier_group.toObject(), modifier: modifiers }
+        }))
+
+        return { ...food_item.toObject(), modifier_groups: modifier_groups };
+      }))
+
+      return {...restaurant_category.toObject(), food_items: foodItems};
+    });
+  
+    const menu = await Promise.all(restaurantMenu);
+    return menu;
   }
+
   async createFoodItem(id: string, foodItem: CreateFoodItemDto, img: Express.Multer.File): Promise<FoodItemDocument>{
     const restaurant = await this.restaurantModel.findById(id).exec();
     if (!restaurant) {
@@ -155,17 +178,19 @@ export class RestaurantService {
         newFoodItem.image = foodImg;
       }
       restaurantCategory.food_items.push(newFoodItem.id)
-      for(const modifierGr of foodItem.modifier_groups) {
-        const mGr = new this.modifieGroupModel(modifierGr)
-        mGr.modifier = []
-        if(mGr){
-          newFoodItem.modifier_groups.push(mGr.id)
-          for (const md of modifierGr.modifier) {
-            const modifier = new this.modifierModel(md);
-            await modifier.save();
-            mGr.modifier.push(modifier.id);
+      if('modifier_groups' in foodItem){
+        for(const modifierGr of foodItem.modifier_groups) {
+          const mGr = new this.modifieGroupModel(modifierGr)
+          mGr.modifier = []
+          if(mGr){
+            newFoodItem.modifier_groups.push(mGr.id)
+            for (const md of modifierGr.modifier) {
+              const modifier = new this.modifierModel(md);
+              await modifier.save();
+              mGr.modifier.push(modifier.id);
+            }
+            await mGr.save();
           }
-          await mGr.save();
         }
       }
       await restaurantCategory.save();

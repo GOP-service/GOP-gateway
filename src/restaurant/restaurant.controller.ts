@@ -138,4 +138,14 @@ export class RestaurantController {
       return error;
     }
   }
+
+  @Roles(RoleType.RESTAURANT)
+  @Get('menu')
+  async getRestaurantMenu(@Req() req: RequestWithUser){
+    try {
+      return this.restaurantService.fetchRestaurantMenu(req.user.role_id.restaurant)
+    } catch (error) {
+      return error
+    }
+  }
 }
