@@ -4,11 +4,13 @@ import { PaymentController } from './payment.controller';
 import { Bill, BillSchema } from './entities/bill.schema';
 import { MongooseModule } from '@nestjs/mongoose';
 import { VnpayModule } from 'src/utils/vnpay-payment/vnpay.module';
+import { Promotion, PromotionSchema } from './entities/promotion.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Bill.name, schema: BillSchema, },
+      { name: Promotion.name, schema: PromotionSchema }
     ]),
     VnpayModule,
   ],
