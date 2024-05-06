@@ -39,8 +39,8 @@ export class DeliveryOrder {
     @Prop({ required: true })
     delivery_fare: number
 
-    @Prop({required: true})
-    subtotal: number
+    
+
 }
 
 export const DeliveryOrderSchema = SchemaFactory.createForClass(DeliveryOrder);

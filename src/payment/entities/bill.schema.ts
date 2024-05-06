@@ -18,8 +18,11 @@ export class Bill {
     @Prop({ required: true, enum: PaymentMethod, default: PaymentMethod.CASH })
     payment_method: PaymentMethod
 
-    @Prop({ required: true})
+    @Prop({ })
     total: number
+
+    @Prop({ default: 2000 })
+    platform_fee: number
 }
 
 export const BillSchema = SchemaFactory.createForClass(Bill);

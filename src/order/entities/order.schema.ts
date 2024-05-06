@@ -3,7 +3,7 @@ import { Document } from "mongoose";
 import { OrderType, OrderStatus } from "src/utils/enums";
 import { DeliveryOrder,DeliveryOrderSchema } from "./delivery_order.schema";
 import { TransportOrder,TransportOrderSchema } from "./transport_order.schema";
-import { Bill, BillSchema } from "src/bill/entities/bill.schema";
+import { Bill, BillSchema } from "src/payment/entities/bill.schema";
 
 export type OrderDocument = Order & Document;
 
@@ -43,8 +43,8 @@ export class Order {
         ]})
     order_type: OrderType
 
-    // @Prop({ type: BillSchema, ref: Bill.name })
-    // bill: Bill
+    @Prop({ type: BillSchema, ref: Bill.name })
+    bill: Bill
 
     @Prop({ })
     sub_total: number

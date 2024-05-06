@@ -123,21 +123,30 @@ export class AuthController {
     const type = param.type;
     const account = await this.accountService.findOneId(req.user.sub);
     let profile = {};
+    let result = {
+      data: {},
+      message: 'OK',
+    };
     if (Object.values(RoleType).includes(type as RoleType)){
       if (account.role[type]){
         switch (type) {
           case RoleType.CUSTOMER:
             profile = await this.customerService.findOneId(account.role.customer);
-            return {account_id: account.id, full_name: account.full_name, email: account.email, phone: account.phone, profile };
+            result.data = {account_id: account.id, full_name: account.full_name, email: account.email, phone: account.phone, profile };
+            return result;
           case RoleType.DRIVER:
             profile = await this.driverService.findOneId(account.role.driver);
-            return {account_id: account.id, full_name: account.full_name, email: account.email, phone: account.phone, profile };
+            result.data = {account_id: account.id, full_name: account.full_name, email: account.email, phone: account.phone, profile };
+            return result;          
           case RoleType.RESTAURANT:
             profile =  await this.restaurantService.findOneId(account.role.restaurant);
-            return {account_id: account.id, full_name: account.full_name, email: account.email, phone: account.phone, profile };
+            result.data = {account_id: account.id, full_name: account.full_name, email: account.email, phone: account.phone, profile };
+            return result;
         }
       } else {
-        throw new NotFoundException('You have not registered as ' + type+' yet!');
+        result.data = {account_id: account.id, full_name: account.full_name, email: account.email, phone: account.phone, profile };
+        result.message = 'NOT_FOUND';
+        return result;
       }
       
     } else {

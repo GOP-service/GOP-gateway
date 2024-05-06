@@ -3,7 +3,7 @@ import { AuthModule } from './auth/auth.module';
 import { CustomerModule } from './customer/customer.module';
 import { DriverModule } from './driver/driver.module';
 import { RestaurantModule } from './restaurant/restaurant.module';
-import { BillModule } from './bill/bill.module';
+import { PaymentModule } from './payment/payment.module';
 import { OrderModule } from './order/order.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -15,6 +15,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { SocketModule } from './socket/socket.module';
 import { SocketGateway } from './socket/socket.gateway';
 import { VietMapModule } from './utils/map-api/viet-map.module';
+import { VnpayModule } from './utils/vnpay-payment/vnpay.module';
 
 
 @Module({
@@ -57,12 +58,13 @@ import { VietMapModule } from './utils/map-api/viet-map.module';
     CustomerModule, 
     DriverModule, 
     RestaurantModule, 
-    BillModule, 
+    PaymentModule, 
     OrderModule,
     AzureStorageModule,
     AdminModule,
     SocketModule,
     VietMapModule,
+    VnpayModule
   ],
   controllers: [AppController],
   providers: [],
