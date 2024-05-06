@@ -4,6 +4,7 @@ import { CreateBillDto } from './dto/create-bill.dto';
 import { UpdateBillDto } from './dto/update-bill.dto';
 import { VnpayService } from 'src/utils/vnpay-payment/vnpay.service';
 import { ApiTags } from '@nestjs/swagger';
+import { log } from 'console';
 
 @ApiTags('Bill')
 @Controller('bill')
@@ -14,9 +15,10 @@ export class PaymentController {
   ) {}
 
 
-  @Get()
-  findAll(@Req() req) {
-
+  @Post()
+  findAll(@Body() Body: UpdateBillDto) {
+    log('Body', Body)
+    return Body
   }
 
   

@@ -15,6 +15,7 @@ import { CreateDriverDto } from 'src/driver/dto/create-driver.dto';
 import { CreateRestaurantDto } from 'src/restaurant/dto/create-restaurant.dto';
 import { createCustomerDto } from 'src/customer/dto/create-customer.dto';
 import { profile } from 'console';
+import { PaymentService } from 'src/payment/payment.service';
 
 @ApiBearerAuth()
 @ApiTags('Authentications')
@@ -26,6 +27,7 @@ export class AuthController {
     private readonly driverService: DriverService,
     private readonly restaurantService: RestaurantService,
     private readonly mailerService: MailerService,
+    private readonly paymentService: PaymentService,
   ) {}
 
   logger = new Logger('AuthController'); 

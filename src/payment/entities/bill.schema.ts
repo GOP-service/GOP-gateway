@@ -12,14 +12,23 @@ export type BillDocument = Bill & Document;
     timestamps: true,
 })
 export class Bill {
-    @Prop({ required: true, enum: BillStatus, default: BillStatus.PENDING })
+    @Prop({ enum: BillStatus, default: BillStatus.PENDING })
     status: BillStatus
 
     @Prop({ required: true, enum: PaymentMethod, default: PaymentMethod.CASH })
     payment_method: PaymentMethod
 
     @Prop({ })
+    promotion_id: string[]
+
+    @Prop({ })
     total: number
+
+    @Prop({ })
+    sub_total: number
+
+    @Prop({  })
+    discount: number
 
     @Prop({ default: 2000 })
     platform_fee: number

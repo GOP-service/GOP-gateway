@@ -9,6 +9,7 @@ import { VietMapModule } from 'src/utils/map-api/viet-map.module';
 import { FoodItemsSchema, OrderFoodItems } from './entities/order_food_items.schema';
 import { Otp, OtpSchema } from 'src/auth/entities/otp.schema';
 import { AuthModule } from 'src/auth/auth.module';
+import { PaymentModule } from 'src/payment/payment.module';
 
 
 @Module({
@@ -28,6 +29,7 @@ import { AuthModule } from 'src/auth/auth.module';
         schema: OtpSchema
       }
     ]),
+    PaymentModule,
     VietMapModule,
   ],
   controllers: [OrderController],

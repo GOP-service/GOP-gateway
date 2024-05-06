@@ -4,7 +4,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { RolesGuard } from 'src/utils/guards/roles.guard';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from 'src/utils/decorators/roles.decorator';
-import { RoleType } from 'src/utils/enums';
+import { PaymentMethod, RoleType } from 'src/utils/enums';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OrderService } from 'src/order/order.service';
 import { CreateTransportOrderDto } from 'src/order/dto/create-transport-order';
@@ -43,9 +43,13 @@ export class CustomerController {
   @Post('transport/place')
   async placeTransportOrder(@Body() createOrderDto: CreateTransportOrderDto, @Req() req: RequestWithUser ) {
     try {
-      const new_transport_order = await this.orderService.TransportOrderPlace(createOrderDto, req.user.sub);
-      this.eventEmitter.emit('order.trip.created', new_transport_order);
-      return new_transport_order;
+      if (createOrderDto.payment_method == PaymentMethod.CASH) {
+        const new_transport_order = await this.orderService.TransportOrderPlace_Cash(createOrderDto, req.user.sub);
+        this.eventEmitter.emit('order.trip.created', new_transport_order);
+        return new_transport_order;
+      } else {
+        return 'Payment method not supported'
+      }
     } catch (e) {
       return e
     }
@@ -56,7 +60,7 @@ export class CustomerController {
   async placeFoodOrder(@Body() createOrderDto: CreateDeliveryOrderDto, @Req() req: RequestWithUser) {
     try {      
       let restaurant = await this.restaurantService.findOneId(createOrderDto.restaurant_id);
-      let new_delivery_order = await this.orderService.createDeliveryOrder(createOrderDto, req.user.role_id.customer, restaurant.location)
+      let new_delivery_order = await this.orderService.createDeliveryOrder_Cash(createOrderDto, req.user.role_id.customer, restaurant.location)
       this.eventEmitter.emit('order.food.created', new_delivery_order);
       return new_delivery_order;
     } catch (e) {

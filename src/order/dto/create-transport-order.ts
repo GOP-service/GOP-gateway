@@ -1,10 +1,22 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEnum, IsNotEmpty, IsString } from "class-validator";
+import { IsArray, IsEnum, IsNotEmpty, IsString } from "class-validator";
 import { CreateOrderDto } from "./create-order.dto";
 import { LocationObject } from "src/utils/subschemas/location.schema";
-import { VehicleType } from "src/utils/enums";
+import { PaymentMethod, VehicleType } from "src/utils/enums";
  
 export class CreateTransportOrderDto extends CreateOrderDto {
+    @ApiProperty({
+        example: PaymentMethod.CASH
+    })
+    @IsEnum(PaymentMethod)
+    payment_method: PaymentMethod
+
+    @ApiProperty({
+        example: []
+    })
+    @IsArray()
+    promotion_id: string[]
+
     @ApiProperty({
         title: 'LONG -> LAT',
         example: new LocationObject([ 106.7653176,10.8564044])

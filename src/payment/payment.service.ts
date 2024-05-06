@@ -5,10 +5,21 @@ import * as crypto from 'crypto';
 import * as qs from 'qs';
 import { format } from 'date-fns';
 import { log } from 'console';
+import { InjectModel } from '@nestjs/mongoose';
+import { Bill, BillDocument } from './entities/bill.schema';
+import { Model } from 'mongoose';
+import { Ledger, LedgerDocument } from './entities/ledger.schema';
+import { BillStatus, OrderType, PaymentMethod } from 'src/utils/enums';
+import { Order, OrderDetails } from 'src/order/entities/order.schema';
+import { DeliveryOrder, DeliveryOrderDocument } from 'src/order/entities/delivery_order.schema';
+import { TransportOrder, TransportOrderDocument } from 'src/order/entities/transport_order.schema';
 
 @Injectable()
 export class PaymentService {
-    constructor() {}
+    constructor(
+      @InjectModel(Bill.name) private readonly billModel: Model<BillDocument>,
+      @InjectModel(Ledger.name) private readonly ledgerModel: Model<LedgerDocument>,
+    ) {}
 
     getURLVnPay(ip: string, amount: number, orderId: string) {
         const date = new Date();
@@ -45,7 +56,7 @@ export class PaymentService {
         return vnpUrl;
       }
     
-      sortObject(obj) {
+    sortObject(obj) {
         let sorted = {};
         let str = [];
         let key;
@@ -60,4 +71,92 @@ export class PaymentService {
           }
           return sorted;
       }
+
+    async createBill(createBillDto: CreateBillDto) {
+      const new_bill = new this.billModel({
+        payment_method: createBillDto.payment_method,
+      });
+
+      //todo check promotion các kiểu đà điểu
+      let discount = 0;
+
+      //todo tính tiền từ promotion
+      if (createBillDto.order instanceof DeliveryOrder) {
+        new_bill.sub_total = createBillDto.order.delivery_fare + createBillDto.order.order_cost;
+      } else if (createBillDto.order instanceof TransportOrder){
+        new_bill.sub_total = createBillDto.order.trip_fare;        
+      }
+
+      new_bill.discount = discount;
+      new_bill.total = new_bill.sub_total - discount + new_bill.platform_fee;
+
+      return await new_bill.save();
+    }
+
+    async updateBill(id: string, updateBillDto: UpdateBillDto) {
+      return 
+    }
+
+    async getBill(id: string): Promise<BillDocument> {
+      return await this.billModel.findById(id).exec();
+    }
+
+    async updateBillPaid(order : OrderDetails) {
+      const bill = await this.billModel.findOne(order.bill).exec();
+
+      bill.status = BillStatus.PAID;
+
+      if (order instanceof DeliveryOrder) {
+        if (bill.payment_method === PaymentMethod.VNPAY) {
+          // update ledger for restaurant and driver with 90% profit
+          this.updateLedger(order.restaurant_id, order, order.order_cost * 0.9);
+          this.updateLedger(order.driver_id, order, order .delivery_fare * 0.9);
+        } else if (bill.payment_method === PaymentMethod.CASH){
+          // Update ledgers for restaurant and drivers pay 10% of profits for the platform
+          this.updateLedger(order.restaurant_id, order, order.order_cost * -0.1);
+          this.updateLedger(order.driver_id, order, order.delivery_fare * -0.1);
+        }
+      } else if (order instanceof TransportOrder){
+        if (bill.payment_method === PaymentMethod.VNPAY) {
+          // update ledger for driver with 90% profit
+          this.updateLedger(order.driver_id, order, order.trip_fare * 0.9);
+        } else if (bill.payment_method === PaymentMethod.CASH){
+          // Update ledgers for drivers pay 10% of profits for the platform
+          this.updateLedger(order.driver_id, order, order.trip_fare * -0.1);
+        }
+      }
+
+      return await bill.save();
+
+    }
+
+    async getLedger(owner_id: string): Promise<LedgerDocument> {
+      const ledger_exist = await this.ledgerModel.findOne({ owner_id: owner_id, closed: false },)
+      if (ledger_exist ) {
+        return ledger_exist;
+      }
+
+      return await new this.ledgerModel({
+        owner_id: owner_id,
+      }).save();
+    }
+
+    async closeLedger(owner_id: string): Promise<LedgerDocument>{
+      const ledger = await this.getLedger(owner_id);
+
+      ledger.closed = true;
+
+      return await ledger.save();
+    }
+
+    async updateLedger(owner_id: string, order: Order, amount: number) {
+      const ledger = await this.getLedger(owner_id);
+
+      ledger.orders.push(order);
+      ledger.total += amount;
+
+      await ledger.save();
+    }
+
+
 }

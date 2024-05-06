@@ -22,7 +22,6 @@ import { AzureStorageModule } from 'src/utils/auzre/storage-blob.module';
       { name : FoodItem.name, schema: FoodItemSchema,},
       { name : ModifierGroup.name, schema: ModifierGroupSchema,},
       { name : Modifier.name, schema: ModifierSchema,},
-      { name: Otp.name, schema: OtpSchema}
     ]),
     OrderModule,
     AzureStorageModule
