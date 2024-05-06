@@ -11,6 +11,7 @@ import { CreateTransportOrderDto } from 'src/order/dto/create-transport-order';
 import { RequestWithUser } from 'src/utils/interfaces';
 import { CreateDeliveryOrderDto } from 'src/order/dto/create-delivery-order';
 import { RestaurantService } from 'src/restaurant/restaurant.service';
+import { PaymentService } from 'src/payment/payment.service';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'),RolesGuard)
@@ -19,6 +20,7 @@ import { RestaurantService } from 'src/restaurant/restaurant.service';
 export class CustomerController {
   constructor(
     private readonly customerService: CustomerService,
+    private readonly paymentService: PaymentService,
     private readonly orderService: OrderService,
     private readonly restaurantService: RestaurantService,
     private readonly eventEmitter: EventEmitter2,
@@ -30,6 +32,17 @@ export class CustomerController {
     return 'hello customer'
   }
 
+  @Roles(RoleType.CUSTOMER)
+  @Post('promotion')
+  async applyPromotion(@Req() req: RequestWithUser, @Body() body: { order_total: number, list_promotion_id: string[] }){
+    try {
+      const promo = this.paymentService.validateAndApplyPromotion(req.user.role_id.customer ,body.order_total, body.list_promotion_id)
+      return promo
+    } catch (error) {
+      return error
+    }
+  }
+  
   @Post('transport/quote')
   quoteTransportOrder(@Body() createOrderDto: CreateTransportOrderDto) {
     try {

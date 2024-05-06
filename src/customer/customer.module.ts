@@ -5,6 +5,7 @@ import { Customer, CustomerSchema } from './entities/customer.schema';
 import { MongooseModule } from '@nestjs/mongoose';
 import { OrderModule } from 'src/order/order.module';
 import { RestaurantModule } from 'src/restaurant/restaurant.module';
+import { PaymentModule } from 'src/payment/payment.module';
 
 @Module({
   imports: [
@@ -12,7 +13,8 @@ import { RestaurantModule } from 'src/restaurant/restaurant.module';
       { name: Customer.name, schema: CustomerSchema, },
     ]),
     OrderModule,
-    RestaurantModule
+    RestaurantModule,
+    PaymentModule
   ],
   controllers: [CustomerController],
   providers: [CustomerService],

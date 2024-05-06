@@ -4,7 +4,9 @@ import { CreateBillDto } from './dto/create-bill.dto';
 import { UpdateBillDto } from './dto/update-bill.dto';
 import { VnpayService } from 'src/utils/vnpay-payment/vnpay.service';
 import { ApiTags } from '@nestjs/swagger';
+import { CreatePromotionDto } from './dto/create-promotion.dto';
 import { log } from 'console';
+import { UpdatePromotionDto } from './dto/update-promotion.dto';
 
 @ApiTags('Bill')
 @Controller('bill')
@@ -15,11 +17,23 @@ export class PaymentController {
   ) {}
 
 
-  @Post()
-  findAll(@Body() Body: UpdateBillDto) {
-    log('Body', Body)
-    return Body
+  @Get()
+  findAll(@Req() req) {
+
   }
 
-  
+  @Post('promotion')
+  async createPromotion(@Body() body: CreatePromotionDto){
+    return this.paymentService.createPromotion(body)
+  }
+
+  @Patch('promotion/state')
+  async updatePromotion(@Body() body: UpdatePromotionDto){
+    try {
+      const promo = await this.paymentService.updatePromotion(body)
+      return promo
+    } catch (error) {
+      return error
+    }
+  }
 }

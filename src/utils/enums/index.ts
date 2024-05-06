@@ -109,4 +109,23 @@ export type DistanceFare = {
     Over10Km: number
 }
 
-// * 
+// PROMOTION
+export enum PromotionType {
+    FLATOFF = 'FLATOFF'
+}
+
+export enum PromotionOrderType {
+    DELIVERY = 'DELIVERY',
+    RESTAURANT = 'RESTAURANT',
+    TRANSPORT = 'TRANSPORT'
+}
+
+export enum PromotionState {
+    ACTIVE = 'ACTIVE',
+    DEACTIVE = 'DEACTIVE',
+}
+
+export enum  PromotionUserGroup {
+    ALL_CUSTOMER = 'ALL_CUSTOMER'
+}
+// *
