@@ -28,7 +28,6 @@ export class RestaurantService {
     @InjectModel(RestaurantCategory.name) private readonly restaurantCategoryModel: Model<RestaurantCategoryDocument>,
     @InjectModel(ModifierGroup.name) private readonly modifieGroupModel: Model<ModifierGroupDocument>,
     @InjectModel(Modifier.name) private readonly modifierModel: Model<ModifierDocument>,
-    @InjectModel(Otp.name) private readonly otpModel: Model<OtpDocument>,
     @InjectModel(FoodItem.name) private readonly foodItemModel: Model<FoodItemDocument>,
     private azureStorage: AzureStorageService
   ) {}

@@ -1,13 +1,13 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document } from "mongoose";
 import { OrderType, OrderStatus } from "src/utils/enums";
-import { DeliveryOrder,DeliveryOrderSchema } from "./delivery_order.schema";
-import { TransportOrder,TransportOrderSchema } from "./transport_order.schema";
+import { DeliveryOrder,DeliveryOrderDocument,DeliveryOrderSchema } from "./delivery_order.schema";
+import { TransportOrder,TransportOrderDocument,TransportOrderSchema } from "./transport_order.schema";
 import { Bill, BillSchema } from "src/payment/entities/bill.schema";
 
 export type OrderDocument = Order & Document;
 
-type OrderDetails = DeliveryOrder | TransportOrder
+export type OrderDetails =  DeliveryOrderDocument | TransportOrderDocument
 
 @Schema({
     toJSON: {
@@ -45,9 +45,6 @@ export class Order {
 
     @Prop({ type: BillSchema, ref: Bill.name })
     bill: Bill
-
-    @Prop({ })
-    sub_total: number
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

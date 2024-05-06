@@ -18,29 +18,29 @@ export type DeliveryOrderDocument = DeliveryOrder & OrderDocument
 export class DeliveryOrder {
     order_type: string
 
-    @Prop({ required: true})
+    @Prop({ })
     restaurant_id: string
 
     @Prop() //{type: [SchemaTypes.ObjectId], ref: 'OrderFoodItems'}
     items: OrderFoodItems[]
 
-    @Prop({ required: true, type: LocationSchema})
+    @Prop({ type: LocationSchema})
     delivery_location: LocationObject
 
-    @Prop({ required: true})
+    @Prop({ })
     delivery_address: string
 
-    @Prop({ required: true})
+    @Prop({ })
     distance: number
 
-    @Prop({ required: true})
+    @Prop({ })
     duration: number
 
-    @Prop({ required: true })
+    @Prop({  })
     delivery_fare: number
 
-    
-
+    @Prop({ })
+    order_cost: number  
 }
 
 export const DeliveryOrderSchema = SchemaFactory.createForClass(DeliveryOrder);

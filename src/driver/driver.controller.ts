@@ -7,9 +7,12 @@ import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/utils/guards/roles.guard';
 import { RequestWithUser } from 'src/utils/interfaces';
 import { UpdateStatusDriverDto } from './dto/update-status-driver.dto';
-import { OrderStatus, VehicleType } from 'src/utils/enums';
+import { OrderStatus, PaymentMethod, VehicleType } from 'src/utils/enums';
 import { OrderService } from 'src/order/order.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { PaymentService } from 'src/payment/payment.service';
+import { CreateBillDto } from 'src/payment/dto/create-bill.dto';
+import { TransportOrderDocument } from 'src/order/entities/transport_order.schema';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'),RolesGuard)
@@ -19,7 +22,9 @@ export class DriverController {
   constructor(
     private readonly driverService: DriverService,
     private readonly orderService: OrderService,
-    private readonly eventEmitter: EventEmitter2
+    private readonly eventEmitter: EventEmitter2,
+    private readonly paymentService: PaymentService,
+
   ) {}
 
   @Patch('status')
@@ -52,7 +57,10 @@ export class DriverController {
     return this.driverService.findDriverInDistance({type: 'Point', coordinates: [parseFloat(dto.lng), parseFloat(dto.lat)]}, parseFloat(dto.distance), VehicleType.BIKE);
   }
 
-  @Get('order/:id/accept')
+  //* TRANSPORT ORDER
+
+  //* accept transport order
+  @Get('transport/order/:id/accept')
   async acceptOrder(@Param('id') id: string, @Req() req: RequestWithUser){
     try {
       const result = await this.orderService.TransportOrderStatusChange_allocated(id,req.user.role_id.driver,OrderStatus.PICKING_UP);
@@ -63,29 +71,8 @@ export class DriverController {
     }
   }
 
-  @Get('delivery/order/:id/accept')
-  async acceptDeliveryOrder(@Param('id') id: string, @Req() req: RequestWithUser){
-    try {
-      const result = await this.orderService.DeliveryOrderStatusChange(id, OrderStatus.PICKING_UP, req.user.role_id.driver);
-      this.eventEmitter.emit('order.driver.accept', result);
-      return result;
-    } catch (e) {
-      return e;
-    }
-  }
-
-  @Get('delivery/order/:id/reject')
-  async rejectDeliveryOrder(@Param('id') id: string, @Req() req: RequestWithUser){
-    try {
-      const result = await this.orderService.DeliveryOrderStatusChange(id, OrderStatus.FAILED, req.user.role_id.driver);
-      this.eventEmitter.emit('order.driver.reject', result);
-      return result;
-    } catch (e) {
-      return e;
-    }
-  }
-
-  @Get('order/:id/reject')
+  //* reject transport order
+  @Get('transport/order/:id/reject')
   async rejectOrder(@Param('id') id: string, @Req() req: RequestWithUser){
     try {
       const result = await this.orderService.TransportOrderStatusChange_allocated(id,req.user.role_id.driver,OrderStatus.FAILED);
@@ -96,22 +83,7 @@ export class DriverController {
     }
   }
 
-  @Get('order/:id/arrived-restaurant')
-  async arrivedRestaurant(@Param('id') id: string, @Req() req: RequestWithUser){
-    try {
-      const order = await this.orderService.DeliveryOrderStatusChange(id, OrderStatus.PENDING_DROP_OFF, req.user.role_id.driver);
-      let otp = await this.orderService.createOTPOrder(order.id)
-      this.eventEmitter.emit('order.arrived_restaurant', order);
-      return {
-        otp: otp.otp,
-        order
-      };
-    } catch (e) {
-      return e;
-    }
-  }
-
-  @Get('order/:id/trip/arrived_pickup')
+  @Get('transport/order/:id/trip/arrived_pickup')
   async arrivedPickup(@Param('id') id: string, @Req() req: RequestWithUser){
     try {
       const result = await this.orderService.TransportOrderStatusChange_allocated(id,req.user.role_id.driver,OrderStatus.PENDING_DROP_OFF);
@@ -122,7 +94,7 @@ export class DriverController {
     }
   }
 
-  @Get('order/:id/trip/picked_up')
+  @Get('transport/order/:id/trip/picked_up')
   async pickedUp(@Param('id') id: string, @Req() req: RequestWithUser){
     try {
       const result = await this.orderService.TransportOrderStatusChange_allocated(id,req.user.role_id.driver,OrderStatus.DROPPING_OFF);
@@ -133,12 +105,55 @@ export class DriverController {
     }
   }
 
-  @Get('order/:id/completed')
+  @Get('transport/order/:id/completed')
   async completed(@Param('id') id: string, @Req() req: RequestWithUser){
     try {
       const result = await this.orderService.TransportOrderStatusChange_allocated(id,req.user.role_id.driver,OrderStatus.COMPLETED);
+      this.paymentService.updateBillPaid(result);
       this.eventEmitter.emit('order.completed', result);
       return result;
+    } catch (e) {
+      return e;
+    }
+  }
+
+  
+  //* DELIVERY ORDER
+  
+  //* accept delivery order
+  @Get('delivery/order/:id/accept')
+  async acceptDeliveryOrder(@Param('id') id: string, @Req() req: RequestWithUser){
+    try {
+      const result = await this.orderService.DeliveryOrderStatusChange(id, OrderStatus.PICKING_UP, req.user.role_id.driver);
+      this.eventEmitter.emit('order.driver.accept', result);
+      return result;
+    } catch (e) {
+      return e;
+    }
+  }
+  
+  //* reject delivery order
+  @Get('delivery/order/:id/reject')
+  async rejectDeliveryOrder(@Param('id') id: string, @Req() req: RequestWithUser){
+    try {
+      const result = await this.orderService.DeliveryOrderStatusChange(id, OrderStatus.FAILED, req.user.role_id.driver);
+      this.eventEmitter.emit('order.driver.reject', result);
+      return result;
+    } catch (e) {
+      return e;
+    }
+  }
+  
+  @Get('delivery/order/:id/arrived-restaurant')
+  async arrivedRestaurant(@Param('id') id: string, @Req() req: RequestWithUser){
+    try {
+      const order = await this.orderService.DeliveryOrderStatusChange(id, OrderStatus.PENDING_DROP_OFF, req.user.role_id.driver);
+      let otp = await this.orderService.createOTPOrder(order.id)
+      this.eventEmitter.emit('order.arrived_restaurant', order);
+      return {
+        otp: otp.otp,
+        order
+      };
     } catch (e) {
       return e;
     }
@@ -155,3 +170,4 @@ export class DriverController {
     }
   }
 }
+

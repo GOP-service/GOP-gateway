@@ -1,7 +1,8 @@
-import { BillStatus } from "src/utils/enums";
+import { OrderDetails } from "src/order/entities/order.schema";
+import { PaymentMethod } from "src/utils/enums";
 
 export class CreateBillDto {
-    status: BillStatus;
-    payment_method: string;
-    total: number;
+    payment_method: PaymentMethod;
+    promotion_id: string[];
+    order: OrderDetails;
 }

@@ -18,7 +18,8 @@ async function bootstrap() {
       forbidUnknownValues: false,
       forbidNonWhitelisted: false,
       validationError: {
-        target: false,
+        target: true,
+        value: true,
       },
     })
   )  

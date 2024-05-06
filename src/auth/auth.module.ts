@@ -10,6 +10,7 @@ import { RestaurantModule } from 'src/restaurant/restaurant.module';
 import { AccessTokenStrategy } from './strategies/accessToken.strategy';
 import { RefreshTokenStrategy } from './strategies/refreshToken.strategy';
 import { Otp, OtpSchema } from './entities/otp.schema';
+import { PaymentModule } from 'src/payment/payment.module';
 
 
 @Module({
@@ -22,6 +23,7 @@ import { Otp, OtpSchema } from './entities/otp.schema';
     CustomerModule,
     DriverModule,
     RestaurantModule,
+    PaymentModule
   ],
   controllers: [AuthController],
   providers: [
