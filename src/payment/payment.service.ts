@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateBillDto } from './dto/create-bill.dto';
 import { UpdateBillDto } from './dto/update-bill.dto';
 import * as crypto from 'crypto';
@@ -77,9 +77,17 @@ export class PaymentService {
       return sorted;
   }
 
-  createPromotion(dto: CreatePromotionDto) {
-    const promo = new this.promotionModdel(dto);
+  async createPromotion(dto: CreatePromotionDto) {
+    const promo = await new this.promotionModdel(dto);
     return promo.save();
+  }
+
+  async deletePromotion(promotion_id: string) {
+    const promo = await this.promotionModdel.findByIdAndDelete(promotion_id)
+    if (!promo) {
+      throw new NotFoundException("Promotion not found!");
+    }
+    return promo;
   }
 
   async updatePromotion(dto: UpdatePromotionDto) {

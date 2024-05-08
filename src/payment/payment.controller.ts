@@ -27,6 +27,11 @@ export class PaymentController {
     return this.paymentService.createPromotion(body)
   }
 
+  @Delete('promotion/:id')
+  async deletePromotion(@Param('id') id: string){
+    return this.paymentService.deletePromotion(id)
+  }
+
   @Patch('promotion/state')
   async updatePromotion(@Body() body: UpdatePromotionDto){
     try {
