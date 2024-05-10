@@ -1,10 +1,15 @@
-import { PromotionOrderType, PromotionState, PromotionType, PromotionUserGroup } from "src/utils/enums"
-import { FlatOffDiscount } from "../entities/flat_off_discount.schema"
+import { CurrencyCode } from "src/utils/enums"
+import { PromotionConditionDto } from "./promotion-condition.dto"
+import { PromotionDiscountDto } from "./promotion-discount.dto"
+import { PromotionQuotasDto } from "./promotion-quotas.dto"
+
 export class PromotionDto {
-    start_time: Date
-    end_time: Date
-    user_group: PromotionUserGroup
-    promo_type: PromotionType
-    promo_order_type: PromotionOrderType
-    flat_off_discount: FlatOffDiscount
+    restaurant_id: string
+    name: string
+    description: string
+    quotas: PromotionQuotasDto
+    conditions: PromotionConditionDto
+    discount: PromotionDiscountDto
+    unavailable_users: string[]
+    currency_code: CurrencyCode
 }

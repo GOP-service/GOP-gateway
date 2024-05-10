@@ -1,7 +1,8 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { FlatOffDiscount } from "./flat_off_discount.schema";
-import { PromotionOrderType, PromotionState, PromotionType, PromotionUserGroup } from "src/utils/enums";
-import { SchemaTypes } from "mongoose";
+import { CurrencyCode} from "src/utils/enums";
+import { PromotionCondition } from "./promotion_condition.schema";
+import { PromotionDiscount } from "./promotion_discount.shema";
+import { PromotionQuotas } from "./promotion_quotas.schema";
 export type PromotionDocument = Promotion & Document
 
 @Schema({
@@ -13,35 +14,29 @@ export type PromotionDocument = Promotion & Document
 })
 export class Promotion {
 
+    @Prop({ default: "" })
+    restaurant_id: string
+
     @Prop({ required: true })
     name: string
 
     @Prop({ default: '' })
     description: string
 
-    @Prop({})
-    start_time: Date
+    @Prop({ required: true })
+    conditions: PromotionCondition
+
+    @Prop({ required: true })
+    discount: PromotionDiscount
 
     @Prop({})
-    end_time: Date
-
-    @Prop({ required: true, enum: PromotionUserGroup, default: PromotionUserGroup.ALL_CUSTOMER })
-    user_group: PromotionUserGroup
-
-    @Prop({ required: true, enum: PromotionType, default: PromotionType.FLATOFF })
-    promo_type: PromotionType
-
-    @Prop({ required: true, enum: PromotionOrderType, default: PromotionOrderType.DELIVERY })
-    promo_order_type: PromotionOrderType
-
-    @Prop({})
-    flat_off_discount: FlatOffDiscount
+    quotas: PromotionQuotas
 
     @Prop({ default: [] })
     unavailable_users: string[]
 
-    @Prop({ required: true, default: 100 })
-    limit: number
+    @Prop({ default: CurrencyCode.VND })
+    currency_code: CurrencyCode
 }
 
 export const PromotionSchema = SchemaFactory.createForClass(Promotion)

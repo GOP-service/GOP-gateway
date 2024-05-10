@@ -9,7 +9,7 @@ import { CreatePromotionDto } from './dto/create-promotion.dto';
 import { Promotion, PromotionDocument } from './entities/promotion.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { BillStatus, PaymentMethod, PromotionType } from 'src/utils/enums';
+import { BillStatus, PaymentMethod } from 'src/utils/enums';
 import { UpdatePromotionDto } from './dto/update-promotion.dto';
 import { Bill, BillDocument } from './entities/bill.schema';
 import { Ledger, LedgerDocument } from './entities/ledger.schema';
@@ -99,19 +99,19 @@ export class PaymentService {
 
   async validateAndApplyPromotion(id: string, order_total: number, list_promotion_id: string[]): Promise<number>{
     let discount_value = 0;
-    const promotions = list_promotion_id.map(async (promo_id) => {
-      const promo = await this.promotionModdel.findById(promo_id);
-      if (promo) {
-        const currDate = new Date();
-        if (currDate >= promo.start_time && currDate <= promo.end_time && order_total >= promo.flat_off_discount.min_spend && !promo.unavailable_users.includes(id) && promo.unavailable_users.length < promo.limit) {
-          promo.unavailable_users.push(id);
-          await promo.save(); 
-          discount_value += promo.flat_off_discount.discount_value
-        }
-      }
-    });
+    // const promotions = list_promotion_id.map(async (promo_id) => {
+    //   const promo = await this.promotionModdel.findById(promo_id);
+    //   if (promo) {
+    //     const currDate = new Date();
+    //     if (currDate >= promo.start_time && currDate <= promo.end_time && order_total >= promo.flat_off_discount.min_spend && !promo.unavailable_users.includes(id) && promo.unavailable_users.length < promo.limit) {
+    //       promo.unavailable_users.push(id);
+    //       await promo.save(); 
+    //       discount_value += promo.flat_off_discount.discount_value
+    //     }
+    //   }
+    // });
     
-    await Promise.all(promotions);
+    // await Promise.all(promotions);
     return discount_value;
   }
 
