@@ -12,6 +12,7 @@ import { RequestWithUser } from 'src/utils/interfaces';
 import { CreateDeliveryOrderDto } from 'src/order/dto/create-delivery-order';
 import { RestaurantService } from 'src/restaurant/restaurant.service';
 import { PaymentService } from 'src/payment/payment.service';
+import { ApplyPromotionDto } from 'src/payment/dto/apply-promotion.dto';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'),RolesGuard)
@@ -31,18 +32,18 @@ export class CustomerController {
   hello() {
     return 'hello customer'
   }
-
-  @Roles(RoleType.CUSTOMER)
-  @Post('promotion')
-  async applyPromotion(@Req() req: RequestWithUser, @Body() body: { order_total: number, list_promotion_id: string[] }){
+  
+  @Post('promotion/apply')
+  async applyPromotion(@Req() req: RequestWithUser, @Body() body: ApplyPromotionDto){
     try {
-      const promo = this.paymentService.validateAndApplyPromotion(req.user.role_id.customer ,body.order_total, body.list_promotion_id)
-      return promo
+      const discount_value = await this.paymentService.validateAndApplyPromotion(req.user.role_id.customer, body.order_total, body.delivery_fare, body.list_promotion_id)
+
+      return discount_value;
     } catch (error) {
       return error
     }
   }
-  
+
   @Post('transport/quote')
   quoteTransportOrder(@Body() createOrderDto: CreateTransportOrderDto) {
     try {

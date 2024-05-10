@@ -7,6 +7,8 @@ import { ApiTags } from '@nestjs/swagger';
 import { CreatePromotionDto } from './dto/create-promotion.dto';
 import { log } from 'console';
 import { UpdatePromotionDto } from './dto/update-promotion.dto';
+import { RequestWithUser } from 'src/utils/interfaces';
+import { ApplyPromotionDto } from './dto/apply-promotion.dto';
 
 @ApiTags('Bill')
 @Controller('bill')
@@ -20,6 +22,15 @@ export class PaymentController {
   @Get()
   findAll(@Req() req) {
 
+  }
+
+  @Get('promotion')
+  findPromotion(){
+    try {
+      return this.paymentService.getAllPromotion();
+    } catch (error) {
+      return error
+    }
   }
 
   @Post('promotion')

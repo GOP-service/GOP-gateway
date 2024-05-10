@@ -9,7 +9,7 @@ import { CreatePromotionDto } from './dto/create-promotion.dto';
 import { Promotion, PromotionDocument } from './entities/promotion.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { BillStatus, PaymentMethod } from 'src/utils/enums';
+import { BillStatus, PaymentMethod, PromotionDiscountType } from 'src/utils/enums';
 import { UpdatePromotionDto } from './dto/update-promotion.dto';
 import { Bill, BillDocument } from './entities/bill.schema';
 import { Ledger, LedgerDocument } from './entities/ledger.schema';
@@ -77,6 +77,11 @@ export class PaymentService {
       return sorted;
   }
 
+  async getAllPromotion():Promise<PromotionDocument[]>{
+    const promo = await this.promotionModdel.find();
+    return promo;
+  }
+
   async createPromotion(dto: CreatePromotionDto) {
     const promo = await new this.promotionModdel(dto);
     return promo.save();
@@ -97,21 +102,32 @@ export class PaymentService {
     throw new Error('Update state failed')
   }
 
-  async validateAndApplyPromotion(id: string, order_total: number, list_promotion_id: string[]): Promise<number>{
+  async validateAndApplyPromotion(customer_id: string, order_total: number, delivery_fare: number, list_promotion_id: string[]): Promise<number> {
     let discount_value = 0;
-    // const promotions = list_promotion_id.map(async (promo_id) => {
-    //   const promo = await this.promotionModdel.findById(promo_id);
-    //   if (promo) {
-    //     const currDate = new Date();
-    //     if (currDate >= promo.start_time && currDate <= promo.end_time && order_total >= promo.flat_off_discount.min_spend && !promo.unavailable_users.includes(id) && promo.unavailable_users.length < promo.limit) {
-    //       promo.unavailable_users.push(id);
-    //       await promo.save(); 
-    //       discount_value += promo.flat_off_discount.discount_value
-    //     }
-    //   }
-    // });
-    
-    // await Promise.all(promotions);
+    let newDeliveryFare = delivery_fare;
+    const currDate = new Date();
+  
+    for (const promo_id of list_promotion_id) {
+      const promo = await this.promotionModdel.findById(promo_id);
+  
+      if (promo && 
+          promo.conditions.start_time <= currDate && 
+          promo.conditions.end_time >= currDate && 
+          promo.quotas.limit > promo.unavailable_users.length &&
+          promo.unavailable_users.filter(id => id === customer_id).length <= promo.quotas.total_count_per_count
+      ) {
+        switch (promo.discount.type) {
+          case PromotionDiscountType.DELIVERY:
+            newDeliveryFare -= promo.discount.value;
+            if (newDeliveryFare <= 0) {
+              return delivery_fare;
+            }
+            break;
+        }
+      }
+    }
+  
+    discount_value += newDeliveryFare > 0 ? delivery_fare - newDeliveryFare : delivery_fare;
     return discount_value;
   }
 
