@@ -5,6 +5,7 @@ import { Driver, DriverSchema } from './entities/driver.schema';
 import { MongooseModule } from '@nestjs/mongoose';
 import { OrderModule } from 'src/order/order.module';
 import { PaymentModule } from 'src/payment/payment.module';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [

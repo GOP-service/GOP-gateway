@@ -4,8 +4,9 @@ import { DriverProfile } from "../entities/driver_profile.schema";
 import { ApiProperty } from "@nestjs/swagger";
 import { IsEnum, IsNotEmpty, IsString } from "class-validator";
 import { LocationObject } from "src/utils/subschemas/location.schema";
+import { CreateAccountDto } from "src/auth/dto";
 
-export class DriverDto{
+export class DriverDto extends CreateAccountDto{
     @ApiProperty({
         example: 'Airblade 150'
     })
@@ -29,7 +30,7 @@ export class DriverDto{
     vehicle_type: VehicleType;
 
     @ApiProperty({
-        example: new LocationObject([10.850739590040357,106.77195728296408])
+        example: new LocationObject([106.77195728296408, 10.850739590040357])
     })
     @IsNotEmpty()
     location: LocationObject

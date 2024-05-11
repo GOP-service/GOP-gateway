@@ -1,8 +1,8 @@
 // * Role
 export enum RoleType  {
-    CUSTOMER = "customer",
-    DRIVER = "driver",
-    RESTAURANT = "restaurant",
+    CUSTOMER = "CustomerService",
+    DRIVER = "DriverService",
+    RESTAURANT = "RestaurantService",
     ADMIN = "admin"
 }
 
@@ -16,7 +16,7 @@ export enum OTPVerifyStatus {
 export enum OTPType {
     VERIFY_ACCOUNT = "Verify your account",
     FORGOT_PASSWORD = "Change your account password",
-    VERIFY_PARCEL = "Verify parcel",
+    VERIFY_PARCEL = "Verify your parcel",
 }
 
 // * Driver

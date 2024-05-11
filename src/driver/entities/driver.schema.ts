@@ -1,13 +1,12 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document } from "mongoose";
+import { Document, HydratedDocument } from "mongoose";
 import { DriverStatus, VehicleType } from "src/utils/enums";
 import { Rating, RatingSchema } from "src/utils/subschemas/rating.schema";
 import { DriverProfile, DriverProfileSchema } from "./driver_profile.schema";
-import { Account, AccountSchema } from "src/auth/entities/account.schema";
 import { LocationObject } from "src/utils/subschemas/location.schema";
+import { Account } from "src/auth/entities/account.schema";
 
-export type DriverDocument = Driver & Document;
-
+export type DriverDocument = HydratedDocument<Driver>;
 @Schema({
     toJSON: {
         getters: true,
@@ -15,7 +14,7 @@ export type DriverDocument = Driver & Document;
     },
     timestamps: true,
 })
-export class Driver {  
+export class Driver extends Account {  
     @Prop({ enum: VehicleType, default: VehicleType.BIKE, type: String})
     vehicle_type: VehicleType
 
@@ -34,8 +33,8 @@ export class Driver {
     // @Prop({ type: RatingSchema, default: new Rating()})
     // rating: Rating
     
-    @Prop({ type: DriverProfileSchema, default: new DriverProfile(), select: false})
-    profile: DriverProfile
+    // @Prop({ type: DriverProfileSchema, default: new DriverProfile(), select: false})
+    // profile: DriverProfile
 
     @Prop({ })
     avatar: string
