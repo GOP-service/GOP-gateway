@@ -29,123 +29,123 @@ export class RestaurantController {
     private readonly eventEmitter: EventEmitter2,
     ) {}
     
-  @Roles(RoleType.RESTAURANT)
-  @Get('info')
-  info(@Req() req: RequestWithUser) {
-    return this.restaurantService.findOneId(req.user.role_id.restaurant);
-  }
+  // @Roles(RoleType.RESTAURANT)
+  // @Get('info')
+  // info(@Req() req: RequestWithUser) {
+  //   return this.restaurantService.findOneId(req.user.role_id.restaurant);
+  // }
   
-  @Roles(RoleType.RESTAURANT)
-  @ApiQuery({
-    name: 'index', 
-    type: Number,
-    example: 0,
-  })
-  @Patch('categories/update')
-  updateCategories(@Req() req: RequestWithUser, @Body() body: UpdateItemsRestaurantDto, @Query() query: {index: number}) {
-    if (query.index === undefined || query.index === null || query.index < 0) {
-      throw new BadRequestException('index is required and must be a positive number');
-    }
-    return this.restaurantService.updateCategories(req.user.role_id.restaurant, body, query.index);
-  }
+  // @Roles(RoleType.RESTAURANT)
+  // @ApiQuery({
+  //   name: 'index', 
+  //   type: Number,
+  //   example: 0,
+  // })
+  // @Patch('categories/update')
+  // updateCategories(@Req() req: RequestWithUser, @Body() body: UpdateItemsRestaurantDto, @Query() query: {index: number}) {
+  //   if (query.index === undefined || query.index === null || query.index < 0) {
+  //     throw new BadRequestException('index is required and must be a positive number');
+  //   }
+  //   return this.restaurantService.updateCategories(req.user.role_id.restaurant, body, query.index);
+  // }
 
-  @Roles(RoleType.RESTAURANT)
-  @Post('categories/create')
-  addCategory(@Req() req: RequestWithUser, @Body() body: CreateRestaurantCategoryDto) {
-    try {
-      const category = this.restaurantService.createCategory(req.user.role_id.restaurant, body);
-      return category;
-    } catch (error) {
-      return error;
-    }
-  }
+  // @Roles(RoleType.RESTAURANT)
+  // @Post('categories/create')
+  // addCategory(@Req() req: RequestWithUser, @Body() body: CreateRestaurantCategoryDto) {
+  //   try {
+  //     const category = this.restaurantService.createCategory(req.user.role_id.restaurant, body);
+  //     return category;
+  //   } catch (error) {
+  //     return error;
+  //   }
+  // }
 
-  @Roles(RoleType.RESTAURANT)
-  @Post('status')
-  updateActiveStatus(@Req() req: RequestWithUser, @Body() body: {status: boolean}) {
-    try {
-      // this.eventEmitter.emit('restaurant.open', req.user.role_id.restaurant)
-    } catch (error) {
-      return error;
-    }
-  }
+  // @Roles(RoleType.RESTAURANT)
+  // @Post('status')
+  // updateActiveStatus(@Req() req: RequestWithUser, @Body() body: {status: boolean}) {
+  //   try {
+  //     // this.eventEmitter.emit('restaurant.open', req.user.role_id.restaurant)
+  //   } catch (error) {
+  //     return error;
+  //   }
+  // }
 
-  @Roles(RoleType.RESTAURANT)
-  @Get('orders')
-  async getAllOrders(@Req() req: RequestWithUser) {
-    try {
-      let orders = await this.orderService.findOrderByRestaurantId(req.user.role_id.restaurant)
-      return orders;
-    } catch (error) {
-      return error;
-    }
-  }
+  // @Roles(RoleType.RESTAURANT)
+  // @Get('orders')
+  // async getAllOrders(@Req() req: RequestWithUser) {
+  //   try {
+  //     let orders = await this.orderService.findOrderByRestaurantId(req.user.role_id.restaurant)
+  //     return orders;
+  //   } catch (error) {
+  //     return error;
+  //   }
+  // }
 
-  @Roles(RoleType.RESTAURANT)
-  @Get('order/accept/:order_id')
-  async acceptOrder(@Req() req: RequestWithUser, @Param('order_id') order_id: string) {
-    try {
-      let order = await this.orderService.DeliveryOrderStatusChange(order_id, OrderStatus.ALLOCATING)
-      if(order){
-        this.eventEmitter.emit('order.food.allocating', order)
-      }
-      return order;
-    } catch (error) {
-      return error;
-    }
-  }
+  // @Roles(RoleType.RESTAURANT)
+  // @Get('order/accept/:order_id')
+  // async acceptOrder(@Req() req: RequestWithUser, @Param('order_id') order_id: string) {
+  //   try {
+  //     let order = await this.orderService.DeliveryOrderStatusChange(order_id, OrderStatus.ALLOCATING)
+  //     if(order){
+  //       this.eventEmitter.emit('order.food.allocating', order)
+  //     }
+  //     return order;
+  //   } catch (error) {
+  //     return error;
+  //   }
+  // }
 
-  @Roles(RoleType.RESTAURANT)
-  @Post('order/verify-otp')
-  async verifyOTP(@Body() body: {order_id: string, otp: string}) {
-    try {
-      let result = await this.orderService.verifyOtp(body.order_id, body.otp)
-      let order = await this.orderService.findOrderById(body.order_id)
-      if(result == OTPVerifyStatus.SUCCESS){
-        let newOrder =  await this.orderService.DeliveryOrderStatusChange(body.order_id, OrderStatus.DROPPING_OFF, order.driver_id)
-        this.eventEmitter.emit('order.droppingoff', newOrder)
-        return newOrder;
-      }
-      else return {
-        message: result
-      };
-    } catch (error) {
-      return error;
-    }
-  }
+  // @Roles(RoleType.RESTAURANT)
+  // @Post('order/verify-otp')
+  // async verifyOTP(@Body() body: {order_id: string, otp: string}) {
+  //   try {
+  //     let result = await this.orderService.verifyOtp(body.order_id, body.otp)
+  //     let order = await this.orderService.findOrderById(body.order_id)
+  //     if(result == OTPVerifyStatus.SUCCESS){
+  //       let newOrder =  await this.orderService.DeliveryOrderStatusChange(body.order_id, OrderStatus.DROPPING_OFF, order.driver_id)
+  //       this.eventEmitter.emit('order.droppingoff', newOrder)
+  //       return newOrder;
+  //     }
+  //     else return {
+  //       message: result
+  //     };
+  //   } catch (error) {
+  //     return error;
+  //   }
+  // }
 
-  @Roles(RoleType.RESTAURANT)
-  @UseInterceptors(FileInterceptor('file'))
-  @Patch('update/avatar')
-  async updateAvatar(@Req() req: RequestWithUser, @UploadedFile() file: Express.Multer.File) {
-    try {
-      if (!file) {
-        throw new BadRequestException('file is required');
-      }
-      return this.restaurantService.updateAvatar(req.user.role_id.restaurant, file)
-    } catch (error) {
-      return error;
-    }
-  }
+  // @Roles(RoleType.RESTAURANT)
+  // @UseInterceptors(FileInterceptor('file'))
+  // @Patch('update/avatar')
+  // async updateAvatar(@Req() req: RequestWithUser, @UploadedFile() file: Express.Multer.File) {
+  //   try {
+  //     if (!file) {
+  //       throw new BadRequestException('file is required');
+  //     }
+  //     return this.restaurantService.updateAvatar(req.user.role_id.restaurant, file)
+  //   } catch (error) {
+  //     return error;
+  //   }
+  // }
 
-  @Roles(RoleType.RESTAURANT)
-  @UseInterceptors(FileInterceptor('image'))
-  @Post('create/food-item')
-  async createFoodItem(@Req() req: RequestWithUser, @Body() body: CreateFoodItemDto, @UploadedFile() image){
-    try {
-      return this.restaurantService.createFoodItem(req.user.role_id.restaurant, body, image)
-    } catch (error) {
-      return error;
-    }
-  }
+  // @Roles(RoleType.RESTAURANT)
+  // @UseInterceptors(FileInterceptor('image'))
+  // @Post('create/food-item')
+  // async createFoodItem(@Req() req: RequestWithUser, @Body() body: CreateFoodItemDto, @UploadedFile() image){
+  //   try {
+  //     return this.restaurantService.createFoodItem(req.user.role_id.restaurant, body, image)
+  //   } catch (error) {
+  //     return error;
+  //   }
+  // }
 
-  @Roles(RoleType.RESTAURANT)
-  @Get('menu')
-  async getRestaurantMenu(@Req() req: RequestWithUser){
-    try {
-      return this.restaurantService.fetchRestaurantMenu(req.user.role_id.restaurant)
-    } catch (error) {
-      return error
-    }
-  }
+  // @Roles(RoleType.RESTAURANT)
+  // @Get('menu')
+  // async getRestaurantMenu(@Req() req: RequestWithUser){
+  //   try {
+  //     return this.restaurantService.fetchRestaurantMenu(req.user.role_id.restaurant)
+  //   } catch (error) {
+  //     return error
+  //   }
+  // }
 }

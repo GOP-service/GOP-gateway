@@ -1,11 +1,11 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document } from "mongoose";
+import { Document, HydratedDocument } from "mongoose";
 import { OrderType, OrderStatus } from "src/utils/enums";
 import { DeliveryOrder,DeliveryOrderDocument,DeliveryOrderSchema } from "./delivery_order.schema";
 import { TransportOrder,TransportOrderDocument,TransportOrderSchema } from "./transport_order.schema";
 import { Bill, BillSchema } from "src/payment/entities/bill.schema";
 
-export type OrderDocument = Order & Document;
+export type OrderDocument = HydratedDocument<Order>
 
 export type OrderDetails =  DeliveryOrderDocument | TransportOrderDocument
 

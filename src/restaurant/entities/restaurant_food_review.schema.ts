@@ -1,7 +1,8 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document } from "mongoose";
+import { Document, HydratedDocument } from "mongoose";
+import { BaseEntity } from "src/utils/repository/base.entity";
 
-export type RestaurantFoodReviewDocument = RestaurantFoodReview & Document;
+export type RestaurantFoodReviewDocument = HydratedDocument<RestaurantFoodReview>;
 
 @Schema({
     toJSON: {
@@ -10,7 +11,7 @@ export type RestaurantFoodReviewDocument = RestaurantFoodReview & Document;
     },
     timestamps: true,
 })
-export class RestaurantFoodReview {
+export class RestaurantFoodReview extends BaseEntity {
     @Prop({ required: true})
     owner_id: string
 

@@ -1,5 +1,9 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { HydratedDocument } from "mongoose";
+import { BaseEntity } from "src/utils/repository/base.entity";
 
+
+export type RestaurantProfileDocument = HydratedDocument<RestaurantProfile>;
 @Schema({
     toJSON: {
         getters: true,
@@ -8,7 +12,7 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
     _id: false,
     timestamps: true,
 })
-export class RestaurantProfile {
+export class RestaurantProfile extends BaseEntity{
     @Prop({ })
     license_image: string
 }

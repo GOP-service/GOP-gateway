@@ -5,17 +5,8 @@ import { OrderDocument } from "./order.schema";
 
 export type TransportOrderDocument = TransportOrder & OrderDocument
 
-@Schema({
-    toJSON: {
-        getters: true,
-        virtuals: true,
-    },
-    _id: false,
-    id: false,
-})
+@Schema()
 export class TransportOrder {
-    order_type: string
-
     @Prop({ required: true, enum: VehicleType })
     vehicle_type: VehicleType
 

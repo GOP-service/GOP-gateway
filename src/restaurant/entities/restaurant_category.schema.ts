@@ -1,8 +1,9 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document, SchemaTypes, Types } from "mongoose";
+import { Document, HydratedDocument, SchemaTypes, Types } from "mongoose";
 import { FoodItem } from "./food_item.schema";
+import { BaseEntity } from "src/utils/repository/base.entity";
 
-export type RestaurantCategoryDocument = RestaurantCategory & Document;
+export type RestaurantCategoryDocument = HydratedDocument<RestaurantCategory>;
 
 @Schema({
     toJSON: {
@@ -11,8 +12,9 @@ export type RestaurantCategoryDocument = RestaurantCategory & Document;
     },
     timestamps: true,
 })
-export class RestaurantCategory {
+export class RestaurantCategory extends BaseEntity{
     constructor(data: Partial<RestaurantCategory>){
+        super();
         Object.assign(this, data);
     }
 

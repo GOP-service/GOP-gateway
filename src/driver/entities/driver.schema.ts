@@ -27,7 +27,7 @@ export class Driver extends Account {
     @Prop({ enum: DriverStatus, default: DriverStatus.OFFLINE, type: String})
     status: DriverStatus
 
-    @Prop({ required : true , type: LocationObject, index: '2dsphere'})
+    @Prop({ type: LocationObject, index: '2dsphere'})
     location: LocationObject
 
     // @Prop({ type: RatingSchema, default: new Rating()})

@@ -7,16 +7,8 @@ import { OrderFoodItems } from "./order_food_items.schema";
 
 export type DeliveryOrderDocument = DeliveryOrder & OrderDocument
 
-@Schema({
-    toJSON: {
-        getters: true,
-        virtuals: true,
-    },
-    _id: false,
-    id: false,
-})
+@Schema()
 export class DeliveryOrder {
-    order_type: string
 
     @Prop({ })
     restaurant_id: string

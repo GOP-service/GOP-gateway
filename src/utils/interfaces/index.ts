@@ -1,7 +1,8 @@
-import { Role } from "src/auth/entities/role.schema"
+import { RoleType } from "../enums";
+
 export interface JwtPayload {
     sub: string
-    role_id: Role
+    role: RoleType
     refreshToken: string
 }
 
