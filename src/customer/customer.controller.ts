@@ -33,17 +33,6 @@ export class CustomerController {
     return 'hello customer'
   }
   
-  @Post('promotion/apply')
-  async applyPromotion(@Req() req: RequestWithUser, @Body() body: ApplyPromotionDto){
-    try {
-      const discount_value = await this.paymentService.validateAndApplyPromotion(req.user.role_id.customer, body.order_total, body.delivery_fare, body.list_promotion_id)
-
-      return discount_value;
-    } catch (error) {
-      return error
-    }
-  }
-
   @Post('transport/quote')
   quoteTransportOrder(@Body() createOrderDto: CreateTransportOrderDto) {
     try {

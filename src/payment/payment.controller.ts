@@ -17,39 +17,4 @@ export class PaymentController {
     private readonly paymentService: PaymentService,
     private readonly vnpayService: VnpayService,
   ) {}
-
-
-  @Get()
-  findAll(@Req() req) {
-
-  }
-
-  @Get('promotion')
-  findPromotion(){
-    try {
-      return this.paymentService.getAllPromotion();
-    } catch (error) {
-      return error
-    }
-  }
-
-  @Post('promotion')
-  async createPromotion(@Body() body: CreatePromotionDto){
-    return this.paymentService.createPromotion(body)
-  }
-
-  @Delete('promotion/:id')
-  async deletePromotion(@Param('id') id: string){
-    return this.paymentService.deletePromotion(id)
-  }
-
-  @Patch('promotion/state')
-  async updatePromotion(@Body() body: UpdatePromotionDto){
-    try {
-      const promo = await this.paymentService.updatePromotion(body)
-      return promo
-    } catch (error) {
-      return error
-    }
-  }
 }
