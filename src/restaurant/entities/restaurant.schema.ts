@@ -5,7 +5,6 @@ import { RestaurantProfile, RestaurantProfileSchema } from "./restaurant_profile
 import { Rating, RatingSchema } from "src/utils/subschemas/rating.schema";
 import { LocationObject } from "src/utils/subschemas/location.schema";
 import { RestaurantCategory, RestaurantCategorySchema } from "./restaurant_category.schema";
-import { Account, AccountSchema } from "src/auth/entities/account.schema";
 
 export type RestaurantDocument = Restaurant & Document;
 

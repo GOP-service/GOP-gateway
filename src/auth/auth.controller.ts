@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, ConflictException, InternalServerErrorException, BadRequestException, Req, UseGuards, Logger, UnauthorizedException, Res, HttpCode, HttpStatus, ForbiddenException, NotFoundException } from '@nestjs/common';
-import { Response } from 'express';
-import { AccountService } from './account.service';
+import e, { Response } from 'express';
+import { AuthService } from './auth.service';
 import { CustomerService } from 'src/customer/customer.service';
 import { DriverService } from 'src/driver/driver.service';
 import { RestaurantService } from 'src/restaurant/restaurant.service';
@@ -8,210 +8,165 @@ import { OTPType, OTPVerifyStatus, RoleType } from 'src/utils/enums';
 import { CreateAccountDto, OtpVerifyDto, SigninDto, } from './dto';
 import { RequestWithUser } from 'src/utils/interfaces';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiParam, ApiTags, getSchemaPath } from '@nestjs/swagger';
 import { MailerService } from '@nestjs-modules/mailer';
 import { OtpTemplate } from 'src/utils/mail-template/otp';
 import { CreateDriverDto } from 'src/driver/dto/create-driver.dto';
 import { CreateRestaurantDto } from 'src/restaurant/dto/create-restaurant.dto';
 import { createCustomerDto } from 'src/customer/dto/create-customer.dto';
-import { profile } from 'console';
+import { log, profile } from 'console';
 import { PaymentService } from 'src/payment/payment.service';
+import { AccountServiceAbstract } from './account.abstract.service';
+import { Customer } from 'src/customer/entities/customer.schema';
+import { Account } from './entities/account.schema';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 @ApiBearerAuth()
 @ApiTags('Authentications')
 @Controller('auth')
 export class AuthController {
   constructor(
-    private readonly accountService: AccountService,
+    private readonly accountService: AuthService,
     private readonly customerService: CustomerService,
     private readonly driverService: DriverService,
     private readonly restaurantService: RestaurantService,
-    private readonly mailerService: MailerService,
     private readonly paymentService: PaymentService,
+
   ) {}
 
-  logger = new Logger('AuthController'); 
+  logger = new Logger('AuthController');  
 
-  async sendOTPMail(mail: string, usename: string, otp: string, type: OTPType) {
-    return await this.mailerService.sendMail({
-      to: mail,
-      subject: 'OTP verification',
-      text: 'OTP verification',
-      html: OtpTemplate(usename,otp,'',type),
+  // * SIGN UP ACCOUNT 
+  private sign_up(body: CreateAccountDto, res: Response, service: AccountServiceAbstract<Account>){
+    service.signUp(body).then(async (account) => {
+      if (!account) {
+        return res.status(HttpStatus.CONFLICT).json({message: 'Email is already in use'});
+      }
+      this.accountService.sendOTPMail(account.email, account.full_name, account._id, OTPType.VERIFY_ACCOUNT);
+      return res.status(HttpStatus.CREATED).json({message: 'OK'});
+    }).catch((err) => {
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({message: err.message});
     });
   }
 
-  // * SIGN UP ACCOUNT
-  @Post('signup')
-  async signup(@Body() body: CreateAccountDto, @Res() res: Response) {
-    const checkExist = await this.accountService.findOneEmail(body.email);
-    if (checkExist) {
-      // account đã tồn tại
-      throw new ConflictException('This email is already registered');
-    } else {
-      // account chưa tồn tại nên tạo mới
-      const newAccount = await this.accountService.createAccount({
-        email: body.email,
-        password: body.password,
-        full_name: body.full_name,
-      });
-      if (!newAccount) {
-        throw new InternalServerErrorException('Something went wrong');
-      }
-      const otp = await this.accountService.createOtp(newAccount.id, OTPType.VERIFY_ACCOUNT);
-      this.sendOTPMail(newAccount.email, newAccount.full_name, otp.otp, OTPType.VERIFY_ACCOUNT)
-      const message = 'Sign up successfully, please check your email for OTP to verify account';
-      return res.status(HttpStatus.CREATED).json({ message });
-    }
+  @Post('customer/signup')
+  async signupCustomer(@Body() body: createCustomerDto , @Res() res: Response) {
+    this.sign_up(body, res, this.customerService);
+  }
+
+  @Post('driver/signup')
+  async signupDriver(@Body() body: CreateDriverDto , @Res() res: Response) {
+    this.sign_up(body, res, this.driverService);
   }
 
   // * SIGN IN ACCOUNT
-  @Post('signin')
-  async signin(@Body() body: SigninDto) {
-    const account = await this.accountService.checkPassword_Email(body.email, body.password);
-    if (!account) {
-      throw new BadRequestException('Password is incorrect or email does not exist');
-    } else {
-      if (!account.verified) {
-        const otp = await this.accountService.createOtp(account.id, OTPType.VERIFY_ACCOUNT);
-        this.sendOTPMail(account.email, account.full_name, otp.otp, OTPType.VERIFY_ACCOUNT)
-        throw new ForbiddenException('The account hasn\'t been verified, please check your email for OTP to verify account');
+  private sign_in(body: SigninDto, res: Response, service: AccountServiceAbstract<Account>){
+    service.signIn(body.email, body.password).then(async (msg) => {
+      if (msg.code === '1') {
+        this.accountService.sendOTPMail(msg.data.email, msg.data.full_name, msg.data._id, OTPType.VERIFY_ACCOUNT);
+        return res.status(HttpStatus.FORBIDDEN).json({message: 'Email has not been verified'});
+      } else if (msg.code === '2') {
+        return res.status(HttpStatus.FORBIDDEN).json({message: 'Email or Password is incorrect'});
       }
-    }
-    const token = await this.accountService.updateRefreshToken(account.id, account.toObject().role);
-    return token;
+      const token = await this.accountService.getTokens(msg.data._id,service.name);
+      service.updateToken(msg.data._id, token.refreshToken);
+      return res.status(HttpStatus.OK).json(token);
+    }).catch((err) => {
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({message: err.message});
+    });
   }
+
+  @Post('customer/signin')
+  async signinCustomer(@Body() body: SigninDto, @Res() res: Response) {
+    this.sign_in(body, res, this.customerService);
+  }
+
+  @Post('driver/signin')
+  async signinDriver(@Body() body: SigninDto, @Res() res: Response) {
+    this.sign_in(body, res, this.driverService);
+  }
+
+  // todo 
+  // @Post('restaurant/signin')
+  // async signinRestaurant(@Body() body: SigninDto, @Res() res: Response) {
+  //   this.sign_in(body, res, this.restaurantService);
+  // }
 
   
   // * OTP verify
-  @Post('verify/otp')
-  async verifyOTP(@Body() body: OtpVerifyDto, @Res() res: Response) {
-    const account = await this.accountService.findOneEmail(body.email);
-    if (!account) {
-      throw new BadRequestException('Account does not exist');
-    } else {
-      if (account.verified) {
-        throw new BadRequestException('Account has been verified');
-      } else {
-        const otp = await this.accountService.verifyOtp(account.id, body.otp, OTPType.VERIFY_ACCOUNT);
-        if (otp === OTPVerifyStatus.SUCCESS) {
-          this.accountService.updateVerifyAccount(account.id);
-          const message = 'Account verified successfully, please continue your sign in process' ;          
-          return res.status(HttpStatus.OK).json({ message });
-        } else {
-          throw new BadRequestException('OTP is incorrect or expired');
-        }
+  private async verifyOTP(body: OtpVerifyDto, res: Response, service: AccountServiceAbstract<Account>){
+    service.findOneByCondition({email: body.email}).then(async (account) => {
+      if (!account) {
+        return res.status(HttpStatus.NOT_FOUND).json({message: 'Email is not found'});
+      } else if (account.verified) {
+        return res.status(HttpStatus.BAD_REQUEST).json({message: 'Account is already verified'});
       }
-    }
+      const otp_result = await this.accountService.verifyOtp(account._id, body.otp, OTPType.VERIFY_ACCOUNT);
+      if (otp_result === OTPVerifyStatus.SUCCESS) {
+        await service.updateVerified(account._id);
+        return res.status(HttpStatus.OK).json({message: otp_result});
+      } else {
+        return res.status(HttpStatus.BAD_REQUEST).json({message: otp_result});
+      }
+    }).catch((err) => {
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({message: err.message});
+    });
   }
+
+  @Post('customer/verify/otp')
+  async verifyOTP_customer(@Body() body: OtpVerifyDto, @Res() res: Response) {
+    this.verifyOTP(body, res, this.customerService);
+  }
+
+  @Post('driver/verify/otp')
+  async verifyOTP_driver(@Body() body: OtpVerifyDto, @Res() res: Response) {
+    this.verifyOTP(body, res, this.driverService);
+  }
+  
 
   // * Refresh token
-  @UseGuards(AuthGuard('jwt-refresh'))
-  @Post('refresh')
-  async refreshToken(@Req() req: RequestWithUser, @Res() res: Response) {
-    const token = await this.accountService.check_updateRefreshToken(req.user.sub, req.user.role_id, req.user.refreshToken);
+  private async refreshToken(req: RequestWithUser, res: Response, service: AccountServiceAbstract<Account>){
+    const token = await service.findOneByCondition({_id: req.user.sub, refresh_token: req.user.refreshToken});
     if (!token) {
-      throw new UnauthorizedException('Refresh token is incorrect, please login again');
-    } 
-    return res.status(HttpStatus.CREATED).json(token);
+      return res.status(HttpStatus.UNAUTHORIZED).json({message: 'Refresh token is incorrect, please login again'});
+    }
+    const new_token = await this.accountService.getTokens(req.user.sub, service.name);
+    service.updateToken(req.user.sub, new_token.refreshToken);
+    return res.status(HttpStatus.CREATED).json(new_token);
+  }
+
+  @UseGuards(AuthGuard('jwt-refresh'))
+  @Get('customer/refresh')
+  async refreshToken_customer(@Req() req: RequestWithUser, @Res() res: Response) {
+    this.refreshToken(req, res, this.customerService);
+  }
+
+  @UseGuards(AuthGuard('jwt-refresh'))
+  @Get('driver/refresh')
+  async refreshToken_driver(@Req() req: RequestWithUser, @Res() res: Response) {
+    this.refreshToken(req, res, this.driverService);
+  }
+
+  // todo
+  // * Forgot password
+  private async forgotPasswordRequest(email: string, res: Response, service: AccountServiceAbstract<Account>){
+    service.findOneByCondition({email: email}).then(async (account) => {
+      if (!account) {
+        return res.status(HttpStatus.NOT_FOUND).json({message: 'Email is not found'});
+      }
+      this.accountService.sendOTPMail(account.email, account.full_name, account._id, OTPType.FORGOT_PASSWORD);
+      return res.status(HttpStatus.OK).json({message: 'Please check your email to reset password'});
+    }).catch((err) => {
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({message: err.message});
+    });
+  }
+
+  private async forgotPasswordValidate(body: OtpVerifyDto, res: Response, service: AccountServiceAbstract<Account>){
+    
   }
 
 
-  // * Get Profile
-  @UseGuards(AuthGuard('jwt'))
-  @ApiParam({ name: 'type', enum: RoleType })
-  @Get('profile/:type')
-  async getProfile(@Req() req: RequestWithUser, @Param() param) {
-    const type = param.type;
-    const account = await this.accountService.findOneId(req.user.sub);
-    let profile = {};
-    let result = {
-      data: {},
-      message: 'OK',
-    };
-    if (Object.values(RoleType).includes(type as RoleType)){
-      if (account.role[type]){
-        switch (type) {
-          case RoleType.CUSTOMER:
-            profile = await this.customerService.findOneId(account.role.customer);
-            result.data = {account_id: account.id, full_name: account.full_name, email: account.email, phone: account.phone, profile };
-            return result;
-          case RoleType.DRIVER:
-            profile = await this.driverService.findOneId(account.role.driver);
-            result.data = {account_id: account.id, full_name: account.full_name, email: account.email, phone: account.phone, profile };
-            return result;          
-          case RoleType.RESTAURANT:
-            profile =  await this.restaurantService.findOneId(account.role.restaurant);
-            result.data = {account_id: account.id, full_name: account.full_name, email: account.email, phone: account.phone, profile };
-            return result;
-        }
-      } else {
-        result.data = {account_id: account.id, full_name: account.full_name, email: account.email, phone: account.phone, profile };
-        result.message = 'NOT_FOUND';
-        return result;
-      }
-      
-    } else {
-      throw new NotFoundException('Role type is not valid');
-    }
-  }
 
-  // * Create new profile ROLE 
-  @UseGuards(AuthGuard('jwt'))
-  @Post('role/customer')
-  async createCustomer(@Body() body: createCustomerDto, @Req() req: RequestWithUser, @Res() res: Response) {
-    const account = await this.accountService.findOneId_role(req.user.sub);
-    if (account.role.customer){
-      throw new BadRequestException('You have already registered as customer');
-    } else {
-      const newCustomer = await this.customerService.create(body);
-      if (!newCustomer) {
-        throw new InternalServerErrorException('Something went wrong');
-      }
-      const updateAccount = await this.accountService.updateRole(req.user.sub, RoleType.CUSTOMER, newCustomer.id);
-      if (!updateAccount) {
-        throw new InternalServerErrorException('Something went wrong');
-      } 
-      return res.status(HttpStatus.CREATED).json({ message: 'Create new customer successfully' });
-    }
-  }  
-
-  @UseGuards(AuthGuard('jwt'))
-  @Post('role/driver')
-  async createDriver(@Body() body: CreateDriverDto, @Req() req: RequestWithUser, @Res() res: Response) {
-    const account = await this.accountService.findOneId_role(req.user.sub);
-    if (account.role.driver){
-      throw new BadRequestException('You have already registered as driver');
-    } else {
-      const newDriver = await this.driverService.create(body);
-      if (!newDriver) {
-        throw new InternalServerErrorException('Something went wrong');
-      }
-      const updateAccount = await this.accountService.updateRole(req.user.sub, RoleType.DRIVER, newDriver.id);
-      if (!updateAccount) {
-        throw new InternalServerErrorException('Something went wrong');
-      } 
-      return res.status(HttpStatus.CREATED).json({ message: 'Create new driver successfully' });
-    }
-  }
-
-  @UseGuards(AuthGuard('jwt'))
-  @Post('role/restaurant')
-  async createRestaurant(@Body() body: CreateRestaurantDto, @Req() req: RequestWithUser, @Res() res: Response) {
-    const account = await this.accountService.findOneId_role(req.user.sub);
-    if (account.role.restaurant){
-      throw new BadRequestException('You have already registered as restaurant');
-    } else {
-      const newRestaurant = await this.restaurantService.create(body);
-      if (!newRestaurant) {
-        throw new InternalServerErrorException('Something went wrong');
-      }
-      const updateAccount = await this.accountService.updateRole(req.user.sub, RoleType.RESTAURANT, newRestaurant.id);
-      if (!updateAccount) {
-        throw new InternalServerErrorException('Something went wrong');
-      } 
-      return res.status(HttpStatus.CREATED).json({ message: 'Create new restaurant successfully' });
-    }
-  }
-
+ 
 }

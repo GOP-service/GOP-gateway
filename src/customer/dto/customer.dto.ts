@@ -1,7 +1,8 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsBoolean, IsNotEmpty, IsString } from "class-validator";
+import { CreateAccountDto } from "src/auth/dto";
 
-export class CustomerDto{
+export class CustomerDto extends CreateAccountDto {
     @ApiProperty({
         description: 'Customer address',
         example: 'số 1 VVN, Linh Chiểu, Thủ Đức, TP.HCM'

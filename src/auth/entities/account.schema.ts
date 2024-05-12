@@ -1,43 +1,25 @@
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { Prop } from "@nestjs/mongoose";
 import { Document } from "mongoose";
-import { Role, RoleSchema } from "./role.schema";
+import { BaseEntity } from "src/utils/repository/base.entity";
 
-export type AccountDocument = Account & Document;
 
-@Schema({
-    toJSON: {
-        getters: true,
-        virtuals: true,
-    },
-    timestamps: true,
-})
-export class Account {
+export class Account extends BaseEntity{
     @Prop({ unique: true, sparse: true })
     phone: string
 
     @Prop({ required: true, unique: true })
     email: string
 
-    @Prop({ required: true, select: false })
+    @Prop({ required: true })
     password: string
 
     @Prop({ required: true })
     full_name: string
 
-    @Prop({ type: RoleSchema , default: new Role()})
-    role: Role
-
     @Prop()
-    refreshToken: string
+    refresh_token?: string
 
     @Prop({ default: false })
     verified: boolean
-
 }
 
-
-const AccountSchema = SchemaFactory.createForClass(Account)
-
-
-
-export { AccountSchema };

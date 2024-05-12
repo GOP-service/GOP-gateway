@@ -7,7 +7,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/utils/guards/roles.guard';
 import { Roles } from 'src/utils/decorators/roles.decorator';
 import { OTPType, OTPVerifyStatus, OrderStatus, RoleType } from 'src/utils/enums';
-import { AccountService } from 'src/auth/account.service';
+import { AuthService } from 'src/auth/auth.service';
 import { RequestWithUser } from 'src/utils/interfaces';
 import { CreateRestaurantCategoryDto } from './dto/create-restaurant-category.dto';
 import { UpdateItemsRestaurantDto } from './dto/update-item-restaurant-category.dto';

@@ -6,6 +6,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { OrderModule } from 'src/order/order.module';
 import { RestaurantModule } from 'src/restaurant/restaurant.module';
 import { PaymentModule } from 'src/payment/payment.module';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { PaymentModule } from 'src/payment/payment.module';
     ]),
     OrderModule,
     RestaurantModule,
-    PaymentModule
+    PaymentModule,
   ],
   controllers: [CustomerController],
   providers: [CustomerService],
