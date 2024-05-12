@@ -1,8 +1,9 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { SchemaTypes, Types } from "mongoose";
+import { HydratedDocument, SchemaTypes, Types } from "mongoose";
 import { ModifierGroup } from "./modifier_groups.schema";
+import { BaseEntity } from "src/utils/repository/base.entity";
 
-export type FoodItemDocument = FoodItem & Document;
+export type FoodItemDocument = HydratedDocument<FoodItem>;
 
 @Schema({
     toJSON: {
@@ -11,8 +12,9 @@ export type FoodItemDocument = FoodItem & Document;
     },
     timestamps: true,
 })
-export class FoodItem {
+export class FoodItem extends BaseEntity{
     constructor(name: string, bio: string, price: number, modifier_groups: ModifierGroup[]){
+        super();
         this.name = name;
         this.bio = bio;
         this.price = price;

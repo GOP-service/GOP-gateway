@@ -19,7 +19,7 @@ export class CreateTransportOrderDto extends CreateOrderDto {
 
     @ApiProperty({
         title: 'LONG -> LAT',
-        example: new LocationObject([ 106.7653176,10.8564044])
+        example: new LocationObject([ 106.7653176,10.8564044], 'coffe izy')
     })
     @IsNotEmpty()
     pickup_location: LocationObject
@@ -33,7 +33,7 @@ export class CreateTransportOrderDto extends CreateOrderDto {
     pickup_address: string
 
     @ApiProperty({
-        example: new LocationObject([106.7957762,10.8452565])
+        example: new LocationObject([106.7957762,10.8452565], 'ĐH SPKT TP.HCM - Cơ sở 2')
     })
     @IsNotEmpty()
     dropoff_location: LocationObject

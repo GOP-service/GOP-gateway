@@ -9,7 +9,7 @@ import { RoleType } from "src/utils/enums";
 import { ConfigService } from "@nestjs/config";
 
 export abstract class AccountServiceAbstract <T extends Account> extends BaseServiceAbstract<T>{
-  constructor(
+  protected constructor(
       model: Model<T>
   ) {
       super(model);
@@ -37,7 +37,11 @@ export abstract class AccountServiceAbstract <T extends Account> extends BaseSer
       data: null
     } // success
     msg.data = await this.findOneByCondition({email: email});
-    if (!msg.data && argon2.verify(msg.data.password, password)) {
+    if (!msg.data) {
+      msg.code = '2'; // wrong email or password
+      return msg;
+    }
+    if (!await argon2.verify(msg.data.password, password)) {
       msg.code = '2'; // wrong email or password
       return msg;
     }

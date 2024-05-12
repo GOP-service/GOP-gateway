@@ -30,7 +30,7 @@ export class DriverDto extends CreateAccountDto{
     vehicle_type: VehicleType;
 
     @ApiProperty({
-        example: new LocationObject([106.77195728296408, 10.850739590040357])
+        example: new LocationObject([106.77195728296408, 10.850739590040357], '123 Nguyen Dinh Chieu, District 3, HCMC')
     })
     @IsNotEmpty()
     location: LocationObject

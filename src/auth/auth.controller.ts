@@ -21,6 +21,7 @@ import { Customer } from 'src/customer/entities/customer.schema';
 import { Account } from './entities/account.schema';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { ForgotPasswordRequestDto } from './dto/forgot-req.dto';
 
 @ApiBearerAuth()
 @ApiTags('Authentications')
@@ -60,6 +61,11 @@ export class AuthController {
     this.sign_up(body, res, this.driverService);
   }
 
+  @Post('restaurant/signup')
+  async signupRestaurant(@Body() body: CreateRestaurantDto , @Res() res: Response) {
+    this.sign_up(body, res, this.restaurantService);
+  }
+
   // * SIGN IN ACCOUNT
   private sign_in(body: SigninDto, res: Response, service: AccountServiceAbstract<Account>){
     service.signIn(body.email, body.password).then(async (msg) => {
@@ -67,7 +73,7 @@ export class AuthController {
         this.accountService.sendOTPMail(msg.data.email, msg.data.full_name, msg.data._id, OTPType.VERIFY_ACCOUNT);
         return res.status(HttpStatus.FORBIDDEN).json({message: 'Email has not been verified'});
       } else if (msg.code === '2') {
-        return res.status(HttpStatus.FORBIDDEN).json({message: 'Email or Password is incorrect'});
+        return res.status(HttpStatus.NOT_FOUND).json({message: 'Email or Password is incorrect'});
       }
       const token = await this.accountService.getTokens(msg.data._id,service.name);
       service.updateToken(msg.data._id, token.refreshToken);
@@ -75,6 +81,7 @@ export class AuthController {
     }).catch((err) => {
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({message: err.message});
     });
+
   }
 
   @Post('customer/signin')
@@ -86,12 +93,11 @@ export class AuthController {
   async signinDriver(@Body() body: SigninDto, @Res() res: Response) {
     this.sign_in(body, res, this.driverService);
   }
-
-  // todo 
-  // @Post('restaurant/signin')
-  // async signinRestaurant(@Body() body: SigninDto, @Res() res: Response) {
-  //   this.sign_in(body, res, this.restaurantService);
-  // }
+ 
+  @Post('restaurant/signin')
+  async signinRestaurant(@Body() body: SigninDto, @Res() res: Response) {
+    this.sign_in(body, res, this.restaurantService);
+  }
 
   
   // * OTP verify
@@ -119,10 +125,10 @@ export class AuthController {
     this.verifyOTP(body, res, this.customerService);
   }
 
-  @Post('driver/verify/otp')
-  async verifyOTP_driver(@Body() body: OtpVerifyDto, @Res() res: Response) {
-    this.verifyOTP(body, res, this.driverService);
-  }
+  // @Post('driver/verify/otp')
+  // async verifyOTP_driver(@Body() body: OtpVerifyDto, @Res() res: Response) {
+  //   this.verifyOTP(body, res, this.driverService);
+  // }
   
 
   // * Refresh token
@@ -148,6 +154,12 @@ export class AuthController {
     this.refreshToken(req, res, this.driverService);
   }
 
+  @UseGuards(AuthGuard('jwt-refresh'))
+  @Get('restaurant/refresh')
+  async refreshToken_restaurant(@Req() req: RequestWithUser, @Res() res: Response) {
+    this.refreshToken(req, res, this.restaurantService);
+  }
+
   // todo
   // * Forgot password
   private async forgotPasswordRequest(email: string, res: Response, service: AccountServiceAbstract<Account>){
@@ -163,10 +175,52 @@ export class AuthController {
   }
 
   private async forgotPasswordValidate(body: OtpVerifyDto, res: Response, service: AccountServiceAbstract<Account>){
-    
+    service.findOneByCondition({email: body.email}).then(async (account) => {
+      if (!account) {
+        return res.status(HttpStatus.NOT_FOUND).json({message: 'Email is not found'});
+      }
+      const otp_result = await this.accountService.verifyOtp(account._id, body.otp, OTPType.FORGOT_PASSWORD);
+      if (otp_result === OTPVerifyStatus.SUCCESS) {
+        return res.status(HttpStatus.OK).json({message: otp_result});
+      } else {
+        return res.status(HttpStatus.BAD_REQUEST).json({message: otp_result});
+      }
+    }).catch((err) => {
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({message: err.message});
+    });
   }
 
+  
+  @Post('customer/forgot-password/request')
+  async forgotPasswordRequest_customer(@Body() dto: ForgotPasswordRequestDto, @Res() res: Response) {
+    // this.forgotPasswordRequest(email, res, this.customerService);
+    // return dto.email
+    res.status(HttpStatus.OK).json({message: dto.email});
+  }
 
+  @Post('customer/forgot-password/validate')
+  async forgotPasswordValidate_customer(@Body() body: OtpVerifyDto, @Res() res: Response) {
+    this.forgotPasswordValidate(body, res, this.customerService);
+  }
 
+  @Post('driver/forgot-password/request')
+  async forgotPasswordRequest_driver(@Body('email') email: string, @Res() res: Response) {
+    this.forgotPasswordRequest(email, res, this.driverService);
+  }
+
+  @Post('driver/forgot-password/validate')
+  async forgotPasswordValidate_driver(@Body() body: OtpVerifyDto, @Res() res: Response) {
+    this.forgotPasswordValidate(body, res, this.driverService);
+  }
+
+  @Post('restaurant/forgot-password/request')
+  async forgotPasswordRequest_restaurant(@Body('email') email: string, @Res() res: Response) {
+    this.forgotPasswordRequest(email, res, this.restaurantService);
+  }
+
+  @Post('restaurant/forgot-password/validate')
+  async forgotPasswordValidate_restaurant(@Body() body: OtpVerifyDto, @Res() res: Response) {
+    this.forgotPasswordValidate(body, res, this.restaurantService);
+  }
  
 }

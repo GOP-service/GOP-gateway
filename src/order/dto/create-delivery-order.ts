@@ -14,7 +14,7 @@ export class CreateDeliveryOrderDto extends CreateOrderDto {
 
     @ApiProperty({
         title: 'LONG -> LAT',
-        example: new LocationObject([106.77163744626203, 10.849841965343426])
+        example: new LocationObject([106.77163744626203, 10.849841965343426], 'Đại học Sư phạm Kỹ thuật TP.HCM')
     })
     @IsNotEmpty()
     delivery_location: LocationObject

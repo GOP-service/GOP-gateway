@@ -9,9 +9,13 @@ import { AccountServiceAbstract } from 'src/auth/account.abstract.service';
 @Injectable()
 export class  CustomerService extends AccountServiceAbstract<Customer> {
   constructor(
-    @InjectModel(Customer.name) customerModel: Model<Customer>,
+    @InjectModel(Customer.name) private readonly customerModel: Model<Customer>,
   ) {
     super(customerModel);
+  }
+
+  async getProfile(id: string) {
+    
   }
   
   

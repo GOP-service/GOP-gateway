@@ -12,6 +12,10 @@ import { Order, OrderSchema } from 'src/order/entities/order.schema';
 import { OrderModule } from 'src/order/order.module';
 import { Otp, OtpSchema } from 'src/auth/entities/otp.schema';
 import { AzureStorageModule } from 'src/utils/auzre/storage-blob.module';
+import { ModifierService } from './modifier.service';
+import { ModifierGroupService } from './modifier_groups.service';
+import { RestaurantCategoryService } from './restaurant_category.service';
+import { FoodItemService } from './food_item.service';
 
 @Module({
   imports: [
@@ -28,7 +32,7 @@ import { AzureStorageModule } from 'src/utils/auzre/storage-blob.module';
     
   ],
   controllers: [RestaurantController],
-  providers: [RestaurantService],
+  providers: [RestaurantService, RestaurantCategoryService, FoodItemService, ModifierGroupService, ModifierService],
   exports: [RestaurantService],
 })
 export class RestaurantModule {}

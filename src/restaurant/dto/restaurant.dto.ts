@@ -3,8 +3,9 @@ import { CuisinesCategory, RestaurantStatus } from "src/utils/enums";
 import { RestaurantCategory, RestaurantCategorySchema } from "../entities/restaurant_category.schema";
 import { IsEmpty, IsEnum, IsNotEmpty, IsObject, IsString } from "class-validator";
 import { LocationObject } from "src/utils/subschemas/location.schema";
+import { CreateAccountDto } from "src/auth/dto";
 
-export class RestaurantDto{
+export class RestaurantDto extends CreateAccountDto {
     @ApiProperty(
         {
             enum: CuisinesCategory,
@@ -20,10 +21,10 @@ export class RestaurantDto{
     @ApiProperty()
     @IsNotEmpty()
     @IsString()
-    name: string
+    restaurant_name: string
     
     @ApiProperty({
-        example: new LocationObject([10.850739590040357,106.77195728296408])
+        example: new LocationObject([10.850739590040357,106.77195728296408], '123 Nguyen Dinh Chieu, District 3, HCMC')
     })
     @IsNotEmpty()
     location: LocationObject

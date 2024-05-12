@@ -15,7 +15,7 @@ import { JwtService } from '@nestjs/jwt';
 @Injectable()
 export class DriverService extends AccountServiceAbstract<Driver>{
   constructor(
-      @InjectModel(Driver.name) driverModel: Model<Driver>,
+      @InjectModel(Driver.name) private readonly driverModel: Model<Driver>,
     ) {
       super(driverModel);
     }

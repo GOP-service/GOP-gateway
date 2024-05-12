@@ -1,6 +1,8 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { HydratedDocument } from "mongoose";
+import { BaseEntity } from "src/utils/repository/base.entity";
 
-export type ModifierDocument = Modifier & Document;
+export type ModifierDocument = HydratedDocument<Modifier>
 
 @Schema({
     toJSON: {
@@ -9,8 +11,9 @@ export type ModifierDocument = Modifier & Document;
     },
     timestamps: true,
 })
-export class Modifier {
+export class Modifier extends BaseEntity{
     constructor(name: string, price: number){
+        super();
         this.name = name;
         this.price = price;
     }
