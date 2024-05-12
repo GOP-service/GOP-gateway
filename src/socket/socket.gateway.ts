@@ -6,14 +6,12 @@ import { CustomerService } from 'src/customer/customer.service';
 import { DriverService } from 'src/driver/driver.service';
 import { UpdateLocationDriverDto } from 'src/driver/dto/update-location-driver.dto';
 import { OrderDocument } from 'src/order/entities/order.schema';
-import { TransportOrderDocument } from 'src/order/entities/transport_order.schema';
 import { RestaurantService } from 'src/restaurant/restaurant.service';
 import { Server,Socket } from "socket.io";
 import { OrderService } from 'src/order/order.service';
 import { OrderStatus, OrderType, VehicleType } from 'src/utils/enums';
 import { CreateDeliveryOrderDto } from 'src/order/dto/create-delivery-order';
 import { error } from 'console';
-import { DeliveryOrderDocument } from 'src/order/entities/delivery_order.schema';
 
 
 
@@ -25,13 +23,7 @@ export class SocketGateway implements NestGateway {
   @WebSocketServer()
   server: Server;
   
-  constructor(
-    private readonly customerService: CustomerService,
-    private readonly driverService: DriverService,
-    private readonly restaurantService: RestaurantService,
-    private readonly orderService: OrderService,
-    
-  ) {}
+  constructor() {}
   private logger = new Logger('SocketGateway')
 
   afterInit(server: Server) {
@@ -45,6 +37,46 @@ export class SocketGateway implements NestGateway {
   handleDisconnect(client: Socket) {
     console.log('Client disconnected');
   }
+
+  notifyOrderState_customer(customer: string, order: string, order_status: OrderStatus){
+    const msg = {
+      order_id: order,
+      message: order_status
+    }
+    this.server.emit(`customer.order.status.${customer}`, msg);
+  }
+
+  notifyOrderState_driver(driver: string, order: string, order_status: OrderStatus){
+    const msg = {
+      order_id: order,
+      message: order_status
+    }
+    this.server.emit(`driver.order.status.${driver}`, msg);
+  }
+
+  notifyOrderState_restaurant(restaurant: string, order: string, order_status: OrderStatus){
+    const msg = {
+      order_id: order,
+      message: order_status
+    }
+    this.server.emit(`restaurant.order.status.${restaurant}`, msg);
+  }
+
+  notifyOrderAssign_Driver(driver: string, order: string){
+    const msg = {
+      order_id: order,
+    }
+    this.server.emit(`driver.order.assign.${driver}`, msg);
+  }
+
+  notifyOrderAssign_Restaurant(restaurant: string, order: string){
+    const msg = {
+      order_id: order,
+    }
+    this.server.emit(`restaurant.order.assign.${restaurant}`, msg);
+  }
+
+
 
   // // DELIVERY ORDER
   // @OnEvent('order.food.created')

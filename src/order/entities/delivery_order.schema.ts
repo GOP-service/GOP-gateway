@@ -2,14 +2,14 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, SchemaTypes } from "mongoose";
 import { FoodItem } from "src/restaurant/entities/food_item.schema";
 import { LocationObject, LocationSchema } from "src/utils/subschemas/location.schema";
-import { OrderDocument } from "./order.schema";
+import { Order } from "./order.schema";
 import { OrderFoodItems } from "./order_food_items.schema";
+import { OrderType } from "src/utils/enums";
 
-export type DeliveryOrderDocument = DeliveryOrder & OrderDocument
+export type DeliveryOrderType = DeliveryOrder & Order
 
 @Schema()
 export class DeliveryOrder {
-
     @Prop({ })
     restaurant_id: string
 

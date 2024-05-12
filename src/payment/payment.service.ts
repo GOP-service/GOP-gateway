@@ -9,13 +9,13 @@ import { CreatePromotionDto } from './dto/create-promotion.dto';
 import { Promotion, PromotionDocument } from './entities/promotion.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { BillStatus, PaymentMethod, PromotionDiscountType } from 'src/utils/enums';
+import { BillStatus, OrderType, PaymentMethod, PromotionDiscountType } from 'src/utils/enums';
 import { UpdatePromotionDto } from './dto/update-promotion.dto';
 import { Bill, BillDocument } from './entities/bill.schema';
 import { Ledger, LedgerDocument } from './entities/ledger.schema';
+import { Order, OrderDetailsType } from 'src/order/entities/order.schema';
 import { DeliveryOrder } from 'src/order/entities/delivery_order.schema';
 import { TransportOrder } from 'src/order/entities/transport_order.schema';
-import { Order, OrderDetails } from 'src/order/entities/order.schema';
 
 
 @Injectable()
@@ -44,7 +44,7 @@ export class PaymentService {
       vnp_Params['vnp_TxnRef'] = orderId;
       vnp_Params['vnp_OrderInfo'] = 'Thanh toan cho ma GD: ' + orderId;
       vnp_Params['vnp_OrderType'] = 'other';
-      vnp_Params['vnp_Amount'] = amount;
+      vnp_Params['vnp_Amount'] = amount*100;
       vnp_Params['vnp_ReturnUrl'] = returnUrl;
       vnp_Params['vnp_IpAddr'] = ip;
       vnp_Params['vnp_CreateDate'] = format(date, 'yyyyMMddHHmmss');;
@@ -133,6 +133,7 @@ export class PaymentService {
 
     async createBill(createBillDto: CreateBillDto) {
       const new_bill = new this.billModel({
+        order_id: createBillDto.order._id,
         payment_method: createBillDto.payment_method,
       });
 
@@ -142,7 +143,7 @@ export class PaymentService {
       //todo tính tiền từ promotion
       if (createBillDto.order instanceof DeliveryOrder) {
         new_bill.sub_total = createBillDto.order.delivery_fare + createBillDto.order.order_cost;
-      } else if (createBillDto.order instanceof TransportOrder){
+      } else {
         new_bill.sub_total = createBillDto.order.trip_fare;        
       }
 
@@ -152,35 +153,32 @@ export class PaymentService {
       return await new_bill.save();
     }
 
-    async updateBill(id: string, updateBillDto: UpdateBillDto) {
-      return 
-    }
-
     async getBill(id: string): Promise<BillDocument> {
       return await this.billModel.findById(id).exec();
     }
 
-    async updateBillPaid(order : OrderDetails) {
+    async updateBillComplete(order : OrderDetailsType) {
       const bill = await this.billModel.findOne(order.bill).exec();
 
-      bill.status = BillStatus.PAID;
+      bill.status = BillStatus.COMPLETED;
 
       if (order instanceof DeliveryOrder) {
         if (bill.payment_method === PaymentMethod.VNPAY) {
-          // update ledger for restaurant and driver with 90% profit
+
+          // cập nhật ledger cho restaurant và driver với 90% lợi nhuận
           this.updateLedger(order.restaurant_id, order, order.order_cost * 0.9);
           this.updateLedger(order.driver_id, order, order .delivery_fare * 0.9);
         } else if (bill.payment_method === PaymentMethod.CASH){
-          // Update ledgers for restaurant and drivers pay 10% of profits for the platform
+          // cập nhật ledgers cho restaurant và drivers trả 10% lợi nhận cho nền tảng
           this.updateLedger(order.restaurant_id, order, order.order_cost * -0.1);
           this.updateLedger(order.driver_id, order, order.delivery_fare * -0.1);
         }
       } else if (order instanceof TransportOrder){
         if (bill.payment_method === PaymentMethod.VNPAY) {
-          // update ledger for driver with 90% profit
+          // cập nhật ledgers cho drivers với 90% lợi nhuận
           this.updateLedger(order.driver_id, order, order.trip_fare * 0.9);
         } else if (bill.payment_method === PaymentMethod.CASH){
-          // Update ledgers for drivers pay 10% of profits for the platform
+          // cập nhật ledgers cho drivers trả 10% lợi nhuận cho nền tảng
           this.updateLedger(order.driver_id, order, order.trip_fare * -0.1);
         }
       }

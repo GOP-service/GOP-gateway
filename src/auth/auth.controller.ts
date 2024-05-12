@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, ConflictException, InternalServerErrorException, BadRequestException, Req, UseGuards, Logger, UnauthorizedException, Res, HttpCode, HttpStatus, ForbiddenException, NotFoundException } from '@nestjs/common';
-import e, { Response } from 'express';
+import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { CustomerService } from 'src/customer/customer.service';
 import { DriverService } from 'src/driver/driver.service';

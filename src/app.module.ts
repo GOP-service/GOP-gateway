@@ -15,7 +15,6 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { SocketModule } from './socket/socket.module';
 import { SocketGateway } from './socket/socket.gateway';
 import { VietMapModule } from './utils/map-api/viet-map.module';
-import { VnpayModule } from './utils/vnpay-payment/vnpay.module';
 
 
 @Module({
@@ -64,7 +63,6 @@ import { VnpayModule } from './utils/vnpay-payment/vnpay.module';
     AdminModule,
     SocketModule,
     VietMapModule,
-    VnpayModule
   ],
   controllers: [AppController],
   providers: [],

@@ -15,6 +15,9 @@ export class Bill {
     @Prop({ enum: BillStatus, default: BillStatus.PENDING })
     status: BillStatus
 
+    @Prop({ })
+    order_id: string
+
     @Prop({ required: true, enum: PaymentMethod, default: PaymentMethod.CASH })
     payment_method: PaymentMethod
 

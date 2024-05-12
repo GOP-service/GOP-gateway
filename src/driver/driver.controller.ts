@@ -12,7 +12,6 @@ import { OrderService } from 'src/order/order.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PaymentService } from 'src/payment/payment.service';
 import { CreateBillDto } from 'src/payment/dto/create-bill.dto';
-import { TransportOrderDocument } from 'src/order/entities/transport_order.schema';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'),RolesGuard)

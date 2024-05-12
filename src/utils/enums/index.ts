@@ -80,9 +80,10 @@ export enum OrderType {
 }
 
 export enum BillStatus {
-    PENDING = "PENDING",
-    PAID = "PAID",
-    CANCELLED = "CANCELLED"
+    PENDING = "PENDING", // initial status của cash order
+    PAID = "PAID", // status của VNPAY order
+    COMPLETED = "COMPLETED", // status của order khi đã hoàn thành
+    CANCELLED = "CANCELLED" // status của order khi bị hủy
 }
 
 export enum PaymentMethod {

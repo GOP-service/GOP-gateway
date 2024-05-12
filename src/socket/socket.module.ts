@@ -6,12 +6,8 @@ import { RestaurantModule } from 'src/restaurant/restaurant.module';
 import { OrderModule } from 'src/order/order.module';
 
 @Module({
-    imports: [
-        CustomerModule,
-        DriverModule,
-        RestaurantModule,
-        OrderModule,
-    ],
+    imports: [],
     providers: [SocketGateway],
+    exports: [SocketGateway]
 })
 export class SocketModule {}
