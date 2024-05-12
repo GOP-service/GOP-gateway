@@ -32,6 +32,11 @@ export class CustomerController {
   hello() {
     return 'hello customer'
   }
+
+  @Post('promotion/apply')
+  applyPromotion(@Req() req: RequestWithUser, @Body() body: ApplyPromotionDto){
+    return this.paymentService.validateAndApplyPromotion(req.user.sub, body)
+  }
   
   @Post('transport/quote')
   quoteTransportOrder(@Body() createOrderDto: CreateTransportOrderDto) {

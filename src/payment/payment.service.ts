@@ -9,13 +9,14 @@ import { CreatePromotionDto } from './dto/create-promotion.dto';
 import { Promotion, PromotionDocument } from './entities/promotion.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { BillStatus, PaymentMethod, PromotionDiscountType } from 'src/utils/enums';
+import { BillStatus, PaymentMethod, PromotionDiscountType, PromotionScopeType } from 'src/utils/enums';
 import { UpdatePromotionDto } from './dto/update-promotion.dto';
 import { Bill, BillDocument } from './entities/bill.schema';
 import { Ledger, LedgerDocument } from './entities/ledger.schema';
 import { DeliveryOrder } from 'src/order/entities/delivery_order.schema';
 import { TransportOrder } from 'src/order/entities/transport_order.schema';
 import { Order, OrderDetails } from 'src/order/entities/order.schema';
+import { ApplyPromotionDto } from './dto/apply-promotion.dto';
 
 
 @Injectable()
@@ -102,33 +103,63 @@ export class PaymentService {
     throw new Error('Update state failed')
   }
 
-  async validateAndApplyPromotion(customer_id: string, order_total: number, delivery_fare: number, list_promotion_id: string[]): Promise<number> {
-    let discount_value = 0;
-    let newDeliveryFare = delivery_fare;
+  isValidPromotion(customer_id: string, promo: Promotion, promoDto: ApplyPromotionDto){
     const currDate = new Date();
-  
-    for (const promo_id of list_promotion_id) {
+    return promo &&
+      promo.conditions.start_time <= currDate &&
+      promo.conditions.end_time >= currDate &&
+      promo.quotas.limit > promo.unavailable_users.length &&
+      promo.unavailable_users.filter(id => id === customer_id).length < promo.quotas.total_count_per_count && 
+      promoDto.subtotal >= promo.conditions.minBasketAmount;
+  }
+
+  async validateAndApplyPromotion(customer_id: string, promoDto: ApplyPromotionDto): Promise<number> {
+    let total_discount_value = 0;
+    for (const promo_id of promoDto.list_promotion_id) {
       const promo = await this.promotionModdel.findById(promo_id);
-  
-      if (promo && 
-          promo.conditions.start_time <= currDate && 
-          promo.conditions.end_time >= currDate && 
-          promo.quotas.limit > promo.unavailable_users.length &&
-          promo.unavailable_users.filter(id => id === customer_id).length <= promo.quotas.total_count_per_count
-      ) {
+      if (this.isValidPromotion(customer_id, promo, promoDto)) {
+        promo.unavailable_users.push(customer_id)
+        await promo.save();
         switch (promo.discount.type) {
           case PromotionDiscountType.DELIVERY:
-            newDeliveryFare -= promo.discount.value;
-            if (newDeliveryFare <= 0) {
-              return delivery_fare;
+            total_discount_value += (promoDto.delivery_fare - promo.discount.value) > 0 ? promo.discount.value : promoDto.delivery_fare;
+            break;
+          case PromotionDiscountType.PERCENTAGE: 
+            switch(promo.discount.scope.type){
+              case PromotionScopeType.ORDER: 
+                const discount_value = promoDto.subtotal * (promo.discount.value / 100)
+                if(discount_value <= promo.discount.cap) {
+                  total_discount_value += discount_value
+                } else total_discount_value += promo.discount.cap
+                break;
+              case PromotionScopeType.CATEGORY: 
+                break;
+              case PromotionScopeType.ITEMS:
+                break;
             }
             break;
+          case PromotionDiscountType.TRANSPORT:
+            const discount_value = promoDto.subtotal - promo.discount.value;
+            total_discount_value += discount_value > 0 ? promo.discount.value : promoDto.subtotal
+            break;
+          case PromotionDiscountType.NET:
+            switch(promo.discount.scope.type) {
+              case PromotionScopeType.ORDER:
+                const discount_value = promoDto.subtotal - promo.discount.value;
+                total_discount_value += discount_value > 0 ? promo.discount.value : promoDto.subtotal 
+                break;
+              case PromotionScopeType.CATEGORY: 
+                break;
+              case PromotionScopeType.ITEMS:
+                break;
+            }
+            break;
+          default: 
+            break
         }
       }
     }
-  
-    discount_value += newDeliveryFare > 0 ? delivery_fare - newDeliveryFare : delivery_fare;
-    return discount_value;
+    return -total_discount_value;
   }
 
     async createBill(createBillDto: CreateBillDto) {
@@ -150,7 +181,7 @@ export class PaymentService {
       new_bill.total = new_bill.sub_total - discount + new_bill.platform_fee;
 
       return await new_bill.save();
-    }
+    } 
 
     async updateBill(id: string, updateBillDto: UpdateBillDto) {
       return 
