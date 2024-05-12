@@ -12,16 +12,19 @@ export type RestaurantFoodReviewDocument = RestaurantFoodReview & Document;
 })
 export class RestaurantFoodReview {
     @Prop({ required: true})
-    owner: string
+    owner_id: string
 
     @Prop({ required: true})
     content: string
+
+    @Prop({ required: true})
+    type: string
 
     @Prop({ required: true, min: 0, max: 5 })
     rating: number
 
     @Prop({ required: true})
-    food_id: string
+    reviewable_id: string
 }
 
 export const RestaurantFoodReviewSchema = SchemaFactory.createForClass(RestaurantFoodReview);

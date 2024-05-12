@@ -7,6 +7,8 @@ import { ApiTags } from '@nestjs/swagger';
 import { CreatePromotionDto } from './dto/create-promotion.dto';
 import { log } from 'console';
 import { UpdatePromotionDto } from './dto/update-promotion.dto';
+import { RequestWithUser } from 'src/utils/interfaces';
+import { ApplyPromotionDto } from './dto/apply-promotion.dto';
 
 @ApiTags('Bill')
 @Controller('bill')
@@ -15,25 +17,4 @@ export class PaymentController {
     private readonly paymentService: PaymentService,
     private readonly vnpayService: VnpayService,
   ) {}
-
-
-  @Get()
-  findAll(@Req() req) {
-
-  }
-
-  @Post('promotion')
-  async createPromotion(@Body() body: CreatePromotionDto){
-    return this.paymentService.createPromotion(body)
-  }
-
-  @Patch('promotion/state')
-  async updatePromotion(@Body() body: UpdatePromotionDto){
-    try {
-      const promo = await this.paymentService.updatePromotion(body)
-      return promo
-    } catch (error) {
-      return error
-    }
-  }
 }

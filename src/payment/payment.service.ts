@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateBillDto } from './dto/create-bill.dto';
 import { UpdateBillDto } from './dto/update-bill.dto';
 import * as crypto from 'crypto';
@@ -9,7 +9,7 @@ import { CreatePromotionDto } from './dto/create-promotion.dto';
 import { Promotion, PromotionDocument } from './entities/promotion.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { BillStatus, PaymentMethod, PromotionType } from 'src/utils/enums';
+import { BillStatus, PaymentMethod, PromotionDiscountType } from 'src/utils/enums';
 import { UpdatePromotionDto } from './dto/update-promotion.dto';
 import { Bill, BillDocument } from './entities/bill.schema';
 import { Ledger, LedgerDocument } from './entities/ledger.schema';
@@ -77,9 +77,22 @@ export class PaymentService {
       return sorted;
   }
 
-  createPromotion(dto: CreatePromotionDto) {
-    const promo = new this.promotionModdel(dto);
+  async getAllPromotion():Promise<PromotionDocument[]>{
+    const promo = await this.promotionModdel.find();
+    return promo;
+  }
+
+  async createPromotion(dto: CreatePromotionDto) {
+    const promo = await new this.promotionModdel(dto);
     return promo.save();
+  }
+
+  async deletePromotion(promotion_id: string) {
+    const promo = await this.promotionModdel.findByIdAndDelete(promotion_id)
+    if (!promo) {
+      throw new NotFoundException("Promotion not found!");
+    }
+    return promo;
   }
 
   async updatePromotion(dto: UpdatePromotionDto) {
@@ -89,21 +102,32 @@ export class PaymentService {
     throw new Error('Update state failed')
   }
 
-  async validateAndApplyPromotion(id: string, order_total: number, list_promotion_id: string[]): Promise<number>{
+  async validateAndApplyPromotion(customer_id: string, order_total: number, delivery_fare: number, list_promotion_id: string[]): Promise<number> {
     let discount_value = 0;
-    const promotions = list_promotion_id.map(async (promo_id) => {
+    let newDeliveryFare = delivery_fare;
+    const currDate = new Date();
+  
+    for (const promo_id of list_promotion_id) {
       const promo = await this.promotionModdel.findById(promo_id);
-      if (promo) {
-        const currDate = new Date();
-        if (currDate >= promo.start_time && currDate <= promo.end_time && order_total >= promo.flat_off_discount.min_spend && !promo.unavailable_users.includes(id) && promo.unavailable_users.length < promo.limit) {
-          promo.unavailable_users.push(id);
-          await promo.save(); 
-          discount_value += promo.flat_off_discount.discount_value
+  
+      if (promo && 
+          promo.conditions.start_time <= currDate && 
+          promo.conditions.end_time >= currDate && 
+          promo.quotas.limit > promo.unavailable_users.length &&
+          promo.unavailable_users.filter(id => id === customer_id).length <= promo.quotas.total_count_per_count
+      ) {
+        switch (promo.discount.type) {
+          case PromotionDiscountType.DELIVERY:
+            newDeliveryFare -= promo.discount.value;
+            if (newDeliveryFare <= 0) {
+              return delivery_fare;
+            }
+            break;
         }
       }
-    });
-    
-    await Promise.all(promotions);
+    }
+  
+    discount_value += newDeliveryFare > 0 ? delivery_fare - newDeliveryFare : delivery_fare;
     return discount_value;
   }
 

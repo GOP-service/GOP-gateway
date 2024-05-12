@@ -110,22 +110,26 @@ export type DistanceFare = {
 }
 
 // PROMOTION
-export enum PromotionType {
-    FLATOFF = 'FLATOFF'
-}
-
-export enum PromotionOrderType {
-    DELIVERY = 'DELIVERY',
-    RESTAURANT = 'RESTAURANT',
-    TRANSPORT = 'TRANSPORT'
-}
-
-export enum PromotionState {
-    ACTIVE = 'ACTIVE',
-    DEACTIVE = 'DEACTIVE',
-}
 
 export enum  PromotionUserGroup {
     ALL_CUSTOMER = 'ALL_CUSTOMER'
+}
+
+export enum PromotionScopeType {
+    ORDER = 'ORDER',
+    ITEMS = 'ITEMS',
+    CATEGORY = 'CATEGORY'
+}
+
+export enum PromotionDiscountType {
+    PERCENTAGE = 'PERCENTAGE',
+    DELIVERY = 'DELIVERY',
+    TRANSPORT = 'TRANSPORT',
+    NET = 'NET'
+}
+
+export enum CurrencyCode {
+    VND = 'VND',
+    USD = 'USD'
 }
 // *
