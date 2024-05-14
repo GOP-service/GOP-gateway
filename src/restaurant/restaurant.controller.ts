@@ -16,6 +16,8 @@ import { OrderService } from 'src/order/order.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FoodItemDto } from './dto/food-item.dto';
 import { CreateFoodItemDto } from './dto/create-food-item.dto';
+import { RestaurantCategoryService } from './restaurant_category.service';
+import { UpdateRestaurantCategoryDto } from './dto/update-restaurant-category.dto';
 
 
 @ApiBearerAuth()
@@ -27,8 +29,55 @@ export class RestaurantController {
     private readonly orderService: OrderService,
     private readonly restaurantService: RestaurantService,
     private readonly eventEmitter: EventEmitter2,
-    ) {}
-    
+  ) {}
+  
+  // RESTAURANT
+  @Roles(RoleType.RESTAURANT)
+  @Patch('info/update')
+  async updateRestaurant(@Req() req: RequestWithUser, @Body() body: UpdateRestaurantDto){
+    try {
+      const restaurant = await this.restaurantService.updateRestaurant(req.user.sub, body);
+      return restaurant;
+    } catch (error) {
+      return error
+    }
+  }
+
+  // CATEGORY
+  @Roles(RoleType.RESTAURANT)
+  @Post('category')
+  async createCategory(@Req() req: RequestWithUser, @Body() body: CreateRestaurantCategoryDto){
+    try {
+      const restaurant = await this.restaurantService.addCategory(req.user.sub, body)
+      return restaurant;
+    } catch (error) {
+      return error
+    }
+  }
+
+  @Roles(RoleType.RESTAURANT)
+  @Patch('category')
+  async updateCategory(@Req() req: RequestWithUser, @Body() body: UpdateRestaurantCategoryDto){
+    try {
+      const restaurant = await this.restaurantService.updateCategory(req.user.sub, body)
+      return restaurant;
+    } catch (error) {
+      return error
+    }
+  }
+
+  // FOOD ITEM
+  @Roles(RoleType.RESTAURANT)
+  @Post('fooditem')
+  async createFoodItem(@Req() req: RequestWithUser, @Body() body: CreateFoodItemDto){
+    try {
+      const restaurant = await this.restaurantService.createFoodItem(req.user.sub, body);
+      return restaurant;
+    } catch (error) {
+      return error
+    }
+  }
+
   // @Roles(RoleType.RESTAURANT)
   // @Get('info')
   // info(@Req() req: RequestWithUser) {

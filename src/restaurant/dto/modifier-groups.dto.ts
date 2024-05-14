@@ -22,6 +22,6 @@ export class ModifierGroupsDto {
     @ApiProperty({
         example: 'tu nhap di'
     })
-    modifier: ModifierDto[]
+    modifier: ModifierDto[] | string[]
 
 }

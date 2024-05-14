@@ -17,4 +17,9 @@ export class PaymentController {
     private readonly paymentService: PaymentService,
     private readonly vnpayService: VnpayService,
   ) {}
+
+  @Get('vnpay')
+  createPayment(@Ip() ip: string){
+    return this.paymentService.getURLVnPay(ip, 100000, '1232')
+  }
 }

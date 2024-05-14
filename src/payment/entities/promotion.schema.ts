@@ -15,7 +15,7 @@ export type PromotionDocument = Promotion & Document
 })
 export class Promotion extends BaseEntity{
 
-    @Prop({ default: "" })
+    @Prop({ default: null })
     restaurant_id: string
 
     @Prop({ required: true })

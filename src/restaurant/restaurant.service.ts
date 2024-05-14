@@ -24,6 +24,7 @@ import { FoodItemService } from './food_item.service';
 import { RestaurantCategoryService } from './restaurant_category.service';
 import { ModifierGroupService } from './modifier_groups.service';
 import { ModifierService } from './modifier.service';
+import { UpdateRestaurantCategoryDto } from './dto/update-restaurant-category.dto';
 
 @Injectable()
 export class RestaurantService extends AccountServiceAbstract<Restaurant>{
@@ -40,25 +41,44 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
   }
 
 
+  async updateRestaurant(id: string, dto: UpdateRestaurantDto): Promise<Restaurant> {
+    const restaurant = await this.update(id, dto as Partial<UpdateRestaurantDto>)
+    return restaurant;
+  }
 
+  async addCategory(restaurant_id: string, dto: CreateRestaurantCategoryDto): Promise<RestaurantDocument>{
+    const category = await this.restaurantCategoryService.createCategory(dto);
 
+    const restaurant = await this.restaurantModel.findByIdAndUpdate(restaurant_id, 
+      { 
+        $push: {
+          restaurant_categories: category._id
+        }
+      },
+      { new: true }
+    ).exec();
 
-  // async createCategory(id: string,dto: CreateRestaurantCategoryDto): Promise<RestaurantDocument> {
-  //   const restaurant = await this.restaurantModel.findById(id).exec();
-  //   const category = new this.restaurantCategoryModel(dto);
-  //   category.save();
-  //   restaurant.restaurant_categories.push(category.id)
-  //   return restaurant.save();
-  // }
+    return restaurant;
+  }
 
-  // async updateCategories(id: string, dto: UpdateItemsRestaurantDto, index: number): Promise<RestaurantDocument> {
-  //   const restaurant = await this.restaurantModel.findById(id).exec();
-  //   const newCategories = new RestaurantCategory(dto);
-  //   restaurant.restaurant_categories[index] = newCategories;
-    
-  //   return restaurant.save();
-  // }
+  async updateCategory(restaurant_id: string, dto: UpdateRestaurantCategoryDto): Promise<RestaurantCategory> {
+    const restaurant = await this.findOneById(restaurant_id);
+    if(restaurant && restaurant.restaurant_categories.includes(dto._id)){
+      const category = await this.restaurantCategoryService.updateCategory(dto);
+      return category;
+    }
+    else throw new Error("Invalid restaurant")
+  }
   
+  async createFoodItem(restaurant_id: string, dto: CreateFoodItemDto){
+    const restaurant = await this.findOneById(restaurant_id);
+    if(restaurant){
+      const foodItem = await this.foodItemService.createFoodItem(dto);
+      this.restaurantCategoryService.addFoodItem(foodItem._id, dto.category_id)
+      return foodItem;
+    }
+    else throw new Error("Invalid restaurant")
+  }
   // // async addCategory(id: string, dto: CreateRestaurantCategoryDto): Promise<RestaurantDocument> {
   // //   const restaurant = await this.restaurantModel.findById(id).exec();
   // //   for (const item of dto.food_items) {
