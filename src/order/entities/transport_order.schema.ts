@@ -1,34 +1,35 @@
 import { Schema,Prop, SchemaFactory } from "@nestjs/mongoose"
 import { LocationObject } from "src/utils/subschemas/location.schema"
-import { VehicleType } from "src/utils/enums";
-import { OrderDocument } from "./order.schema";
+import { OrderType, VehicleType } from "src/utils/enums";
+import { Order, OrderDocument } from "./order.schema";
 
-export type TransportOrderDocument = TransportOrder & OrderDocument
+export type TransportOrderType = TransportOrder & Order
 
 @Schema()
 export class TransportOrder {
-    @Prop({ required: true, enum: VehicleType })
+
+    @Prop({ enum: VehicleType })
     vehicle_type: VehicleType
 
-    @Prop({ required: true})
+    @Prop({ })
     pickup_location: LocationObject 
 
-    @Prop({ required: true})
+    @Prop({ })
     pickup_address: string
 
-    @Prop({ required: true})
+    @Prop({ })
     dropoff_location: LocationObject
 
-    @Prop({ required: true})
+    @Prop({ })
     dropoff_address: string
     
-    @Prop({ required: true})
+    @Prop({ })
     distance: number
 
-    @Prop({ required: true})
+    @Prop({ })
     duration: number
 
-    @Prop({ required: true})
+    @Prop({ })
     trip_fare: number
 }
 

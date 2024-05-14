@@ -6,6 +6,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { OrderModule } from 'src/order/order.module';
 import { PaymentModule } from 'src/payment/payment.module';
 import { JwtModule } from '@nestjs/jwt';
+import { SocketModule } from 'src/socket/socket.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { JwtModule } from '@nestjs/jwt';
       { name: Driver.name, schema: DriverSchema, },
     ]),
     OrderModule,
+    SocketModule,
     PaymentModule
   ],
   controllers: [DriverController],

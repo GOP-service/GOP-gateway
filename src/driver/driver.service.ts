@@ -7,7 +7,6 @@ import { Model } from 'mongoose';
 import { LocationObject } from 'src/utils/subschemas/location.schema';
 import { DriverStatus, VehicleType } from 'src/utils/enums';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { TransportOrderDocument } from 'src/order/entities/transport_order.schema';
 import { AccountServiceAbstract } from 'src/auth/account.abstract.service';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -38,22 +37,22 @@ export class DriverService extends AccountServiceAbstract<Driver>{
   // }
 
   
-  // //TODO add filter to allocate driver
-  // async findDriverInDistance(point: LocationObject, distance: number, vehicle_type: VehicleType): Promise<DriverDocument> {
-  //   return await this.driverModel.findOne({
-  //     status: { $eq: DriverStatus.ONLINE },
-  //     vehicle_type: { $eq: vehicle_type },
-  //     location: {
-  //       $near: {
-  //         $geometry: {
-  //           type: "Point",
-  //           coordinates: point.coordinates
-  //         },
-  //         $maxDistance: distance
-  //       }
-  //     }
-  //   });
-  // }
+  //TODO add filter to allocate driver
+  async findDriverInDistance(point: LocationObject, distance: number, vehicle_type: VehicleType): Promise<DriverDocument> {
+    return await this.driverModel.findOne({
+      status: { $eq: DriverStatus.ONLINE },
+      vehicle_type: { $eq: vehicle_type },
+      location: {
+        $near: {
+          $geometry: {
+            type: "Point",
+            coordinates: point.coordinates
+          },
+          $maxDistance: distance
+        }
+      }
+    });
+  }
 
   // async findOneId(id: string): Promise<DriverDocument> {
   //   return this.driverModel.findById(id).exec();
