@@ -21,7 +21,7 @@ export class Restaurant extends Account{
     cuisine_categories: CuisinesCategory[]
 
     @Prop([{ type: SchemaTypes.ObjectId, ref: 'RestaurantCategory'}])
-    restaurant_categories: RestaurantCategory[]
+    restaurant_categories: string[]
 
     @Prop({ enum: RestaurantStatus, default: RestaurantStatus.CLOSED })
     status: RestaurantStatus

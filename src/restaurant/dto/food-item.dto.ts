@@ -30,5 +30,5 @@ export class FoodItemDto {
         example: 'tu nhap di'
     })
     @IsOptional()
-    modifier_groups: ModifierGroupsDto[];
+    modifier_groups: ModifierGroupsDto[] | string[];
 }

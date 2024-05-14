@@ -13,7 +13,7 @@ export type FoodItemDocument = HydratedDocument<FoodItem>;
     timestamps: true,
 })
 export class FoodItem extends BaseEntity{
-    constructor(name: string, bio: string, price: number, modifier_groups: ModifierGroup[]){
+    constructor(name: string, bio: string, price: number, modifier_groups: string[]){
         super();
         this.name = name;
         this.bio = bio;
@@ -33,8 +33,8 @@ export class FoodItem extends BaseEntity{
     @Prop()
     price: number
 
-    @Prop({ type: [SchemaTypes.ObjectId], ref: 'ModifierGroup'})
-    modifier_groups: ModifierGroup[]
+    @Prop({ type: [SchemaTypes.ObjectId], ref: 'ModifierGroup', default: []})
+    modifier_groups: string[]
 }
 
 export const FoodItemSchema = SchemaFactory.createForClass(FoodItem);

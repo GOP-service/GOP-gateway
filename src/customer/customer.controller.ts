@@ -62,6 +62,20 @@ export class CustomerController {
     }
   }
 
+  @Post('promotion/apply')
+  applyPromotion(@Req() req: RequestWithUser, @Body() body: ApplyPromotionDto){
+    return this.paymentService.validateAndApplyPromotion(req.user.sub, body)
+  }
+  
+  // @Post('transport/quote')
+  // quoteTransportOrder(@Body() createOrderDto: CreateTransportOrderDto) {
+  //   try {
+  //     return this.orderService.TransportOrderQuote(createOrderDto);
+  //   } catch (e) {
+  //     return e
+  //   }
+  // }
+
   @Post('transport/place')
   async placeTransportOrder(@Body() createOrderDto: CreateTransportOrderDto, @Req() req: RequestWithUser ) {
     try {

@@ -3,6 +3,7 @@ import { CurrencyCode} from "src/utils/enums";
 import { PromotionCondition } from "./promotion_condition.schema";
 import { PromotionDiscount } from "./promotion_discount.shema";
 import { PromotionQuotas } from "./promotion_quotas.schema";
+import { BaseEntity } from "src/utils/repository/base.entity";
 export type PromotionDocument = Promotion & Document
 
 @Schema({
@@ -12,9 +13,9 @@ export type PromotionDocument = Promotion & Document
     },
     timestamps: true
 })
-export class Promotion {
+export class Promotion extends BaseEntity{
 
-    @Prop({ default: "" })
+    @Prop({ default: null })
     restaurant_id: string
 
     @Prop({ required: true })

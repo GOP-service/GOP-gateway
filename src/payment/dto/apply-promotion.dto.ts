@@ -12,11 +12,10 @@ export class ApplyPromotionDto {
         example: 200000
     })
     @IsNotEmpty()
-    order_total: number
+    subtotal: number
 
     @ApiProperty({
         example: 12000
     })
-    @IsNotEmpty()
     delivery_fare: number
 }
