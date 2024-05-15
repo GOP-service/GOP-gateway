@@ -8,7 +8,7 @@ import { PaymentMethod, RoleType } from 'src/utils/enums';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OrderService } from 'src/order/order.service';
 import { CreateTransportOrderDto } from 'src/order/dto/create-transport-order';
-import { RequestWithUser } from 'src/utils/interfaces';
+import { ICustomerController, RequestWithUser } from 'src/utils/interfaces';
 import { CreateDeliveryOrderDto } from 'src/order/dto/create-delivery-order';
 import { RestaurantService } from 'src/restaurant/restaurant.service';
 import { PaymentService } from 'src/payment/payment.service';
@@ -21,7 +21,7 @@ import e, { Response } from 'express';
 @ApiTags('Customer')
 @Controller('customer')
 @Roles(RoleType.CUSTOMER)
-export class CustomerController {
+export class CustomerController implements ICustomerController{
   constructor(
     private readonly customerService: CustomerService,
     private readonly paymentService: PaymentService,
@@ -51,8 +51,8 @@ export class CustomerController {
   }
 
   @Patch('profile')
-  async modifyProfile(@Req() req: RequestWithUser){
-
+  async modifyProfile(@Req() req: RequestWithUser, @Res() res: Response) {
+    return;
   }
   //todo add update profile
 
@@ -140,7 +140,7 @@ export class CustomerController {
 
   }
   
-  @Get('order/history')
+  @Get('order/details/:id')
   async getOrderDetails(){
 
   }
