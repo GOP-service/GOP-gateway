@@ -8,7 +8,7 @@ import { PaymentMethod, RoleType } from 'src/utils/enums';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OrderService } from 'src/order/order.service';
 import { CreateTransportOrderDto } from 'src/order/dto/create-transport-order';
-import { RequestWithUser } from 'src/utils/interfaces';
+import { ICustomerController, RequestWithUser } from 'src/utils/interfaces';
 import { CreateDeliveryOrderDto } from 'src/order/dto/create-delivery-order';
 import { RestaurantService } from 'src/restaurant/restaurant.service';
 import { PaymentService } from 'src/payment/payment.service';
@@ -21,7 +21,7 @@ import e, { Response } from 'express';
 @ApiTags('Customer')
 @Controller('customer')
 @Roles(RoleType.CUSTOMER)
-export class CustomerController {
+export class CustomerController implements ICustomerController{
   constructor(
     private readonly customerService: CustomerService,
     private readonly paymentService: PaymentService,
@@ -30,6 +30,7 @@ export class CustomerController {
     private readonly eventEmitter: EventEmitter2,
   ) {}
   
+  // ACCOUNT MANAGEMT
   @Get('profile')
   async getProfile(@Req() req: RequestWithUser, @Res() res: Response) {
     return await this.customerService.findOneById(req.user.sub).then(profile => {
@@ -49,10 +50,14 @@ export class CustomerController {
     });
   }
 
+  @Patch('profile')
+  async modifyProfile(@Req() req: RequestWithUser, @Res() res: Response) {
+    return;
+  }
   //todo add update profile
 
   
-  
+  // TRANPORT BOOKING
   @Post('transport/quote')
   quoteTransportOrder(@Body() createOrderDto: CreateTransportOrderDto, ) {
     try {
@@ -60,11 +65,6 @@ export class CustomerController {
     } catch (e) {
       return e
     }
-  }
-
-  @Post('promotion/apply')
-  applyPromotion(@Req() req: RequestWithUser, @Body() body: ApplyPromotionDto){
-    return this.paymentService.validateAndApplyPromotion(req.user.sub, body)
   }
   
   // @Post('transport/quote')
@@ -93,6 +93,7 @@ export class CustomerController {
     }
   }
 
+  // FOOD BOOKING  
   @Post('delivery/quote')
   async quoteFoodOrder(@Body() createOrderDto: CreateDeliveryOrderDto) {
     // try {
@@ -115,5 +116,37 @@ export class CustomerController {
     // }
   }
 
+  // APPLY PROMOTION
+  @Post('promotion/apply')
+  applyPromotion(@Req() req: RequestWithUser, @Body() body: ApplyPromotionDto){
+    return this.paymentService.validateAndApplyPromotion(req.user.sub, body)
+  }
 
+  // REVIEW
+  @Post('review')
+  async createReview(){
+
+  }
+
+  @Delete('review')
+  async deleteReview(){
+    
+  }
+
+  // BOOKING MANAGEMENT
+  @Get('order/history')
+  async getOrderHistory(){
+
+
+  }
+  
+  @Get('order/details/:id')
+  async getOrderDetails(){
+
+  }
+
+  @Patch('order/cancel')
+  async cancelOrder(){
+
+  }
 }
