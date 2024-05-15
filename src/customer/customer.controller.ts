@@ -30,6 +30,7 @@ export class CustomerController {
     private readonly eventEmitter: EventEmitter2,
   ) {}
   
+  // ACCOUNT MANAGEMT
   @Get('profile')
   async getProfile(@Req() req: RequestWithUser, @Res() res: Response) {
     return await this.customerService.findOneById(req.user.sub).then(profile => {
@@ -49,10 +50,14 @@ export class CustomerController {
     });
   }
 
+  @Patch('profile')
+  async modifyProfile(@Req() req: RequestWithUser){
+
+  }
   //todo add update profile
 
   
-  
+  // TRANPORT BOOKING
   @Post('transport/quote')
   quoteTransportOrder(@Body() createOrderDto: CreateTransportOrderDto, ) {
     try {
@@ -60,11 +65,6 @@ export class CustomerController {
     } catch (e) {
       return e
     }
-  }
-
-  @Post('promotion/apply')
-  applyPromotion(@Req() req: RequestWithUser, @Body() body: ApplyPromotionDto){
-    return this.paymentService.validateAndApplyPromotion(req.user.sub, body)
   }
   
   // @Post('transport/quote')
@@ -93,6 +93,7 @@ export class CustomerController {
     }
   }
 
+  // FOOD BOOKING  
   @Post('delivery/quote')
   async quoteFoodOrder(@Body() createOrderDto: CreateDeliveryOrderDto) {
     // try {
@@ -115,5 +116,37 @@ export class CustomerController {
     // }
   }
 
+  // APPLY PROMOTION
+  @Post('promotion/apply')
+  applyPromotion(@Req() req: RequestWithUser, @Body() body: ApplyPromotionDto){
+    return this.paymentService.validateAndApplyPromotion(req.user.sub, body)
+  }
 
+  // REVIEW
+  @Post('review')
+  async createReview(){
+
+  }
+
+  @Delete('review')
+  async deleteReview(){
+    
+  }
+
+  // BOOKING MANAGEMENT
+  @Get('order/history')
+  async getOrderHistory(){
+
+
+  }
+  
+  @Get('order/history')
+  async getOrderDetails(){
+
+  }
+
+  @Patch('order/cancel')
+  async cancelOrder(){
+
+  }
 }
