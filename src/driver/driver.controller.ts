@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query } from '@nestjs/common';
+import { Controller, Post, Body, Patch, Param, Delete, UseGuards, Req, Query, Res, Get } from '@nestjs/common';
 import { DriverService } from './driver.service';
 import { CreateDriverDto } from './dto/create-driver.dto';
 import { UpdateDriverDto } from './dto/update-driver.dto';
@@ -7,11 +7,13 @@ import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/utils/guards/roles.guard';
 import { IDriverController, RequestWithUser } from 'src/utils/interfaces';
 import { UpdateStatusDriverDto } from './dto/update-status-driver.dto';
-import { OrderStatus, PaymentMethod, VehicleType } from 'src/utils/enums';
+import { DriverStatus, OrderStatus, PaymentMethod, VehicleType } from 'src/utils/enums';
 import { OrderService } from 'src/order/order.service';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { PaymentService } from 'src/payment/payment.service';
 import { CreateBillDto } from 'src/payment/dto/create-bill.dto';
+import { Response } from 'express';
+import { AssignDriverDto } from './dto/assign-driver.dto';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'),RolesGuard)
@@ -88,11 +90,45 @@ export class DriverController implements IDriverController{
   //   return this.driverService.updateStatus(req.user.role_id.driver, dto.status);
   // }
 
-  // @Get()
-  // findAll() {
-  //   return this.driverService.findAll();
-  // }
+  @Get('profile')
+  async findAll(@Req() req: RequestWithUser, @Res() res: Response) {
+    await this.driverService.findOneById(req.user.sub).then(profile => {
+      if (profile) {
+        return res.status(200).json({
+          _id: profile._id,
+          email: profile.email,
+          full_name: profile.full_name,
+          // phone: profile.phone, //todo add phone
+          avatar: profile.avatar,
+          vehicle: profile.vehicle_model,
+          vehicle_type: profile.vehicle_type,
+          vehicle_plate: profile.vehicle_plate_number,
+          status: profile.status,
+        })
+      }
+    });
+  }
 
+  @Get('startwork')
+  async startWork(@Req() req: RequestWithUser){
+    return this.driverService.update(req.user.sub, {status: DriverStatus.ONLINE});
+  }
+
+  @Get('stopwork')
+  async stopWork(@Req() req: RequestWithUser){
+    return this.driverService.update(req.user.sub, {status: DriverStatus.OFFLINE});
+  }
+
+  @Get('orderhistory')
+  async orderHistory(@Req() req: RequestWithUser){
+    // return this.orderService.findOrderByDriverId(req.user.sub);
+  }
+
+  @OnEvent('Assign.Driver.request')
+  async assignDriverRequest(payload: AssignDriverDto){
+    return this.driverService.findDriverInDistance(payload);
+    
+  }
   // @Get(':id')
   // findOne(@Param('id') id: string) {
   //   return this.driverService.findOneId(id);

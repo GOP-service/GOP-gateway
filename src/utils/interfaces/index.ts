@@ -36,27 +36,11 @@ export interface BaseServiceInterface<T> {
 export interface ICustomerController {
     getProfile(req: RequestWithUser, res: Response): Promise<any>
 
-    modifyProfile(req: RequestWithUser, res: Response): Promise<any>
+    modifyProfile(req: RequestWithUser, dto: any, res: Response): Promise<any>;
 
-    quoteTransportOrder(createOrderDto: CreateTransportOrderDto): Promise<any>
+    createReview(req: RequestWithUser, res: Response): Promise<any>;
 
-    placeTransportOrder(createOrderDto: CreateTransportOrderDto, req: RequestWithUser): Promise<any>
-
-    quoteFoodOrder(createOrderDto: CreateDeliveryOrderDto): Promise<any>
-
-    placeFoodOrder(createOrderDto: CreateDeliveryOrderDto, req: RequestWithUser): Promise<any>
-
-    applyPromotion(req: RequestWithUser, body: ApplyPromotionDto): Promise<any>
-
-    createReview(): Promise<any>
-
-    deleteReview(): Promise<any>
-
-    getOrderHistory(): Promise<any>
-
-    getOrderDetails(): Promise<any>
-    
-    cancelOrder(): Promise<any>
+    deleteReview(req: RequestWithUser, id:string, res: Response): Promise<any>;
 }
 
 export interface IDriverController {
@@ -105,3 +89,42 @@ export interface IPayment {
 
     refundPayment(): Promise<any>
 }
+
+
+export interface IOrderController {
+    handleOrderCreatedEvent(payload: string): void; // initiate order 
+
+    handleOrderAssignedEvent(payload: string): void; // assign driver
+
+    handleOrderStatusChangeEvent(payload: string): void; // tracking  order status
+
+    placeTransportOrder(createOrderDto: CreateTransportOrderDto, req: RequestWithUser): Promise<any>;
+    
+    quoteTransportOrder(createOrderDto: CreateTransportOrderDto): Promise<any>;
+
+    placeDeliveryOrder(createOrderDto: CreateTransportOrderDto, req: RequestWithUser): Promise<any>;
+
+    quoteDeliveryOrder(createOrderDto: CreateTransportOrderDto): Promise<any>;
+
+    cancelOrder(dto:{reason:string, id: string}, req: RequestWithUser): Promise<any>;
+
+    // updateOrder(id: string, dto: any): Promise<any>;
+
+    userGetOrder(req: RequestWithUser, dto: any): Promise<any>;
+
+    driverGetOrder(req: RequestWithUser, dto: any ): Promise<any>;
+
+    restaurantGetOrder(req: RequestWithUser, dto: any): Promise<any>;
+
+    findOrderByDriverId(id: string): Promise<any>;
+
+    findOrderByCustomerId(id: string): Promise<any>;
+
+    findOrderByRestaurantId(id: string): Promise<any>;
+    
+    findOrderById(id: string): Promise<any>;
+
+    findAll(): Promise<any>;
+
+}
+

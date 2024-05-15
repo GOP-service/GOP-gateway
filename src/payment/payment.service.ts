@@ -198,20 +198,20 @@ export class PaymentService {
         if (bill.payment_method === PaymentMethod.VNPAY) {
 
           // cập nhật ledger cho restaurant và driver với 90% lợi nhuận
-          this.updateLedger(order.restaurant_id, order, order.order_cost * 0.9);
-          this.updateLedger(order.driver_id, order, order .delivery_fare * 0.9);
+          this.updateLedger(order.restaurant._id, order, order.order_cost * 0.9);
+          this.updateLedger(order.driver._id, order, order .delivery_fare * 0.9);
         } else if (bill.payment_method === PaymentMethod.CASH){
           // cập nhật ledgers cho restaurant và drivers trả 10% lợi nhận cho nền tảng
-          this.updateLedger(order.restaurant_id, order, order.order_cost * -0.1);
-          this.updateLedger(order.driver_id, order, order.delivery_fare * -0.1);
+          this.updateLedger(order.restaurant._id, order, order.order_cost * -0.1);
+          this.updateLedger(order.driver._id, order, order.delivery_fare * -0.1);
         }
       } else if (order instanceof TransportOrder){
         if (bill.payment_method === PaymentMethod.VNPAY) {
           // cập nhật ledgers cho drivers với 90% lợi nhuận
-          this.updateLedger(order.driver_id, order, order.trip_fare * 0.9);
+          this.updateLedger(order.driver._id, order, order.trip_fare * 0.9);
         } else if (bill.payment_method === PaymentMethod.CASH){
           // cập nhật ledgers cho drivers trả 10% lợi nhuận cho nền tảng
-          this.updateLedger(order.driver_id, order, order.trip_fare * -0.1);
+          this.updateLedger(order.driver._id, order, order.trip_fare * -0.1);
         }
       }
 

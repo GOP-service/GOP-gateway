@@ -60,7 +60,7 @@ export class OrderService extends BaseServiceAbstract< OrderDetails >{
 
     async TransportOrderPlace_Cash(dto: CreateTransportOrderDto, customer_id: string ): Promise<TransportOrderType> {
 
-        const new_dto = {...dto, order_status: OrderStatus.ALLOCATING, customer_id: customer_id, order_time: new Date(Date.now()+7*60*60*1000),};
+        const new_dto = {...dto, order_status: OrderStatus.ALLOCATING, customer: customer_id, order_time: new Date(Date.now()+7*60*60*1000),};
         let new_transport_order = new this.transportOrderModel(new_dto);
 
         // Get distance and duration from pickup to dropoff location form VietMap API
@@ -84,6 +84,13 @@ export class OrderService extends BaseServiceAbstract< OrderDetails >{
         
         return new_transport_order.save();
     }
+
+    
+    // async findOrderByDriverId(driver_id: string): Promise<OrderDetails[]> {
+    //     return await this.orderModel.find({driver: driver_id})
+    //                                 .populate({path: 'customer_id driver_id bill'})
+    //                                 .exec();
+    // }
 
     
 
