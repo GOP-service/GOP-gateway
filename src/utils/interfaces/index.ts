@@ -2,7 +2,6 @@ import { CreateTransportOrderDto } from "src/order/dto/create-transport-order";
 import { RoleType } from "../enums";
 import { Response } from 'express';
 import { CreateDeliveryOrderDto } from "src/order/dto/create-delivery-order";
-import { ApplyPromotionDto } from "src/payment/dto/apply-promotion.dto";
 export interface JwtPayload {
     sub: string
     role: RoleType
@@ -45,8 +44,6 @@ export interface ICustomerController {
     quoteFoodOrder(createOrderDto: CreateDeliveryOrderDto): Promise<any>
 
     placeFoodOrder(createOrderDto: CreateDeliveryOrderDto, req: RequestWithUser): Promise<any>
-
-    applyPromotion(req: RequestWithUser, body: ApplyPromotionDto): Promise<any>
 
     createReview(): Promise<any>
 
@@ -100,8 +97,6 @@ export interface IPayment {
     createTransaction(): Promise<any>
 
     cancelTransaction(): Promise<any>
-
-    performTransaction(): Promise<any>
 
     refundPayment(): Promise<any>
 }

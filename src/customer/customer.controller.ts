@@ -12,7 +12,7 @@ import { ICustomerController, RequestWithUser } from 'src/utils/interfaces';
 import { CreateDeliveryOrderDto } from 'src/order/dto/create-delivery-order';
 import { RestaurantService } from 'src/restaurant/restaurant.service';
 import { PaymentService } from 'src/payment/payment.service';
-import { ApplyPromotionDto } from 'src/payment/dto/apply-promotion.dto';
+import { ApplyCampaignDto } from 'src/payment/dto/apply-campaign.dto';
 import { error } from 'console';
 import e, { Response } from 'express';
 
@@ -116,10 +116,10 @@ export class CustomerController implements ICustomerController{
     // }
   }
 
-  // APPLY PROMOTION
-  @Post('promotion/apply')
-  applyPromotion(@Req() req: RequestWithUser, @Body() body: ApplyPromotionDto){
-    return this.paymentService.validateAndApplyPromotion(req.user.sub, body)
+  // APPLY CAMPAIGN
+  @Post('campaign/apply')
+  applyCampaign(@Req() req: RequestWithUser, @Body() body: ApplyCampaignDto){
+    return this.paymentService.validateAndApplyCampaign(req.user.sub, body)
   }
 
   // REVIEW

@@ -22,7 +22,7 @@ export class Bill {
     payment_method: PaymentMethod
 
     @Prop({ })
-    promotion_id: string[]
+    campaign_id: string[]
 
     @Prop({ })
     total: number

@@ -1,10 +1,10 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { CurrencyCode} from "src/utils/enums";
-import { PromotionCondition } from "./promotion_condition.schema";
-import { PromotionDiscount } from "./promotion_discount.shema";
-import { PromotionQuotas } from "./promotion_quotas.schema";
 import { BaseEntity } from "src/utils/repository/base.entity";
-export type PromotionDocument = Promotion & Document
+import { CampaignCondition } from "./campaign_condition.schema";
+import { CampaignDiscount } from "./campaign_discount.shema";
+import { CampaignQuotas } from "./campaign_quotas.schema";
+export type CampaignDocument = Campaign & Document
 
 @Schema({
     toJSON: {
@@ -13,7 +13,7 @@ export type PromotionDocument = Promotion & Document
     },
     timestamps: true
 })
-export class Promotion extends BaseEntity{
+export class Campaign extends BaseEntity{
 
     @Prop({ default: null })
     restaurant_id: string
@@ -25,13 +25,13 @@ export class Promotion extends BaseEntity{
     description: string
 
     @Prop({ required: true })
-    conditions: PromotionCondition
+    conditions: CampaignCondition
 
     @Prop({ required: true })
-    discount: PromotionDiscount
+    discount: CampaignDiscount
 
     @Prop({})
-    quotas: PromotionQuotas
+    quotas: CampaignQuotas
 
     @Prop({ default: [] })
     unavailable_users: string[]
@@ -40,4 +40,4 @@ export class Promotion extends BaseEntity{
     currency_code: CurrencyCode
 }
 
-export const PromotionSchema = SchemaFactory.createForClass(Promotion)
+export const CampaignSchema = SchemaFactory.createForClass(Campaign)

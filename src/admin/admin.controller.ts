@@ -1,7 +1,7 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { PaymentService } from 'src/payment/payment.service';
-import { CreatePromotionDto } from 'src/payment/dto/create-promotion.dto';
+import { CreateCampaignDto } from 'src/payment/dto/create-campaign.dto';
 
 @Controller('admin')
 export class AdminController {
@@ -10,9 +10,9 @@ export class AdminController {
     private readonly paymentService: PaymentService
   ) {}
 
-  @Post('promotion')
-  createPromotion(@Body() body: CreatePromotionDto){
-    const promo = this.paymentService.createPromotion(body)
+  @Post('campaign')
+  createCampaign(@Body() body: CreateCampaignDto){
+    const promo = this.paymentService.createCampaign(body)
     return promo;
   }
 

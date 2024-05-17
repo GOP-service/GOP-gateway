@@ -1,13 +1,13 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsNotEmpty } from "class-validator";
-import { PromotionScopeType } from "src/utils/enums";
+import { CampaignScopeType } from "src/utils/enums";
 
-export class PromotionScopeDto {
+export class CampaignScopeDto {
     @ApiProperty({
         example: "ORDER"
     })
     @IsNotEmpty()
-    type: PromotionScopeType
+    type: CampaignScopeType
 
     @ApiProperty({})
     object_ids: number
