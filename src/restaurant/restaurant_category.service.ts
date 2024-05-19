@@ -19,8 +19,8 @@ export class RestaurantCategoryService extends BaseServiceAbstract<RestaurantCat
         return category;
     }
 
-    async updateCategory(dto: UpdateRestaurantCategoryDto) {
-        const category = await this.update(dto._id, dto as Partial<UpdateRestaurantCategoryDto>)
+    async updateCategory(cate_id: string, dto: UpdateRestaurantCategoryDto) {
+        const category = await this.update(cate_id, { name: dto.name, bio: dto.bio })
         return category;
     }
 

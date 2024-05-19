@@ -61,17 +61,17 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
     return restaurant;
   }
 
-  async updateCategory(restaurant_id: string, dto: UpdateRestaurantCategoryDto): Promise<RestaurantCategory> {
-    if(this.isCategoryOwnedByRestaurant){
-      const category = await this.restaurantCategoryService.updateCategory(dto);
+  async updateCategory(restaurant_id: string, cate_id: string, dto: UpdateRestaurantCategoryDto): Promise<RestaurantCategory> {
+    if(this.isCategoryOwnedByRestaurant(restaurant_id, cate_id)){
+      const category = await this.restaurantCategoryService.updateCategory(cate_id ,dto);
       return category;
     }
     else throw new NotFoundException("Restaurant not found")
   }
 
-  async isCategoryOwnedByRestaurant(restaurant_id: string, dto: UpdateRestaurantCategoryDto): Promise<boolean> {
+  async isCategoryOwnedByRestaurant(restaurant_id: string, cate_id: string): Promise<boolean> {
     const restaurant = await this.findOneById(restaurant_id);
-    return  restaurant && (restaurant.restaurant_categories.filter(cate => (cate as RestaurantCategory)._id == dto._id || (cate as string) == dto._id )).length > 0;
+    return  restaurant && (restaurant.restaurant_categories.filter(cate => (cate as RestaurantCategory)._id == cate_id || (cate as string) == cate_id )).length > 0;
   }
   
   async createFoodItem(restaurant_id: string, dto: CreateFoodItemDto){

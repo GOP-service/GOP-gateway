@@ -87,10 +87,10 @@ export class RestaurantController implements IRestaurantController, ICampaign{
     }
   }
 
-  @Patch('catrgory/update')
-  async updateCategory(@Req() req: RequestWithUser, @Body() body: UpdateRestaurantCategoryDto): Promise<any> {
+  @Patch('catrgory/:id/update')
+  async updateCategory(@Req() req: RequestWithUser, @Param('id') id: string, @Body() body: UpdateRestaurantCategoryDto): Promise<any> {
      try {
-      const restaurant = await this.restaurantService.updateCategory(req.user.sub, body)
+      const restaurant = await this.restaurantService.updateCategory(req.user.sub, id, body)
       return restaurant;
     } catch (error) {
       return error

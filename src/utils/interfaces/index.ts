@@ -103,7 +103,7 @@ export interface IRestaurantController {
 
     createCategory(req: RequestWithUser, body: CreateRestaurantCategoryDto): Promise<any>
 
-    updateCategory(req: RequestWithUser, body: UpdateRestaurantCategoryDto): Promise<any>
+    updateCategory(req: RequestWithUser, id: string, body: UpdateRestaurantCategoryDto): Promise<any>
 
     deleteCategory(): Promise<any>
 
