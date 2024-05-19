@@ -78,13 +78,23 @@ export class RestaurantController implements IRestaurantController, ICampaign{
   }
 
   @Post('category/create')
-  createCategory(): Promise<any> {
-    throw new Error('Method not implemented.');
+  async createCategory(@Req() req: RequestWithUser, @Body() body: CreateRestaurantCategoryDto): Promise<any> {
+    try {
+      const restaurant = await this.restaurantService.addCategory(req.user.sub, body)
+      return restaurant;
+    } catch (error) {
+      return error
+    }
   }
 
-  @Patch('catrgory/:id/update')
-  updateCategory(): Promise<any> {
-    throw new Error('Method not implemented.');
+  @Patch('catrgory/update')
+  async updateCategory(@Req() req: RequestWithUser, @Body() body: UpdateRestaurantCategoryDto): Promise<any> {
+     try {
+      const restaurant = await this.restaurantService.updateCategory(req.user.sub, body)
+      return restaurant;
+    } catch (error) {
+      return error
+    }
   }
 
   @Delete('category/:id/delete')
@@ -97,7 +107,7 @@ export class RestaurantController implements IRestaurantController, ICampaign{
     throw new Error('Method not implemented.');
   }
 
-  @Patch('fooditem/:id/update')
+  @Patch('fooditem/update')
   updateFoodItem(): Promise<any> {
     throw new Error('Method not implemented.');
   }
@@ -133,28 +143,6 @@ export class RestaurantController implements IRestaurantController, ICampaign{
   }
   
   // RESTAURANT
-  // @Roles(RoleType.RESTAURANT)
-  // @Patch('info/update')
-  // async updateRestaurant(@Req() req: RequestWithUser, @Body() body: UpdateRestaurantDto){
-  //   try {
-  //     const restaurant = await this.restaurantService.updateRestaurant(req.user.sub, body);
-  //     return restaurant;
-  //   } catch (error) {
-  //     return error
-  //   }
-  // }
-
-  // CATEGORY
-  // @Roles(RoleType.RESTAURANT)
-  // @Post('category')
-  // async createCategory(@Req() req: RequestWithUser, @Body() body: CreateRestaurantCategoryDto){
-  //   try {
-  //     const restaurant = await this.restaurantService.addCategory(req.user.sub, body)
-  //     return restaurant;
-  //   } catch (error) {
-  //     return error
-  //   }
-  // }
 
   // @Roles(RoleType.RESTAURANT)
   // @Patch('category')

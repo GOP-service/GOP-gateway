@@ -3,6 +3,8 @@ import { RoleType } from "../enums";
 import { Response } from 'express';
 import { CreateDeliveryOrderDto } from "src/order/dto/create-delivery-order";
 import { UpdateRestaurantDto } from "src/restaurant/dto/update-restaurant.dto";
+import { CreateRestaurantCategoryDto } from "src/restaurant/dto/create-restaurant-category.dto";
+import { UpdateRestaurantCategoryDto } from "src/restaurant/dto/update-restaurant-category.dto";
 export interface JwtPayload {
     sub: string
     role: RoleType
@@ -99,9 +101,9 @@ export interface IRestaurantController {
 
     getRevenueStatistics(): Promise<any>
 
-    createCategory(): Promise<any>
+    createCategory(req: RequestWithUser, body: CreateRestaurantCategoryDto): Promise<any>
 
-    updateCategory(): Promise<any>
+    updateCategory(req: RequestWithUser, body: UpdateRestaurantCategoryDto): Promise<any>
 
     deleteCategory(): Promise<any>
 
