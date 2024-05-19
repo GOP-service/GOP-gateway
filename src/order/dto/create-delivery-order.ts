@@ -29,13 +29,6 @@ export class CreateDeliveryOrderDto extends CreateOrderDto {
 
     @ApiProperty({
         title: 'Items',
-        example: [{
-            name: 'Cà phê đen',
-            modifiers: [],
-            price: 32000,
-            quantity: 1,
-            specification: ''
-        }]
     })
     @IsNotEmpty()
     items: OrderFoodItems[]

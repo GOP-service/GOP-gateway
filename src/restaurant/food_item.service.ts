@@ -29,4 +29,8 @@ export class FoodItemService extends BaseServiceAbstract<FoodItem> {
         // dto.modifier_groups = mg
         // return await this.update(id, dto);
     }
+
+    async updateFoodItemImg(imgUrl: string) {
+
+    }
 }

@@ -14,8 +14,11 @@ export class DeliveryOrder {
     @Prop({ type: SchemaTypes.ObjectId, ref: 'Restaurant' })
     restaurant: Restaurant
 
-    @Prop({type: [SchemaTypes.ObjectId], ref: 'OrderFoodItems'}) //
+    @Prop({type: [OrderFoodItems], }) //
     items: OrderFoodItems[]
+
+    @Prop()
+    specifications: string
 
     @Prop({ type: LocationSchema})
     delivery_location: LocationObject

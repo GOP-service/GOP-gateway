@@ -8,7 +8,7 @@ import { VietMapService } from 'src/utils/map-api/viet-map.service';
 import { BikeFare, BillStatus, CarFare, DistanceFare, OTPType, OTPVerifyStatus, OrderStatus, PaymentMethod, VehicleType } from 'src/utils/enums';
 import { CreateDeliveryOrderDto } from './dto/create-delivery-order';
 import { LocationObject } from 'src/utils/subschemas/location.schema';
-import { OrderFoodItems, OrderFoodItemsDocument } from './entities/order_food_items.schema';
+import { OrderFoodItems } from './entities/order_food_items.schema';
 import { Otp, OtpDocument } from 'src/auth/entities/otp.schema';
 import { PaymentService } from 'src/payment/payment.service';
 import { CreateBillDto } from 'src/payment/dto/create-bill.dto';
@@ -25,7 +25,6 @@ export class OrderService extends BaseServiceAbstract< OrderDetails >{
         @InjectModel(Order.name) private readonly orderModel: Model< OrderDetails >,
         @InjectModel(TransportOrder.name) private readonly transportOrderModel: Model<TransportOrderType>,
         @InjectModel(DeliveryOrder.name) private readonly deliveryOrderModel: Model<DeliveryOrderType>,
-        @InjectModel(OrderFoodItems.name) private readonly orderFoodItemsModel: Model<OrderFoodItemsDocument>,
         private readonly vietMapService: VietMapService,
         private readonly paymentService: PaymentService,
     ) {
@@ -33,19 +32,6 @@ export class OrderService extends BaseServiceAbstract< OrderDetails >{
     }
 
     private logger = new Logger('OrderService');
-    // async createDeliveryOrder_Cash(dto: CreateDeliveryOrderDto, customer_id: string, restaurant_location: LocationObject): Promise<deliveryOrderModel>{
-    //     const subtotal = dto.items.reduce((total, item) => total + item.price * item.quantity, 0)
-
-    //     const new_dto = {...dto, subtotal: subtotal, order_status: OrderStatus.PENDING_COMFIRM, customer_id: customer_id, order_time: new Date(Date.now()+7*60*60*1000)};
-
-    //     let new_delivery_order = new this.deliveryOrderModel(new_dto);
-
-    //     Object.assign(new_delivery_order, await this.vietMapService.getDistanceNDuration(restaurant_location, dto.delivery_location, VehicleType.BIKE));
-
-    //     new_delivery_order.delivery_fare = this.calculateFare(new_delivery_order.distance , BikeFare);
-
-    //     return new_delivery_order.save();
-    // }
 
     async TransportOrderQuote(dto: CreateTransportOrderDto): Promise< TransportOrderType > {
         const new_transport_order = new this.transportOrderModel(dto);
@@ -87,6 +73,11 @@ export class OrderService extends BaseServiceAbstract< OrderDetails >{
 
         
         return (await new_transport_order.save()).toObject();
+    }
+
+    async DeliveryOrderQuote(dto: CreateDeliveryOrderDto){
+        const new_order = new this.deliveryOrderModel(dto);
+
     }
 
     async cancelOrder(payload: CancelOrderDto){
