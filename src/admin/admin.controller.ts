@@ -12,6 +12,9 @@ export class AdminController implements IAdminController, ICampaign{
     private readonly authService: AuthService,
     private readonly paymentService: PaymentService
   ) {}
+  getRevenueStatistics(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
 
   @Get('campaigns')
   getCampaigns(): Promise<any> {
