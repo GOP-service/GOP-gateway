@@ -12,7 +12,7 @@ import { ICustomerController, RequestWithUser } from 'src/utils/interfaces';
 import { CreateDeliveryOrderDto } from 'src/order/dto/create-delivery-order';
 import { RestaurantService } from 'src/restaurant/restaurant.service';
 import { PaymentService } from 'src/payment/payment.service';
-import { ApplyPromotionDto } from 'src/payment/dto/apply-promotion.dto';
+import { ApplyCampaignDto } from 'src/payment/dto/apply-campaign.dto';
 import { error } from 'console';
 import e, { Response } from 'express';
 import { UpdateCustomerDto } from './dto/update-customer.dto';

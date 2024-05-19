@@ -15,7 +15,7 @@ export class CreateTransportOrderDto extends CreateOrderDto {
         example: []
     })
     @IsArray()
-    promotion_id: string[]
+    campaign_id: string[]
 
     @ApiProperty({
         title: 'LONG -> LAT',

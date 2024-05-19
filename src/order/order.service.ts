@@ -80,7 +80,7 @@ export class OrderService extends BaseServiceAbstract< OrderDetails >{
     
         const bill = await this.paymentService.createBill({
             payment_method: PaymentMethod.CASH,
-            // promotion_id: dto.promotion_id,
+            campaign_id: dto.campaign_id,
             order: new_transport_order,
         });
         new_transport_order.bill = bill;

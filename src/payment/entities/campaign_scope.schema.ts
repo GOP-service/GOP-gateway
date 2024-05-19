@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { PromotionScopeType } from "src/utils/enums";
+import { CampaignScopeType } from "src/utils/enums";
 
 @Schema({
     toJSON: {
@@ -9,11 +9,11 @@ import { PromotionScopeType } from "src/utils/enums";
     _id: false,
     timestamps: false
 })
-export class PromotionScope {
+export class CampaignScope {
     @Prop({ required: true })
-    type: PromotionScopeType
+    type: CampaignScopeType
 
     @Prop()
     object_ids: string[]
 }
-export const PromotionScopeSchema = SchemaFactory.createForClass(PromotionScope)
+export const CampaignScopeSchema = SchemaFactory.createForClass(CampaignScope)

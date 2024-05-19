@@ -27,7 +27,7 @@ export class Bill extends BaseEntity {
     transaction_id: string
 
     @Prop({ })
-    promotion_id: string[]
+    campaign_id: string[]
 
     @Prop({ })
     total: number

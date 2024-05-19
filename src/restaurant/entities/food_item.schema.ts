@@ -30,7 +30,7 @@ export class FoodItem extends BaseEntity{
     @Prop()
     image: string
 
-    @Prop()
+    @Prop({ required: true })
     price: number
 
     @Prop({ type: [SchemaTypes.ObjectId], ref: 'ModifierGroup', default: []})

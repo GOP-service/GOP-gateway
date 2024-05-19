@@ -2,10 +2,11 @@ import { CreateTransportOrderDto } from "src/order/dto/create-transport-order";
 import { RoleType } from "../enums";
 import { Response } from 'express';
 import { CreateDeliveryOrderDto } from "src/order/dto/create-delivery-order";
-import { ApplyPromotionDto } from "src/payment/dto/apply-promotion.dto";
+import { UpdateRestaurantDto } from "src/restaurant/dto/update-restaurant.dto";
+import { CreateRestaurantCategoryDto } from "src/restaurant/dto/create-restaurant-category.dto";
+import { UpdateRestaurantCategoryDto } from "src/restaurant/dto/update-restaurant-category.dto";
+import { CreateFoodItemDto } from "src/restaurant/dto/create-food-item.dto";
 import { CancelOrderDto } from "src/order/dto/cancel-order.dto";
-import { TransportOrderType } from "src/order/entities/transport_order.schema";
-import { DeliveryOrderType } from "src/order/entities/delivery_order.schema";
 export interface JwtPayload {
     sub: string
     role: RoleType
@@ -39,11 +40,10 @@ export interface BaseServiceInterface<T> {
 export interface ICustomerController {
     getProfile(req: RequestWithUser, res: Response): Promise<any>
 
-    modifyProfile(req: RequestWithUser, dto: any, res: Response): Promise<any>;
+    modifyProfile(req: RequestWithUser, res: Response): Promise<any>
 
     createReview(req: RequestWithUser, res: Response): Promise<any>;
 
-    deleteReview(req: RequestWithUser, id:string, res: Response): Promise<any>;
 }
 
 export interface IDriverController {
@@ -73,17 +73,58 @@ export interface IRestaurantController {
 
     deletePromotion(): Promise<any>
 
-    createDiscount(): Promise<any>
+    getOrderDetails(): Promise<any>
 
-    updateDiscount(): Promise<any>
+    getOrders(): Promise<any>
 
-    deleteDiscount(): Promise<any>
+    deleteOrder(): Promise<any>
 
-    getRestaurantRevenueStats(): Promise<any>
+    getRevenueStatistics(): Promise<any>
+
+    createCategory(req: RequestWithUser, body: CreateRestaurantCategoryDto): Promise<any>
+
+    updateCategory(req: RequestWithUser, id: string, body: UpdateRestaurantCategoryDto): Promise<any>
+
+    deleteCategory(req: RequestWithUser, id: string): Promise<any>
+
+    createFoodItem(req: RequestWithUser, body: CreateFoodItemDto, image: File): Promise<any>
+
+    updateFoodItem(): Promise<any>
+
+    deleteFoodItem(): Promise<any>
 }
 
 export interface IAdminController {
+    getCustomers(): Promise<any>
+    getCustomerInfo(): Promise<any>
+    searchCustomers(): Promise<any>
+    blockCustomer(): Promise<any>
 
+    getDrivers(): Promise<any>
+    getDriverInfo(): Promise<any>
+    searchDrivers(): Promise<any>
+    blockDriver(): Promise<any>
+
+
+    getRestaurants(): Promise<any>
+    getRestaurantInfo(): Promise<any>
+    searchRestaurants(): Promise<any>
+    getRestaurantStatistics(): Promise<any>
+    getStatisticsByRestaurant(): Promise<any>
+    blockRestaurant(): Promise<any>
+
+    getOrders(): Promise<any>
+    searchOrders(): Promise<any> 
+
+    getRevenueStatistics(): Promise<any>
+}
+
+export interface ICampaign {
+    getCampaigns(): Promise<any>
+    getCampaignDetails(): Promise<any>
+    createCampaign(): Promise<any>
+    updateCampaign(): Promise<any>
+    deleteCampaign(): Promise<any>
 }
 
 export interface IPayment {

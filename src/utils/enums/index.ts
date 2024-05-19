@@ -108,19 +108,19 @@ export type DistanceFare = {
     Over10Km: number
 }
 
-// PROMOTION
+// CAMPAIGN
 
-export enum  PromotionUserGroup {
+export enum  CampaignUserGroup {
     ALL_CUSTOMER = 'ALL_CUSTOMER'
 }
 
-export enum PromotionScopeType {
+export enum CampaignScopeType {
     ORDER = 'ORDER',
     ITEMS = 'ITEMS',
     CATEGORY = 'CATEGORY'
 }
 
-export enum PromotionDiscountType {
+export enum CampaignDiscountType {
     PERCENTAGE = 'PERCENTAGE',
     DELIVERY = 'DELIVERY',
     TRANSPORT = 'TRANSPORT',
