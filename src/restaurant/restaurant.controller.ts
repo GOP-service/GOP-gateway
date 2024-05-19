@@ -8,7 +8,7 @@ import { RolesGuard } from 'src/utils/guards/roles.guard';
 import { Roles } from 'src/utils/decorators/roles.decorator';
 import { OTPType, OTPVerifyStatus, OrderStatus, RoleType } from 'src/utils/enums';
 import { AuthService } from 'src/auth/auth.service';
-import { IRestaurantController, RequestWithUser } from 'src/utils/interfaces';
+import { ICampaign, IRestaurantController, RequestWithUser } from 'src/utils/interfaces';
 import { CreateRestaurantCategoryDto } from './dto/create-restaurant-category.dto';
 import { UpdateItemsRestaurantDto } from './dto/update-item-restaurant-category.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -24,7 +24,7 @@ import { UpdateRestaurantCategoryDto } from './dto/update-restaurant-category.dt
 @UseGuards(AuthGuard('jwt'),RolesGuard)
 @ApiTags('Restaurants')
 @Controller('restaurant')
-export class RestaurantController implements IRestaurantController{
+export class RestaurantController implements IRestaurantController, ICampaign{
   constructor(
     private readonly orderService: OrderService,
     private readonly restaurantService: RestaurantService,
@@ -104,6 +104,31 @@ export class RestaurantController implements IRestaurantController{
 
   @Delete('fooditem/:id/delete')
   deleteFoodItem(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+
+  @Get('campaigns')
+  getCampaigns(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+
+  @Get('campaign/:id')
+  getCampaignDetails(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+
+  @Post('campaign/create')
+  createCampaign(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+
+  @Patch('campaign/:id/update')
+  updateCampaign(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+
+  @Delete('campaign/:id/delete')
+  deleteCampaign(): Promise<any> {
     throw new Error('Method not implemented.');
   }
   

@@ -131,14 +131,13 @@ export interface IAdminController {
     getStatisticsByRestaurant(): Promise<any>
     blockRestaurant(): Promise<any>
 
-    getOrdersByStatus(): Promise<any>
-    filterOrders(): Promise<any>
+    getOrders(): Promise<any>
     searchOrders(): Promise<any> 
 
     getRevenueStatistics(): Promise<any>
 }
 
-export interface Campaign {
+export interface ICampaign {
     getCampaigns(): Promise<any>
     getCampaignDetails(): Promise<any>
     createCampaign(): Promise<any>
