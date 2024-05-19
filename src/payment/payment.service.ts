@@ -24,9 +24,9 @@ import { ApplyCampaignDto } from './dto/apply-campaign.dto';
 @Injectable()
 export class PaymentService {
     constructor(
-      @InjectModel(Bill.name) private readonly billModel: Model<BillDocument>,
-      @InjectModel(Ledger.name) private readonly ledgerModel: Model<LedgerDocument>,
-      @InjectModel(Campaign.name) private readonly campaignModdel: Model<CampaignDocument>
+      @InjectModel(Bill.name) private readonly billModel: Model<Bill>,
+      @InjectModel(Ledger.name) private readonly ledgerModel: Model<Ledger>,
+      @InjectModel(Campaign.name) private readonly campaignModdel: Model<Campaign>
 
     ) {}
 
@@ -81,7 +81,7 @@ export class PaymentService {
       return sorted;
   }
 
-  async getAllCampaign():Promise<CampaignDocument[]>{
+  async getAllCampaign(): Promise<Campaign[]>{
     const campaign = await this.campaignModdel.find();
     return campaign;
   }
