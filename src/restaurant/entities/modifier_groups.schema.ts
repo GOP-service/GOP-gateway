@@ -25,7 +25,7 @@ export class ModifierGroup extends BaseEntity{
     name: string
 
     @Prop({ required: true, type: [SchemaTypes.ObjectId], ref: 'Modifier', default: []})
-    modifier: string[]
+    modifier: Modifier[] | string[]
 
     @Prop({ required: true, default: 0})
     min: number

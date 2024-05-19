@@ -12,8 +12,8 @@ export class AdminController {
 
   @Post('campaign')
   createCampaign(@Body() body: CreateCampaignDto){
-    const promo = this.paymentService.createCampaign(body)
-    return promo;
+    const campaign = this.paymentService.createCampaign(body)
+    return campaign;
   }
 
 

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 import { Restaurant, RestaurantDocument } from './entities/restaurant.schema';
@@ -62,12 +62,16 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
   }
 
   async updateCategory(restaurant_id: string, dto: UpdateRestaurantCategoryDto): Promise<RestaurantCategory> {
-    const restaurant = await this.findOneById(restaurant_id);
-    if(restaurant && restaurant.restaurant_categories.includes(dto._id)){
+    if(this.isCategoryOwnedByRestaurant){
       const category = await this.restaurantCategoryService.updateCategory(dto);
       return category;
     }
-    else throw new Error("Invalid restaurant")
+    else throw new NotFoundException("Restaurant not found")
+  }
+
+  async isCategoryOwnedByRestaurant(restaurant_id: string, dto: UpdateRestaurantCategoryDto): Promise<boolean> {
+    const restaurant = await this.findOneById(restaurant_id);
+    return  restaurant && (restaurant.restaurant_categories.filter(cate => (cate as RestaurantCategory)._id == dto._id || (cate as string) == dto._id )).length > 0;
   }
   
   async createFoodItem(restaurant_id: string, dto: CreateFoodItemDto){

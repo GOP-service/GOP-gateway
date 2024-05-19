@@ -1,6 +1,6 @@
-import { PickType } from "@nestjs/swagger";
+import { PartialType } from "@nestjs/swagger";
 import { RestaurantCategoryDto } from "./restaurant-category.dto";
 
-export class UpdateItemsRestaurantDto extends (RestaurantCategoryDto){
+export class UpdateItemsRestaurantDto extends PartialType(RestaurantCategoryDto){
 
 }

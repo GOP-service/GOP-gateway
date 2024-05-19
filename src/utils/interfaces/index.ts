@@ -2,6 +2,7 @@ import { CreateTransportOrderDto } from "src/order/dto/create-transport-order";
 import { RoleType } from "../enums";
 import { Response } from 'express';
 import { CreateDeliveryOrderDto } from "src/order/dto/create-delivery-order";
+import { UpdateRestaurantDto } from "src/restaurant/dto/update-restaurant.dto";
 export interface JwtPayload {
     sub: string
     role: RoleType
@@ -82,11 +83,67 @@ export interface IDriverController {
 }
 
 export interface IRestaurantController {
+    getProile(): Promise<any>
 
+    updateRestaurant(req: RequestWithUser, body: UpdateRestaurantDto): Promise<any>
+
+    acceptOrder(): Promise<any>
+
+    rejectOrder(): Promise<any>
+
+    getOrderDetails(): Promise<any>
+
+    getOrders(): Promise<any>
+
+    deleteOrder(): Promise<any>
+
+    getRevenueStatistics(): Promise<any>
+
+    createCategory(): Promise<any>
+
+    updateCategory(): Promise<any>
+
+    deleteCategory(): Promise<any>
+
+    createFoodItem(): Promise<any>
+
+    updateFoodItem(): Promise<any>
+
+    deleteFoodItem(): Promise<any>
 }
 
 export interface IAdminController {
+    getCustomers(): Promise<any>
+    getCustomerInfo(): Promise<any>
+    searchCustomers(): Promise<any>
+    blockCustomer(): Promise<any>
 
+    getDrivers(): Promise<any>
+    getDriverInfo(): Promise<any>
+    searchDrivers(): Promise<any>
+    blockDriver(): Promise<any>
+
+
+    getRestaurants(): Promise<any>
+    getRestaurantInfo(): Promise<any>
+    searchRestaurants(): Promise<any>
+    getRestaurantStatistics(): Promise<any>
+    getStatisticsByRestaurant(): Promise<any>
+    blockRestaurant(): Promise<any>
+
+    getOrdersByStatus(): Promise<any>
+    filterOrders(): Promise<any>
+    searchOrders(): Promise<any> 
+
+    getRevenueStatistics(): Promise<any>
+}
+
+export interface Campaign {
+    getCampaigns(): Promise<any>
+    getCampaignDetails(): Promise<any>
+    createCampaign(): Promise<any>
+    updateCampaign(): Promise<any>
+    deleteCampaign(): Promise<any>
 }
 
 export interface IPayment {
