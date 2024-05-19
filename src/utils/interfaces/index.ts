@@ -5,6 +5,7 @@ import { CreateDeliveryOrderDto } from "src/order/dto/create-delivery-order";
 import { UpdateRestaurantDto } from "src/restaurant/dto/update-restaurant.dto";
 import { CreateRestaurantCategoryDto } from "src/restaurant/dto/create-restaurant-category.dto";
 import { UpdateRestaurantCategoryDto } from "src/restaurant/dto/update-restaurant-category.dto";
+import { CreateFoodItemDto } from "src/restaurant/dto/create-food-item.dto";
 export interface JwtPayload {
     sub: string
     role: RoleType
@@ -105,9 +106,9 @@ export interface IRestaurantController {
 
     updateCategory(req: RequestWithUser, id: string, body: UpdateRestaurantCategoryDto): Promise<any>
 
-    deleteCategory(): Promise<any>
+    deleteCategory(req: RequestWithUser, id: string): Promise<any>
 
-    createFoodItem(): Promise<any>
+    createFoodItem(req: RequestWithUser, body: CreateFoodItemDto): Promise<any>
 
     updateFoodItem(): Promise<any>
 

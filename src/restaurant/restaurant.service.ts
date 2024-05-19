@@ -74,6 +74,19 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
     return  restaurant && (restaurant.restaurant_categories.filter(cate => (cate as RestaurantCategory)._id == cate_id || (cate as string) == cate_id )).length > 0;
   }
   
+  async deleteCategory(category_id: string, restaurant_id: string) {
+    if(this.isCategoryOwnedByRestaurant(restaurant_id, category_id)){
+      const restaurant = await this.findOneById(restaurant_id)
+      const new_cate = restaurant.restaurant_categories.filter(cate_id => cate_id != category_id) as RestaurantCategory[]
+
+      await this.update(restaurant_id, {
+        restaurant_categories: new_cate
+      })
+      
+      return await this.restaurantCategoryService.deleteCategory(category_id)
+    }
+  }
+
   async createFoodItem(restaurant_id: string, dto: CreateFoodItemDto){
     const restaurant = await this.findOneById(restaurant_id);
     if(restaurant){
