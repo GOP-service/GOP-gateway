@@ -39,7 +39,12 @@ export class RestaurantController implements IRestaurantController{
   @Roles(RoleType.RESTAURANT)
   @Patch('info/update')
   async updateRestaurant(@Req() req: RequestWithUser, @Body() body: UpdateRestaurantDto): Promise<any> {
-    throw new Error('Method not implemented.');
+    try {
+      const restaurant = await this.restaurantService.updateRestaurant(req.user.sub, body);
+      return restaurant;
+    } catch (error) {
+      return error
+    }
   }
 
   @Post('order/:id/accept')
