@@ -108,7 +108,7 @@ export interface IRestaurantController {
 
     deleteCategory(req: RequestWithUser, id: string): Promise<any>
 
-    createFoodItem(req: RequestWithUser, body: CreateFoodItemDto): Promise<any>
+    createFoodItem(req: RequestWithUser, body: CreateFoodItemDto, image: File): Promise<any>
 
     updateFoodItem(): Promise<any>
 

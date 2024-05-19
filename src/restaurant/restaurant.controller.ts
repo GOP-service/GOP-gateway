@@ -118,8 +118,9 @@ export class RestaurantController implements IRestaurantController, ICampaign{
   }
 
   @Roles(RoleType.RESTAURANT)
+  @UseInterceptors(FileInterceptor('image'))
   @Post('fooditem/create')
-  async createFoodItem(@Req() req: RequestWithUser, @Body() body: CreateFoodItemDto): Promise<any> {
+  async createFoodItem(@Req() req: RequestWithUser, @Body() body: CreateFoodItemDto, @UploadedFile() image): Promise<any> {
     try {
       const restaurant = await this.restaurantService.createFoodItem(req.user.sub, body);
       return restaurant;

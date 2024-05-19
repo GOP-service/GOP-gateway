@@ -94,7 +94,7 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
       this.restaurantCategoryService.addFoodItem(foodItem._id, dto.category_id)
       return foodItem;
     }
-    else throw new Error("Invalid restaurant")
+    else throw new NotFoundException("Restaurant not found")
   }
   // // async addCategory(id: string, dto: CreateRestaurantCategoryDto): Promise<RestaurantDocument> {
   // //   const restaurant = await this.restaurantModel.findById(id).exec();
