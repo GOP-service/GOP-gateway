@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { PromotionUserGroup } from "src/utils/enums";
+import { CampaignUserGroup } from "src/utils/enums";
 
 @Schema({
     toJSON: {
@@ -9,17 +9,17 @@ import { PromotionUserGroup } from "src/utils/enums";
     _id: false,
     timestamps: false
 })
-export class PromotionCondition {
+export class CampaignCondition {
     @Prop({ required: true })
     start_time: Date
 
     @Prop({ required: true })
     end_time: Date
 
-    @Prop({ required: true, default: PromotionUserGroup.ALL_CUSTOMER })
-    user_group: PromotionUserGroup
+    @Prop({ required: true, default: CampaignUserGroup.ALL_CUSTOMER })
+    user_group: CampaignUserGroup
 
     @Prop({ required: true })
     minBasketAmount: number
 }
-export const PromotionConditionSchema = SchemaFactory.createForClass(PromotionCondition)
+export const CampaignConditionSchema = SchemaFactory.createForClass(CampaignCondition)

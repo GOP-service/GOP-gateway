@@ -1,12 +1,11 @@
-import { OTPType } from "../enums";
-
-export function OtpTemplate(username: string, otp: string, type: OTPType) {
+export function NotificationTemplate(usename: string) {
     const now = new Date();
     return `<!DOCTYPE html>
     <html lang="en">
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        
         <meta http-equiv="X-UA-Compatible" content="ie=edge" />
         <title>Static Template</title>
     
@@ -73,12 +72,12 @@ export function OtpTemplate(username: string, otp: string, type: OTPType) {
                 <h1
                   style="
                     margin: 0;
-                    font-size: 24px;
+                    font-size:32px;
                     font-weight: 700;
                     color: #1f1f1f;
                   "
                 >
-                  Hey ${username},
+                  Hey ${usename}
                 </h1>
                 <p
                   style="
@@ -86,24 +85,19 @@ export function OtpTemplate(username: string, otp: string, type: OTPType) {
                     margin-top: 16px;
                     font-weight: 500;
                     letter-spacing: 0.56px;
+                    font-size: 20px;
                   "
                 >
-                  Use the following OTP to complete the procedure to
-                  <span style="font-weight: 600; color: #1f1f1f">${type}</span>
-                  . OTP is valid for
-                  <span style="font-weight: 600; color: #1f1f1f">30 minutes</span>.
-                  Do not share this code with others, including GoP employees.
+                  Your account has been successfully created. To verify your account and start using our service, please visit<span style="font-weight: 600; color: #1f1f1f"> GoP office </span>  located at 1 Vo Van Ngan, Linh Chieu Ward, Thu Duc City, Ho Chi Minh City, during 9am to 4pm
                 </p>
-                <p
-                  style="
-                    margin: 50px 0px 0px 50px;
-                    font-size: 40px;
-                    font-weight: 600;
-                    letter-spacing: 50px;
-                    color: #ba3d4f;
-                  "
-                >
-                  ${otp}
+                <p style="
+                    margin: 0;
+                    margin-top: 16px;
+                    font-weight: 550;
+                    letter-spacing: 0.56px;
+                    font-size: 24px;
+                  ">
+                   We look forward to welcoming you!
                 </p>
               </div>
             </div>

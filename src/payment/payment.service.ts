@@ -5,27 +5,29 @@ import * as crypto from 'crypto';
 import * as qs from 'qs';
 import { format } from 'date-fns';
 import { error, log } from 'console';
-import { CreatePromotionDto } from './dto/create-promotion.dto';
-import { Promotion, PromotionDocument } from './entities/promotion.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { BillStatus, OrderType, PaymentMethod, PromotionDiscountType, PromotionScopeType } from 'src/utils/enums';
-import { UpdatePromotionDto } from './dto/update-promotion.dto';
+import { BillStatus, CampaignDiscountType, CampaignScopeType, OrderType, PaymentMethod } from 'src/utils/enums';
 import { Bill, BillDocument } from './entities/bill.schema';
 import { Ledger, LedgerDocument } from './entities/ledger.schema';
 import { OrderDetailsType } from 'src/order/entities/order.schema';
 import { DeliveryOrder } from 'src/order/entities/delivery_order.schema';
 import { TransportOrder } from 'src/order/entities/transport_order.schema';
 import { Order, OrderDetails } from 'src/order/entities/order.schema';
-import { ApplyPromotionDto } from './dto/apply-promotion.dto';
+import { RevenueHistory, RevenueHistoryDocument } from './entities/revenue_history.schem';
+import { Campaign, CampaignDocument } from './entities/campaign.schema';
+import { CreateCampaignDto } from './dto/create-campaign.dto';
+import { UpdateCampaignnDto } from './dto/update-campaign.dto';
+import { ApplyCampaignDto } from './dto/apply-campaign.dto';
 
 
 @Injectable()
 export class PaymentService {
     constructor(
-      @InjectModel(Bill.name) private readonly billModel: Model<BillDocument>,
-      @InjectModel(Ledger.name) private readonly ledgerModel: Model<LedgerDocument>,
-      @InjectModel(Promotion.name) private readonly promotionModdel: Model<PromotionDocument>
+      @InjectModel(Bill.name) private readonly billModel: Model<Bill>,
+      @InjectModel(Ledger.name) private readonly ledgerModel: Model<Ledger>,
+      @InjectModel(Campaign.name) private readonly campaignModdel: Model<Campaign>
+
     ) {}
 
   getURLVnPay(ip: string, amount: number, orderId: string) {
@@ -79,79 +81,79 @@ export class PaymentService {
       return sorted;
   }
 
-  async getAllPromotion():Promise<PromotionDocument[]>{
-    const promo = await this.promotionModdel.find();
-    return promo;
+  async getAllCampaign(): Promise<Campaign[]>{
+    const campaign = await this.campaignModdel.find();
+    return campaign;
   }
 
-  async createPromotion(dto: CreatePromotionDto) {
-    const promo = await new this.promotionModdel(dto);
-    return promo.save();
+  async createCampaign(dto: CreateCampaignDto) {
+    const campaign = await new this.campaignModdel(dto);
+    return campaign.save();
   }
 
-  async deletePromotion(promotion_id: string) {
-    const promo = await this.promotionModdel.findByIdAndDelete(promotion_id)
-    if (!promo) {
-      throw new NotFoundException("Promotion not found!");
+  async deleteCampaign(campaign_id: string) {
+    const campaign = await this.campaignModdel.findByIdAndDelete(campaign_id)
+    if (!campaign) {
+      throw new NotFoundException("Campaign not found!");
     }
-    return promo;
+    return campaign;
   }
 
-  async updatePromotion(dto: UpdatePromotionDto) {
-    const promotion = await this.promotionModdel.findByIdAndUpdate(dto.id, dto, { new: true })
-    if(promotion)
-      return promotion
+  async updateCampaign(dto: UpdateCampaignnDto) {
+    const campaign = await this.campaignModdel.findByIdAndUpdate(dto.id, dto, { new: true })
+    if(campaign)
+      return campaign
     throw new Error('Update state failed')
   }
 
-  isValidPromotion(customer_id: string, promo: Promotion, promoDto: ApplyPromotionDto){
+  isValidCampaign(customer_id: string, campaign: Campaign, campaignDto: ApplyCampaignDto){
     const currDate = new Date();
-    return promo &&
-      promo.conditions.start_time <= currDate &&
-      promo.conditions.end_time >= currDate &&
-      promo.quotas.limit > promo.unavailable_users.length &&
-      promo.unavailable_users.filter(id => id === customer_id).length < promo.quotas.total_count_per_count && 
-      promoDto.subtotal >= promo.conditions.minBasketAmount;
+    return campaign &&
+      campaign.conditions.start_time <= currDate &&
+      campaign.conditions.end_time >= currDate &&
+      campaign.quotas.limit > campaign.unavailable_users.length &&
+      campaign.unavailable_users.filter(id => id === customer_id).length < campaign.quotas.total_count_per_count && 
+      campaignDto.subtotal >= campaign.conditions.minBasketAmount;
   }
 
-  async validateAndApplyPromotion(customer_id: string, promoDto: ApplyPromotionDto): Promise<number> {
+  async validateAndApplyCampaign(customer_id: string, campaignDto: ApplyCampaignDto): Promise<number> {
     let total_discount_value = 0;
-    for (const promo_id of promoDto.list_promotion_id) {
-      const promo = await this.promotionModdel.findById(promo_id);
-      if (this.isValidPromotion(customer_id, promo, promoDto)) {
-        promo.unavailable_users.push(customer_id)
-        await promo.save();
-        switch (promo.discount.type) {
-          case PromotionDiscountType.DELIVERY:
-            total_discount_value += (promoDto.delivery_fare - promo.discount.value) > 0 ? promo.discount.value : promoDto.delivery_fare;
+    for (const campaign_id of campaignDto.list_compaign_id) {
+      const campaign = await this.campaignModdel.findById(campaign_id);
+      if (this.isValidCampaign(customer_id, campaign, campaignDto)) {
+        campaign.unavailable_users.push(customer_id)
+        await campaign.save();
+        switch (campaign.discount.type) {
+          case CampaignDiscountType.DELIVERY:
+            total_discount_value += (campaignDto.delivery_fare - campaign.discount.value) > 0 ? campaign.discount.value : campaignDto.delivery_fare;
             break;
-          case PromotionDiscountType.PERCENTAGE: 
-            switch(promo.discount.scope.type){
-              case PromotionScopeType.ORDER: 
-                const discount_value = promoDto.subtotal * (promo.discount.value / 100)
-                if(discount_value <= promo.discount.cap) {
+          case CampaignDiscountType.PERCENTAGE: 
+            switch(campaign.discount.scope.type){
+              case CampaignScopeType.ORDER: 
+                const discount_value = campaignDto.subtotal * (campaign.discount.value / 100)
+                if(discount_value <= campaign.discount.cap) {
                   total_discount_value += discount_value
-                } else total_discount_value += promo.discount.cap
+                } else total_discount_value += campaign.discount.cap
                 break;
-              case PromotionScopeType.CATEGORY: 
+              case CampaignScopeType.CATEGORY: 
                 break;
-              case PromotionScopeType.ITEMS:
+              case CampaignScopeType.ITEMS:
                 break;
             }
             break;
-          case PromotionDiscountType.TRANSPORT:
-            const discount_value = promoDto.subtotal - promo.discount.value;
-            total_discount_value += discount_value > 0 ? promo.discount.value : promoDto.subtotal
+          case CampaignDiscountType.TRANSPORT:
+            const discount_value = campaignDto.subtotal - campaign.discount.value;
+            total_discount_value += discount_value > 0 ? campaign.discount.value : campaignDto.subtotal
             break;
-          case PromotionDiscountType.NET:
-            switch(promo.discount.scope.type) {
-              case PromotionScopeType.ORDER:
-                const discount_value = promoDto.subtotal - promo.discount.value;
-                total_discount_value += discount_value > 0 ? promo.discount.value : promoDto.subtotal 
+          case CampaignDiscountType.NET:
+            switch(campaign.discount.scope.type) {
+              case CampaignScopeType.ORDER:
+                const discount_value = campaignDto.subtotal - campaign.discount.value;
+                total_discount_value += discount_value > 0 ? campaign.discount.value : campaignDto.subtotal 
                 break;
-              case PromotionScopeType.CATEGORY: 
+              case CampaignScopeType.CATEGORY: 
                 break;
-              case PromotionScopeType.ITEMS:
+              case CampaignScopeType.ITEMS:
                 break;
             }
             break;
@@ -163,89 +165,91 @@ export class PaymentService {
     return -total_discount_value;
   }
 
-    async createBill(createBillDto: CreateBillDto) {
-      const new_bill = new this.billModel({
-        order_id: createBillDto.order._id,
-        payment_method: createBillDto.payment_method,
-      });
+  async createBill(createBillDto: CreateBillDto) {
+    const initStatus = createBillDto.payment_method === PaymentMethod.CASH ? BillStatus.PENDING : BillStatus.PAID;
+    const new_bill = new this.billModel({
+      order: createBillDto.order,
+      status: initStatus,
+      payment_method: createBillDto.payment_method,
+    });
 
-      //todo check promotion các kiểu đà điểu
-      let discount = 0;
+    //todo check promotion các kiểu đà điểu
+    let discount = 0;
 
-      //todo tính tiền từ promotion
-      if (createBillDto.order instanceof DeliveryOrder) {
-        new_bill.sub_total = createBillDto.order.delivery_fare + createBillDto.order.order_cost;
-      } else {
-        new_bill.sub_total = createBillDto.order.trip_fare;        
+    //todo tính tiền từ promotion
+    if (createBillDto.order instanceof DeliveryOrder) {
+      new_bill.sub_total = createBillDto.order.delivery_fare + createBillDto.order.order_cost;
+    } else {
+      new_bill.sub_total = createBillDto.order.trip_fare;        
+    }
+
+    new_bill.discount = discount;
+    new_bill.total = new_bill.sub_total - discount + new_bill.platform_fee;
+
+    return (await new_bill.save()).toObject();
+  }
+
+  async getBill(id: string): Promise<BillDocument> {
+    return await this.billModel.findById(id).exec();
+  }
+
+  async updateBillComplete(order : OrderDetailsType) {
+    const bill = await this.billModel.findOne(order.bill).exec();
+
+    bill.status = BillStatus.COMPLETED;
+
+    if (order instanceof DeliveryOrder) {
+      if (bill.payment_method === PaymentMethod.VNPAY) {
+
+        // cập nhật ledger cho restaurant và driver với 90% lợi nhuận
+        this.updateLedger(order.restaurant._id, order, order.order_cost * 0.9);
+        this.updateLedger(order.driver._id, order, order.delivery_fare * 0.9);
+      } else if (bill.payment_method === PaymentMethod.CASH){
+        // cập nhật ledgers cho restaurant và drivers trả 10% lợi nhận cho nền tảng
+        this.updateLedger(order.restaurant._id, order, order.order_cost * -0.1);
+        this.updateLedger(order.driver._id, order, order.delivery_fare * 0.9 );
       }
-
-      new_bill.discount = discount;
-      new_bill.total = new_bill.sub_total - discount + new_bill.platform_fee;
-
-      return await new_bill.save();
-    }
-
-    async getBill(id: string): Promise<BillDocument> {
-      return await this.billModel.findById(id).exec();
-    }
-
-    async updateBillComplete(order : OrderDetailsType) {
-      const bill = await this.billModel.findOne(order.bill).exec();
-
-      bill.status = BillStatus.COMPLETED;
-
-      if (order instanceof DeliveryOrder) {
-        if (bill.payment_method === PaymentMethod.VNPAY) {
-
-          // cập nhật ledger cho restaurant và driver với 90% lợi nhuận
-          this.updateLedger(order.restaurant_id, order, order.order_cost * 0.9);
-          this.updateLedger(order.driver_id, order, order .delivery_fare * 0.9);
-        } else if (bill.payment_method === PaymentMethod.CASH){
-          // cập nhật ledgers cho restaurant và drivers trả 10% lợi nhận cho nền tảng
-          this.updateLedger(order.restaurant_id, order, order.order_cost * -0.1);
-          this.updateLedger(order.driver_id, order, order.delivery_fare * -0.1);
-        }
-      } else if (order instanceof TransportOrder){
-        if (bill.payment_method === PaymentMethod.VNPAY) {
-          // cập nhật ledgers cho drivers với 90% lợi nhuận
-          this.updateLedger(order.driver_id, order, order.trip_fare * 0.9);
-        } else if (bill.payment_method === PaymentMethod.CASH){
-          // cập nhật ledgers cho drivers trả 10% lợi nhuận cho nền tảng
-          this.updateLedger(order.driver_id, order, order.trip_fare * -0.1);
-        }
+    } else if (order instanceof TransportOrder){
+      if (bill.payment_method === PaymentMethod.VNPAY) {
+        // cập nhật ledgers cho drivers với 90% lợi nhuận
+        this.updateLedger(order.driver._id, order, order.trip_fare * 0.9);
+      } else if (bill.payment_method === PaymentMethod.CASH){
+        // cập nhật ledgers cho drivers trả 10% lợi nhuận cho nền tảng
+        this.updateLedger(order.driver._id, order, order.trip_fare * 0.9 - bill.total);
       }
-
-      return await bill.save();
-
     }
 
-    async getLedger(owner_id: string): Promise<LedgerDocument> {
-      const ledger_exist = await this.ledgerModel.findOne({ owner_id: owner_id, closed: false },)
-      if (ledger_exist ) {
-        return ledger_exist;
-      }
+    return (await bill.save()).toObject();
 
-      return await new this.ledgerModel({
-        owner_id: owner_id,
-      }).save();
+  }
+
+  async getLedger(owner_id: string): Promise<LedgerDocument> {
+    const ledger_exist = await this.ledgerModel.findOne({ owner_id: owner_id, closed: false },)
+    if (ledger_exist ) {
+      return ledger_exist;
     }
 
-    async closeLedger(owner_id: string): Promise<LedgerDocument>{
-      const ledger = await this.getLedger(owner_id);
+    return (await new this.ledgerModel({
+      owner_id: owner_id,
+    }).save()).toObject();
+  }
 
-      ledger.closed = true;
+  async closeLedger(owner_id: string): Promise<LedgerDocument>{
+    const ledger = await this.getLedger(owner_id);
 
-      return await ledger.save();
-    }
+    ledger.closed = true;
 
-    async updateLedger(owner_id: string, order: Order, amount: number) {
-      const ledger = await this.getLedger(owner_id);
+    return (await ledger.save()).toObject();
+  }
 
-      ledger.orders.push(order);
-      ledger.total += amount;
+  async updateLedger(owner_id: string, order: Order, amount: number) {
+    const ledger = await this.getLedger(owner_id);
 
-      await ledger.save();
-    }
+    ledger.orders.push(order);
+    ledger.total += amount;
+
+    await ledger.save();
+  }
 
 
 }

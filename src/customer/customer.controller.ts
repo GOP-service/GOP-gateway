@@ -12,22 +12,19 @@ import { ICustomerController, RequestWithUser } from 'src/utils/interfaces';
 import { CreateDeliveryOrderDto } from 'src/order/dto/create-delivery-order';
 import { RestaurantService } from 'src/restaurant/restaurant.service';
 import { PaymentService } from 'src/payment/payment.service';
-import { ApplyPromotionDto } from 'src/payment/dto/apply-promotion.dto';
+import { ApplyCampaignDto } from 'src/payment/dto/apply-campaign.dto';
 import { error } from 'console';
 import e, { Response } from 'express';
+import { UpdateCustomerDto } from './dto/update-customer.dto';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'),RolesGuard)
 @ApiTags('Customer')
 @Controller('customer')
 @Roles(RoleType.CUSTOMER)
-export class CustomerController implements ICustomerController{
+export class CustomerController implements ICustomerController {
   constructor(
     private readonly customerService: CustomerService,
-    private readonly paymentService: PaymentService,
-    private readonly orderService: OrderService,
-    private readonly restaurantService: RestaurantService,
-    private readonly eventEmitter: EventEmitter2,
   ) {}
   
   // ACCOUNT MANAGEMT
@@ -54,99 +51,16 @@ export class CustomerController implements ICustomerController{
   async modifyProfile(@Req() req: RequestWithUser, @Res() res: Response) {
     return;
   }
-  //todo add update profile
 
   
-  // TRANPORT BOOKING
-  @Post('transport/quote')
-  quoteTransportOrder(@Body() createOrderDto: CreateTransportOrderDto, ) {
-    try {
-      return this.orderService.TransportOrderQuote(createOrderDto);
-    } catch (e) {
-      return e
-    }
-  }
-  
-  // @Post('transport/quote')
-  // quoteTransportOrder(@Body() createOrderDto: CreateTransportOrderDto) {
-  //   try {
-  //     return this.orderService.TransportOrderQuote(createOrderDto);
-  //   } catch (e) {
-  //     return e
-  //   }
-  // }
-
-  @Post('transport/place')
-  async placeTransportOrder(@Body() createOrderDto: CreateTransportOrderDto, @Req() req: RequestWithUser ) {
-    try {
-      if (createOrderDto.payment_method == PaymentMethod.CASH) {
-        return await this.orderService.TransportOrderPlace_Cash(createOrderDto, req.user.sub).then(order => {
-          this.eventEmitter.emit('order.created', order._id);
-          return order;
-        });
-
-      } else {
-        return 'Payment method not supported'
-      }
-    } catch (e) {
-      return e
-    }
-  }
-
-  // FOOD BOOKING  
-  @Post('delivery/quote')
-  async quoteFoodOrder(@Body() createOrderDto: CreateDeliveryOrderDto) {
-    // try {
-    //   let restaurant = await this.restaurantService.findOneId(createOrderDto.restaurant_id);
-    //   return await this.orderService.createDeliveryOrder_Cash(createOrderDto, '', restaurant.location)
-    // } catch (e) {
-    //   return e
-    // }
-  }
-
-  @Post('delivery/place')
-  async placeFoodOrder(@Body() createOrderDto: CreateDeliveryOrderDto, @Req() req: RequestWithUser) {
-    // try {      
-    //   let restaurant = await this.restaurantService.findOneId(createOrderDto.restaurant_id);
-    //   let new_delivery_order = await this.orderService.createDeliveryOrder_Cash(createOrderDto, req.user.role_id.customer, restaurant.location)
-    //   this.eventEmitter.emit('order.food.created', new_delivery_order);
-    //   return new_delivery_order;
-    // } catch (e) {
-    //   return e
-    // }
-  }
-
-  // APPLY PROMOTION
-  @Post('promotion/apply')
-  applyPromotion(@Req() req: RequestWithUser, @Body() body: ApplyPromotionDto){
-    return this.paymentService.validateAndApplyPromotion(req.user.sub, body)
-  }
-
-  // REVIEW
   @Post('review')
-  async createReview(){
-
-  }
-
-  @Delete('review')
-  async deleteReview(){
+  async createReview(@Req() req: RequestWithUser, @Body() dto: any) {
     
   }
 
-  // BOOKING MANAGEMENT
-  @Get('order/history')
-  async getOrderHistory(){
-
-
-  }
-  
-  @Get('order/details/:id')
-  async getOrderDetails(){
-
+  @Delete('review/:id')
+  async deleteReview(@Req() req: RequestWithUser,@Param() id: any, @Res() res: Response,) {
+    
   }
 
-  @Patch('order/cancel')
-  async cancelOrder(){
-
-  }
 }

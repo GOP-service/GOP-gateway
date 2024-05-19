@@ -7,6 +7,7 @@ import * as argon2 from 'argon2'
 import { JwtService } from "@nestjs/jwt";
 import { RoleType } from "src/utils/enums";
 import { ConfigService } from "@nestjs/config";
+import { ConflictException } from "@nestjs/common";
 
 export abstract class AccountServiceAbstract <T extends Account> extends BaseServiceAbstract<T>{
   protected constructor(
@@ -65,7 +66,16 @@ export abstract class AccountServiceAbstract <T extends Account> extends BaseSer
     await this.update(id, {password: hash}as Partial<T>);
   }
 
+  async topUp(id: string, amount: number) {
+    this.model.updateOne({_id: id}, {$inc: {balance: amount}});
+  }
 
-    
+  async withdraw(id: string, amount: number) {
+    const account = await this.findOneById(id);
+    if (account.balance < amount) {
+      throw new ConflictException('Not enough balance');
+    }
+    this.model.updateOne({_id: id}, {$inc: {balance: -amount}});
+  }
 
 }

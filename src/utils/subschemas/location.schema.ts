@@ -9,7 +9,7 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose"
     timestamps: false,
 })
 export class LocationObject{
-    constructor(coordinates: number[] , address: string){
+    constructor(coordinates: number[] , address?: string){
         this.coordinates = coordinates
         this.address = address
     }
@@ -20,7 +20,7 @@ export class LocationObject{
     @Prop({ type: [Number], required: true })
     coordinates: number[]
 
-    @Prop({ type: String })
+    @Prop({ required: false})
     address: string
 
 }

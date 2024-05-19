@@ -24,17 +24,17 @@ export class FoodItem extends BaseEntity{
     @Prop({ required: true})
     name: string
 
-    @Prop({ required: true, default: 'ố deeeeeeeeeee'})
+    @Prop({ default: 'ố deeeeeeeeeee'})
     bio: string
 
     @Prop()
     image: string
 
-    @Prop()
+    @Prop({ required: true })
     price: number
 
     @Prop({ type: [SchemaTypes.ObjectId], ref: 'ModifierGroup', default: []})
-    modifier_groups: string[]
+    modifier_groups: ModifierGroup[] | string[]
 }
 
 export const FoodItemSchema = SchemaFactory.createForClass(FoodItem);

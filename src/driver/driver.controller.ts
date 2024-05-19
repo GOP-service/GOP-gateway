@@ -1,17 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query } from '@nestjs/common';
+import { Controller, Post, Body, Patch, Param, Delete, UseGuards, Req, Query, Res, Get, BadRequestException } from '@nestjs/common';
 import { DriverService } from './driver.service';
 import { CreateDriverDto } from './dto/create-driver.dto';
 import { UpdateDriverDto } from './dto/update-driver.dto';
-import { ApiBearerAuth, ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/utils/guards/roles.guard';
 import { IDriverController, RequestWithUser } from 'src/utils/interfaces';
 import { UpdateStatusDriverDto } from './dto/update-status-driver.dto';
-import { OrderStatus, PaymentMethod, VehicleType } from 'src/utils/enums';
+import { DriverStatus, OrderStatus, PaymentMethod, VehicleType } from 'src/utils/enums';
 import { OrderService } from 'src/order/order.service';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { PaymentService } from 'src/payment/payment.service';
 import { CreateBillDto } from 'src/payment/dto/create-bill.dto';
+import { Response } from 'express';
+import { AssignDriverDto } from './dto/assign-driver.dto';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'),RolesGuard)
@@ -20,15 +22,26 @@ import { CreateBillDto } from 'src/payment/dto/create-bill.dto';
 export class DriverController implements IDriverController{
   constructor(
     private readonly driverService: DriverService,
-    private readonly orderService: OrderService,
-    private readonly eventEmitter: EventEmitter2,
-    private readonly paymentService: PaymentService,
 
   ) {}
 
   @Get('profile')
-  getProfile(): Promise<any> {
-    throw new Error('Method not implemented.');
+  async getProfile(@Req() req: RequestWithUser, @Res() res: Response) {
+    await this.driverService.findOneById(req.user.sub).then(profile => {
+      if (profile) {
+        return res.status(200).json({
+          _id: profile._id,
+          email: profile.email,
+          full_name: profile.full_name,
+          // phone: profile.phone, //todo add phone
+          avatar: profile.avatar,
+          vehicle: profile.vehicle_model,
+          vehicle_type: profile.vehicle_type,
+          vehicle_plate: profile.vehicle_plate_number,
+          status: profile.status,
+        })
+      }
+    });
   }
 
   @Patch('profile')
@@ -36,63 +49,26 @@ export class DriverController implements IDriverController{
     throw new Error('Method not implemented.');
   }
 
-  @Post('order/:id/accept')
-  acceptOrder(): Promise<any> {
-    throw new Error('Method not implemented.');
+  @ApiParam({
+    name: 'status',
+    enum: ['online', 'offline'],
+  })
+  @Get('active/:status')
+  async updateActiveStatus(@Req() req: RequestWithUser, @Param('status') dto: string): Promise<any> {
+    switch (dto) {
+      case 'online':
+        return await this.driverService.update(req.user.sub, {status: DriverStatus.ONLINE});
+      case 'offline':
+        return await this.driverService.update(req.user.sub, {status: DriverStatus.OFFLINE});
+      default:
+        return new BadRequestException('Invalid status');
+    }
   }
-
-  @Post('order/:id/reject')
-  rejectOrder(): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-
-  @Patch('active/:status')
-  updateActiveStatus(): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-
-  @Post('order/:id/arrived')
-  arrivedPickup(): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-
-  @Post('order/:id/pickedup')
-  pickedUp(): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-
-  @Post('order/:id/restaurant/arrived')
-  arrivedRestaurant(): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-
-  @Post('order/:id/completed')
-  completeOrder(): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-
-  @Post('order/:id/cancel')
-  cancelOrder(): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-
-  @Get('revenue')
-  getDriverRevenueStats(): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-
-
 
   // @Patch('status')
   // updateStatus(@Body() dto: UpdateStatusDriverDto, @Req() req: RequestWithUser){
   //   return this.driverService.updateStatus(req.user.role_id.driver, dto.status);
   // }
-
-  // @Get()
-  // findAll() {
-  //   return this.driverService.findAll();
-  // }
-
   // @Get(':id')
   // findOne(@Param('id') id: string) {
   //   return this.driverService.findOneId(id);

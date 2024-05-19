@@ -12,19 +12,19 @@ export type RestaurantFoodReviewDocument = HydratedDocument<RestaurantFoodReview
     timestamps: true,
 })
 export class RestaurantFoodReview extends BaseEntity {
-    @Prop({ required: true})
+    @Prop({ })
     owner_id: string
 
-    @Prop({ required: true})
+    @Prop({ })
     content: string
 
-    @Prop({ required: true})
+    @Prop({ })
     type: string
 
-    @Prop({ required: true, min: 0, max: 5 })
+    @Prop({ min: 0, max: 5 })
     rating: number
 
-    @Prop({ required: true})
+    @Prop({ })
     reviewable_id: string
 }
 

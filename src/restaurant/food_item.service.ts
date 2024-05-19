@@ -7,6 +7,7 @@ import { CreateFoodItemDto } from "./dto/create-food-item.dto";
 import { ModifierGroupService } from "./modifier_groups.service";
 import { FoodItemDto } from "./dto/food-item.dto";
 import { ModifierGroup } from "./entities/modifier_groups.schema";
+import { UpdateFoodItemDto } from "./dto/update-food-item.dto";
 
 @Injectable()
 export class FoodItemService extends BaseServiceAbstract<FoodItem> {
@@ -21,5 +22,11 @@ export class FoodItemService extends BaseServiceAbstract<FoodItem> {
         const mg = await this.modiferGroupService.createModifieriGroupList(dto.modifier_groups as ModifierGroup[])
         dto.modifier_groups = mg
         return await this.create(dto);
+    }
+
+    async updateFoodItem(id: string, dto: UpdateFoodItemDto) {
+        // const mg = await this.modiferGroupService.createModifieriGroupList(dto.modifier_groups as ModifierGroup[])
+        // dto.modifier_groups = mg
+        // return await this.update(id, dto);
     }
 }

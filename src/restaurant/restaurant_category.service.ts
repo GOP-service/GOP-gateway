@@ -19,11 +19,19 @@ export class RestaurantCategoryService extends BaseServiceAbstract<RestaurantCat
         return category;
     }
 
-    async updateCategory(dto: UpdateRestaurantCategoryDto) {
-        const category = await this.update(dto._id, dto as Partial<UpdateRestaurantCategoryDto>)
+    async updateCategory(cate_id: string, dto: UpdateRestaurantCategoryDto) {
+        const category = await this.update(cate_id, { name: dto.name, bio: dto.bio })
         return category;
     }
 
+    async deleteCategory(cate_id: string) {
+        const now = new Date(); 
+        now.setTime(now.getTime() + (7 * 60 * 60 * 1000)); 
+        const category = await this.update(cate_id, {
+            deleted_at: now
+        })
+        return category;
+    }
     async addFoodItem(food_item_id: string, category_id: string){
         return await this.restaurantCategoryModel.findByIdAndUpdate(category_id, { 
             $push: {

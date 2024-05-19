@@ -6,10 +6,9 @@ import { Driver, DriverDocument } from './entities/driver.schema';
 import { Model } from 'mongoose';
 import { LocationObject } from 'src/utils/subschemas/location.schema';
 import { DriverStatus, VehicleType } from 'src/utils/enums';
-import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { AccountServiceAbstract } from 'src/auth/account.abstract.service';
-import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
+import { AssignDriverDto } from './dto/assign-driver.dto';
+import { TransportOrder } from 'src/order/entities/transport_order.schema';
 
 @Injectable()
 export class DriverService extends AccountServiceAbstract<Driver>{
@@ -20,39 +19,32 @@ export class DriverService extends AccountServiceAbstract<Driver>{
     }
   
   logger = new Logger('DriverService');
-
-  // async create(createDriverDto: CreateDriverDto): Promise<DriverDocument> {
-  //   const createdDriver = new this.driverModel(createDriverDto);
-  //   return createdDriver.save();
-  // }
-
-  // async updateLocation(id: string, location: LocationObject): Promise<DriverDocument> {
-  //   return this.driverModel.findByIdAndUpdate
-  //   (id, {location: location}, {new: true}).exec();
-  // }
-
-  // async updateStatus(id: string, status: DriverStatus): Promise<DriverDocument> {
-  //   return this.driverModel.findByIdAndUpdate
-  //   (id, {status: status}, {new: true}).exec();
-  // }
-
-  
+ 
   //TODO add filter to allocate driver
-  async findDriverInDistance(point: LocationObject, distance: number, vehicle_type: VehicleType): Promise<DriverDocument> {
-    return await this.driverModel.findOne({
+  async findDriverInDistance(dto : AssignDriverDto): Promise<Driver> {
+    const coor = dto.coor
+    const driver = await this.driverModel.findOne({
       status: { $eq: DriverStatus.ONLINE },
-      vehicle_type: { $eq: vehicle_type },
+      vehicle_type: { $eq: dto.vehicle_type },
       location: {
         $near: {
           $geometry: {
             type: "Point",
-            coordinates: point.coordinates
+            coordinates: coor.coordinates
           },
-          $maxDistance: distance
+          $maxDistance: dto.distance
         }
-      }
-    });
+      },
+      _id: { $nin: dto.reject_drivers }
+    }).exec();
+    return driver? driver.toObject() : null;
   }
+
+  async updateDriverLocation(id: string, location: LocationObject) {
+    return this.update(id, {location: location});
+  }
+
+  
 
   // async findOneId(id: string): Promise<DriverDocument> {
   //   return this.driverModel.findById(id).exec();

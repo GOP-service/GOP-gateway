@@ -8,7 +8,7 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
     _id: false,
     timestamps: false
 })
-export class PromotionQuotas {
+export class CampaignQuotas {
     @Prop()
     limit: number
 
@@ -16,4 +16,4 @@ export class PromotionQuotas {
     total_count_per_count: number
 }
 
-export const PromotionQuotasSchema = SchemaFactory.createForClass(PromotionQuotas)
+export const CampaignQuotasSchema = SchemaFactory.createForClass(CampaignQuotas)

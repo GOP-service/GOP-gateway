@@ -3,7 +3,7 @@ import { BaseServiceInterface as BaseServiceInterface, FindAllResponse } from ".
 import { BaseEntity } from "./base.entity";
 
 export abstract class BaseServiceAbstract<T extends BaseEntity>implements BaseServiceInterface<T>{
-    protected constructor(private readonly model: Model<T>) {
+    protected constructor(protected readonly model: Model<T>) {
         this.model = model;
     }
 

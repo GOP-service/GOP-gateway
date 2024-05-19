@@ -11,6 +11,7 @@ import { Order, OrderSchema } from './entities/order.schema';
 import { DeliveryOrder, DeliveryOrderSchema } from './entities/delivery_order.schema';
 import { TransportOrder, TransportOrderSchema } from './entities/transport_order.schema';
 import { SocketModule } from 'src/socket/socket.module';
+import { DriverModule } from 'src/driver/driver.module';
 
 
 @Module({
@@ -26,6 +27,7 @@ import { SocketModule } from 'src/socket/socket.module';
       },
       { name: OrderFoodItems.name, schema: FoodItemsSchema },
     ]),
+    DriverModule,
     PaymentModule,
     VietMapModule,
     SocketModule

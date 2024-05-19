@@ -21,5 +21,8 @@ export class Account extends BaseEntity{
 
     @Prop({ default: false })
     verified: boolean
+
+    @Prop({ default: 0 })
+    balance: number
 }
 

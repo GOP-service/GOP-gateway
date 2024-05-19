@@ -5,15 +5,16 @@ import { LocationObject, LocationSchema } from "src/utils/subschemas/location.sc
 import { Order } from "./order.schema";
 import { OrderFoodItems } from "./order_food_items.schema";
 import { OrderType } from "src/utils/enums";
+import { Restaurant } from "src/restaurant/entities/restaurant.schema";
 
 export type DeliveryOrderType = DeliveryOrder & Order
 
 @Schema()
 export class DeliveryOrder {
-    @Prop({ })
-    restaurant_id: string
+    @Prop({ type: SchemaTypes.ObjectId, ref: 'Restaurant' })
+    restaurant: Restaurant
 
-    @Prop() //{type: [SchemaTypes.ObjectId], ref: 'OrderFoodItems'}
+    @Prop({type: [SchemaTypes.ObjectId], ref: 'OrderFoodItems'}) //
     items: OrderFoodItems[]
 
     @Prop({ type: LocationSchema})

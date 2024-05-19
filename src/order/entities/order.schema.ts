@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document, HydratedDocument } from "mongoose";
+import { Document, HydratedDocument, SchemaTypes } from "mongoose";
 import { OrderType, OrderStatus, VehicleType } from "src/utils/enums";
 import { Bill, BillSchema } from "src/payment/entities/bill.schema";
 import { BaseEntity } from "src/utils/repository/base.entity";
@@ -7,6 +7,8 @@ import { LocationObject, LocationSchema } from "src/utils/subschemas/location.sc
 import { OrderFoodItems } from "./order_food_items.schema";
 import { DeliveryOrder,  DeliveryOrderSchema, DeliveryOrderType } from "./delivery_order.schema";
 import { TransportOrder, TransportOrderSchema, TransportOrderType } from "./transport_order.schema";
+import { Driver } from "src/driver/entities/driver.schema";
+import { Customer } from "src/customer/entities/customer.schema";
 
 export type OrderDocument = HydratedDocument<Order>
 
@@ -23,11 +25,11 @@ export type OrderDetailsType = TransportOrderType | DeliveryOrderType
     discriminatorKey: 'order_type',
 })
 export class Order extends BaseEntity{
-    @Prop({})
-    customer_id: string
+    @Prop({ type: SchemaTypes.ObjectId, ref: 'Customer'})
+    customer: Customer
 
-    @Prop({})
-    driver_id: string
+    @Prop({ type: SchemaTypes.ObjectId, ref: 'Driver'})
+    driver: Driver
 
     @Prop({ enum: OrderStatus, type: String})
     order_status: OrderStatus
@@ -48,8 +50,14 @@ export class Order extends BaseEntity{
         ]})
     order_type: OrderType
 
-    @Prop({ type: BillSchema, ref: Bill.name })
+    @Prop({ type: SchemaTypes.ObjectId, ref: 'Bill' })
     bill: Bill
+
+    @Prop({})
+    cancel_reason: string
+
+    @Prop({default: []})
+    drivers_reject: string[]
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

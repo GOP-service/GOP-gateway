@@ -1,12 +1,12 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsNotEmpty } from "class-validator";
 
-export class ApplyPromotionDto {
+export class ApplyCampaignDto {
     @ApiProperty({
         example: ['1', '2']
     })
     @IsNotEmpty()
-    list_promotion_id: string[]
+    list_compaign_id: string[]
 
     @ApiProperty({
         example: 200000

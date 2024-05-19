@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { PromotionDiscountType } from "src/utils/enums";
-import { PromotionScope } from "./promotion_scope.schema";
+import { CampaignDiscountType } from "src/utils/enums";
+import { CampaignScope } from "./campaign_scope.schema";
 
 @Schema({
     toJSON: {
@@ -10,9 +10,9 @@ import { PromotionScope } from "./promotion_scope.schema";
     _id: false,
     timestamps: false
 })
-export class PromotionDiscount {
+export class CampaignDiscount {
     @Prop({ require: true })
-    type: PromotionDiscountType
+    type: CampaignDiscountType
 
     @Prop()
     cap: number
@@ -21,7 +21,7 @@ export class PromotionDiscount {
     value: number
 
     @Prop({ required: true })
-    scope: PromotionScope
+    scope: CampaignScope
 }
 
-export const PromotionDiscountSchema = SchemaFactory.createForClass(PromotionDiscount)
+export const CampaignDiscountSchema = SchemaFactory.createForClass(CampaignDiscount)

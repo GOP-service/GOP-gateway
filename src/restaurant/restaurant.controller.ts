@@ -8,7 +8,7 @@ import { RolesGuard } from 'src/utils/guards/roles.guard';
 import { Roles } from 'src/utils/decorators/roles.decorator';
 import { OTPType, OTPVerifyStatus, OrderStatus, RoleType } from 'src/utils/enums';
 import { AuthService } from 'src/auth/auth.service';
-import { RequestWithUser } from 'src/utils/interfaces';
+import { ICampaign, IRestaurantController, RequestWithUser } from 'src/utils/interfaces';
 import { CreateRestaurantCategoryDto } from './dto/create-restaurant-category.dto';
 import { UpdateItemsRestaurantDto } from './dto/update-item-restaurant-category.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -24,17 +24,20 @@ import { UpdateRestaurantCategoryDto } from './dto/update-restaurant-category.dt
 @UseGuards(AuthGuard('jwt'),RolesGuard)
 @ApiTags('Restaurants')
 @Controller('restaurant')
-export class RestaurantController {
+export class RestaurantController implements IRestaurantController, ICampaign{
   constructor(
-    private readonly orderService: OrderService,
     private readonly restaurantService: RestaurantService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
-  
-  // RESTAURANT
+
+  @Get('profile')
+  getProile(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+
   @Roles(RoleType.RESTAURANT)
   @Patch('info/update')
-  async updateRestaurant(@Req() req: RequestWithUser, @Body() body: UpdateRestaurantDto){
+  async updateRestaurant(@Req() req: RequestWithUser, @Body() body: UpdateRestaurantDto): Promise<any> {
     try {
       const restaurant = await this.restaurantService.updateRestaurant(req.user.sub, body);
       return restaurant;
@@ -43,10 +46,45 @@ export class RestaurantController {
     }
   }
 
-  // CATEGORY
   @Roles(RoleType.RESTAURANT)
-  @Post('category')
-  async createCategory(@Req() req: RequestWithUser, @Body() body: CreateRestaurantCategoryDto){
+  @Post('order/:id/accept')
+  acceptOrder(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+
+  @Roles(RoleType.RESTAURANT)
+  @Post('order/:id/reject')
+  rejectOrder(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+
+  @Roles(RoleType.RESTAURANT)
+  @Post('order/:id/details')
+  getOrderDetails(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+
+  @Roles(RoleType.RESTAURANT)
+  @Get('orders')
+  getOrders(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+
+  @Roles(RoleType.RESTAURANT)
+  @Delete('order/:id/delete')
+  deleteOrder(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+
+  @Roles(RoleType.RESTAURANT)
+  @Get('/statistics/revenue')
+  getRevenueStatistics(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+
+  @Roles(RoleType.RESTAURANT)
+  @Post('category/create')
+  async createCategory(@Req() req: RequestWithUser, @Body() body: CreateRestaurantCategoryDto): Promise<any> {
     try {
       const restaurant = await this.restaurantService.addCategory(req.user.sub, body)
       return restaurant;
@@ -56,20 +94,32 @@ export class RestaurantController {
   }
 
   @Roles(RoleType.RESTAURANT)
-  @Patch('category')
-  async updateCategory(@Req() req: RequestWithUser, @Body() body: UpdateRestaurantCategoryDto){
-    try {
-      const restaurant = await this.restaurantService.updateCategory(req.user.sub, body)
+  @Patch('catrgory/:id/update')
+  async updateCategory(@Req() req: RequestWithUser, @Param('id') id: string, @Body() body: UpdateRestaurantCategoryDto): Promise<any> {
+     try {
+      const restaurant = await this.restaurantService.updateCategory(req.user.sub, id, body)
       return restaurant;
     } catch (error) {
       return error
     }
   }
 
-  // FOOD ITEM
   @Roles(RoleType.RESTAURANT)
-  @Post('fooditem')
-  async createFoodItem(@Req() req: RequestWithUser, @Body() body: CreateFoodItemDto){
+  @Delete('category/:id/delete')
+  async deleteCategory(@Req()  req: RequestWithUser, @Param('id') id: string): Promise<any> {
+    try {
+      const category = await this.restaurantService.
+      deleteCategory(id, req.user.sub)
+      return category;
+    } catch (error) {
+      return error
+    }
+  }
+
+  @Roles(RoleType.RESTAURANT)
+  @UseInterceptors(FileInterceptor('image'))
+  @Post('fooditem/create')
+  async createFoodItem(@Req() req: RequestWithUser, @Body() body: CreateFoodItemDto, @UploadedFile() image): Promise<any> {
     try {
       const restaurant = await this.restaurantService.createFoodItem(req.user.sub, body);
       return restaurant;
@@ -77,6 +127,52 @@ export class RestaurantController {
       return error
     }
   }
+
+  @Roles(RoleType.RESTAURANT)
+  @Patch('fooditem/:id/update')
+  updateFoodItem(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+
+  @Roles(RoleType.RESTAURANT)
+  @Delete('fooditem/:id/delete')
+  deleteFoodItem(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+
+  @Roles(RoleType.RESTAURANT)
+  @Get('campaigns')
+  getCampaigns(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+
+  @Roles(RoleType.RESTAURANT)
+  @Get('campaign/:id')
+  getCampaignDetails(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+
+  @Roles(RoleType.RESTAURANT)
+  @Post('campaign/create')
+  createCampaign(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+
+  @Roles(RoleType.RESTAURANT)
+  @Patch('campaign/:id/update')
+  updateCampaign(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+
+  @Roles(RoleType.RESTAURANT)
+  @Delete('campaign/:id/delete')
+  deleteCampaign(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+  
+  // RESTAURANT
+
+  // FOOD ITEM
 
   // @Roles(RoleType.RESTAURANT)
   // @Get('info')

@@ -13,7 +13,7 @@ export type ModifierGroupDocument = HydratedDocument<ModifierGroup>;
     timestamps: true,
 })
 export class ModifierGroup extends BaseEntity{
-    constructor( name: string, modifier: string[], min?: number, max?: number){
+    constructor( name: string, modifier?: string[], min?: number, max?: number){
         super();
         this.name = name;
         this.modifier = modifier;
@@ -24,10 +24,10 @@ export class ModifierGroup extends BaseEntity{
     @Prop({ required: true})
     name: string
 
-    @Prop({ required: true, type: [SchemaTypes.ObjectId], ref: 'Modifier', default: []})
-    modifier: string[]
+    @Prop({ type: [SchemaTypes.ObjectId], ref: 'Modifier', default: []})
+    modifier: Modifier[] | string[]
 
-    @Prop({ required: true, default: 0})
+    @Prop({ default: 0})
     min: number
 
     @Prop({})

@@ -15,7 +15,7 @@ export class Ledger {
     @Prop({ required: true })
     owner_id: string
 
-    @Prop({ type: [OrderSchema], default: [] })
+    @Prop({ type: [OrderSchema], default: [],ref: 'Order'})
     orders: Order[]
 
     @Prop()

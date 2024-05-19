@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 import { Restaurant, RestaurantDocument } from './entities/restaurant.schema';
@@ -61,15 +61,32 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
     return restaurant;
   }
 
-  async updateCategory(restaurant_id: string, dto: UpdateRestaurantCategoryDto): Promise<RestaurantCategory> {
-    const restaurant = await this.findOneById(restaurant_id);
-    if(restaurant && restaurant.restaurant_categories.includes(dto._id)){
-      const category = await this.restaurantCategoryService.updateCategory(dto);
+  async updateCategory(restaurant_id: string, cate_id: string, dto: UpdateRestaurantCategoryDto): Promise<RestaurantCategory> {
+    if(this.isCategoryOwnedByRestaurant(restaurant_id, cate_id)){
+      const category = await this.restaurantCategoryService.updateCategory(cate_id ,dto);
       return category;
     }
-    else throw new Error("Invalid restaurant")
+    else throw new NotFoundException("Restaurant not found")
+  }
+
+  async isCategoryOwnedByRestaurant(restaurant_id: string, cate_id: string): Promise<boolean> {
+    const restaurant = await this.findOneById(restaurant_id);
+    return  restaurant && (restaurant.restaurant_categories.filter(cate => (cate as RestaurantCategory)._id == cate_id || (cate as string) == cate_id )).length > 0;
   }
   
+  async deleteCategory(category_id: string, restaurant_id: string) {
+    if(this.isCategoryOwnedByRestaurant(restaurant_id, category_id)){
+      const restaurant = await this.findOneById(restaurant_id)
+      const new_cate = restaurant.restaurant_categories.filter(cate_id => cate_id != category_id) as RestaurantCategory[]
+
+      await this.update(restaurant_id, {
+        restaurant_categories: new_cate
+      })
+      
+      return await this.restaurantCategoryService.deleteCategory(category_id)
+    }
+  }
+
   async createFoodItem(restaurant_id: string, dto: CreateFoodItemDto){
     const restaurant = await this.findOneById(restaurant_id);
     if(restaurant){
@@ -77,7 +94,7 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
       this.restaurantCategoryService.addFoodItem(foodItem._id, dto.category_id)
       return foodItem;
     }
-    else throw new Error("Invalid restaurant")
+    else throw new NotFoundException("Restaurant not found")
   }
   // // async addCategory(id: string, dto: CreateRestaurantCategoryDto): Promise<RestaurantDocument> {
   // //   const restaurant = await this.restaurantModel.findById(id).exec();
