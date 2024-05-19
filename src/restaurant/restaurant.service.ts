@@ -61,13 +61,13 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
     return restaurant;
   }
 
-  async updateCategory(restaurant_id: string, dto: UpdateRestaurantCategoryDto): Promise<RestaurantCategory> {
-    const restaurant = await this.findOneById(restaurant_id);
-    if(restaurant && restaurant.restaurant_categories.includes(dto._id)){
-      const category = await this.restaurantCategoryService.updateCategory(dto);
-      return category;
-    }
-    else throw new Error("Invalid restaurant")
+  async updateCategory(restaurant_id: string, dto: UpdateRestaurantCategoryDto) {
+    // const restaurant = await this.findOneById(restaurant_id);
+    // if(restaurant && restaurant.restaurant_categories.includes(dto._id)){
+    //   const category = await this.restaurantCategoryService.updateCategory(dto);
+    //   return category;
+    // }
+    // else throw new Error("Invalid restaurant")
   }
   
   async createFoodItem(restaurant_id: string, dto: CreateFoodItemDto){

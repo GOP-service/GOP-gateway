@@ -1,8 +1,8 @@
-import { Controller, Post, Body, Patch, Param, Delete, UseGuards, Req, Query, Res, Get } from '@nestjs/common';
+import { Controller, Post, Body, Patch, Param, Delete, UseGuards, Req, Query, Res, Get, BadRequestException } from '@nestjs/common';
 import { DriverService } from './driver.service';
 import { CreateDriverDto } from './dto/create-driver.dto';
 import { UpdateDriverDto } from './dto/update-driver.dto';
-import { ApiBearerAuth, ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/utils/guards/roles.guard';
 import { IDriverController, RequestWithUser } from 'src/utils/interfaces';
@@ -22,76 +22,11 @@ import { AssignDriverDto } from './dto/assign-driver.dto';
 export class DriverController implements IDriverController{
   constructor(
     private readonly driverService: DriverService,
-    private readonly orderService: OrderService,
-    private readonly eventEmitter: EventEmitter2,
-    private readonly paymentService: PaymentService,
 
   ) {}
 
   @Get('profile')
-  getProfile(): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-
-  @Patch('profile')
-  updateProfile(): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-
-  @Post('order/:id/accept')
-  acceptOrder(): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-
-  @Post('order/:id/reject')
-  rejectOrder(): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-
-  @Patch('active/:status')
-  updateActiveStatus(): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-
-  @Post('order/:id/arrived')
-  arrivedPickup(): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-
-  @Post('order/:id/pickedup')
-  pickedUp(): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-
-  @Post('order/:id/restaurant/arrived')
-  arrivedRestaurant(): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-
-  @Post('order/:id/completed')
-  completeOrder(): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-
-  @Post('order/:id/cancel')
-  cancelOrder(): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-
-  @Get('revenue')
-  getDriverRevenueStats(): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-
-
-
-  // @Patch('status')
-  // updateStatus(@Body() dto: UpdateStatusDriverDto, @Req() req: RequestWithUser){
-  //   return this.driverService.updateStatus(req.user.role_id.driver, dto.status);
-  // }
-
-  @Get('profile')
-  async findAll(@Req() req: RequestWithUser, @Res() res: Response) {
+  async getProfile(@Req() req: RequestWithUser, @Res() res: Response) {
     await this.driverService.findOneById(req.user.sub).then(profile => {
       if (profile) {
         return res.status(200).json({
@@ -109,26 +44,31 @@ export class DriverController implements IDriverController{
     });
   }
 
-  @Get('startwork')
-  async startWork(@Req() req: RequestWithUser){
-    return this.driverService.update(req.user.sub, {status: DriverStatus.ONLINE});
+  @Patch('profile')
+  updateProfile(): Promise<any> {
+    throw new Error('Method not implemented.');
   }
 
-  @Get('stopwork')
-  async stopWork(@Req() req: RequestWithUser){
-    return this.driverService.update(req.user.sub, {status: DriverStatus.OFFLINE});
+  @ApiParam({
+    name: 'status',
+    enum: ['online', 'offline'],
+  })
+  @Get('active/:status')
+  async updateActiveStatus(@Req() req: RequestWithUser, @Param('status') dto: string): Promise<any> {
+    switch (dto) {
+      case 'online':
+        return await this.driverService.update(req.user.sub, {status: DriverStatus.ONLINE});
+      case 'offline':
+        return await this.driverService.update(req.user.sub, {status: DriverStatus.OFFLINE});
+      default:
+        return new BadRequestException('Invalid status');
+    }
   }
 
-  @Get('orderhistory')
-  async orderHistory(@Req() req: RequestWithUser){
-    // return this.orderService.findOrderByDriverId(req.user.sub);
-  }
-
-  @OnEvent('Assign.Driver.request')
-  async assignDriverRequest(payload: AssignDriverDto){
-    return this.driverService.findDriverInDistance(payload);
-    
-  }
+  // @Patch('status')
+  // updateStatus(@Body() dto: UpdateStatusDriverDto, @Req() req: RequestWithUser){
+  //   return this.driverService.updateStatus(req.user.role_id.driver, dto.status);
+  // }
   // @Get(':id')
   // findOne(@Param('id') id: string) {
   //   return this.driverService.findOneId(id);

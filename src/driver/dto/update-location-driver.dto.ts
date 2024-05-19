@@ -5,7 +5,7 @@ import { LocationObject } from "src/utils/subschemas/location.schema";
 export class UpdateLocationDriverDto {
     @ApiProperty()
     @IsNotEmpty()
-    driver_id: string;
+    driver: string;
 
     @ApiProperty()
     @IsNotEmpty()

@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document, SchemaTypes, Schema as MongooseSchema } from "mongoose";
+import { Document, SchemaTypes } from "mongoose";
 import { FoodItem } from "src/restaurant/entities/food_item.schema";
 import { LocationObject, LocationSchema } from "src/utils/subschemas/location.schema";
 import { Order } from "./order.schema";
@@ -11,10 +11,10 @@ export type DeliveryOrderType = DeliveryOrder & Order
 
 @Schema()
 export class DeliveryOrder {
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Restaurant' })
+    @Prop({ type: SchemaTypes.ObjectId, ref: 'Restaurant' })
     restaurant: Restaurant
 
-    @Prop() //{type: [SchemaTypes.ObjectId], ref: 'OrderFoodItems'}
+    @Prop({type: [SchemaTypes.ObjectId], ref: 'OrderFoodItems'}) //
     items: OrderFoodItems[]
 
     @Prop({ type: LocationSchema})

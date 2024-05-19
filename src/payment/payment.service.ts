@@ -18,6 +18,7 @@ import { DeliveryOrder } from 'src/order/entities/delivery_order.schema';
 import { TransportOrder } from 'src/order/entities/transport_order.schema';
 import { Order, OrderDetails } from 'src/order/entities/order.schema';
 import { ApplyPromotionDto } from './dto/apply-promotion.dto';
+import { RevenueHistory, RevenueHistoryDocument } from './entities/revenue_history.schem';
 
 
 @Injectable()
@@ -25,7 +26,8 @@ export class PaymentService {
     constructor(
       @InjectModel(Bill.name) private readonly billModel: Model<BillDocument>,
       @InjectModel(Ledger.name) private readonly ledgerModel: Model<LedgerDocument>,
-      @InjectModel(Promotion.name) private readonly promotionModdel: Model<PromotionDocument>
+      @InjectModel(Promotion.name) private readonly promotionModdel: Model<PromotionDocument>,
+      @InjectModel(RevenueHistory.name) private readonly revenueHistoryModel: Model<RevenueHistoryDocument>,
     ) {}
 
   getURLVnPay(ip: string, amount: number, orderId: string) {
@@ -163,89 +165,91 @@ export class PaymentService {
     return -total_discount_value;
   }
 
-    async createBill(createBillDto: CreateBillDto) {
-      const new_bill = new this.billModel({
-        order_id: createBillDto.order._id,
-        payment_method: createBillDto.payment_method,
-      });
+  async createBill(createBillDto: CreateBillDto) {
+    const initStatus = createBillDto.payment_method === PaymentMethod.CASH ? BillStatus.PENDING : BillStatus.PAID;
+    const new_bill = new this.billModel({
+      order: createBillDto.order,
+      status: initStatus,
+      payment_method: createBillDto.payment_method,
+    });
 
-      //todo check promotion các kiểu đà điểu
-      let discount = 0;
+    //todo check promotion các kiểu đà điểu
+    let discount = 0;
 
-      //todo tính tiền từ promotion
-      if (createBillDto.order instanceof DeliveryOrder) {
-        new_bill.sub_total = createBillDto.order.delivery_fare + createBillDto.order.order_cost;
-      } else {
-        new_bill.sub_total = createBillDto.order.trip_fare;        
+    //todo tính tiền từ promotion
+    if (createBillDto.order instanceof DeliveryOrder) {
+      new_bill.sub_total = createBillDto.order.delivery_fare + createBillDto.order.order_cost;
+    } else {
+      new_bill.sub_total = createBillDto.order.trip_fare;        
+    }
+
+    new_bill.discount = discount;
+    new_bill.total = new_bill.sub_total - discount + new_bill.platform_fee;
+
+    return (await new_bill.save()).toObject();
+  }
+
+  async getBill(id: string): Promise<BillDocument> {
+    return await this.billModel.findById(id).exec();
+  }
+
+  async updateBillComplete(order : OrderDetailsType) {
+    const bill = await this.billModel.findOne(order.bill).exec();
+
+    bill.status = BillStatus.COMPLETED;
+
+    if (order instanceof DeliveryOrder) {
+      if (bill.payment_method === PaymentMethod.VNPAY) {
+
+        // cập nhật ledger cho restaurant và driver với 90% lợi nhuận
+        this.updateLedger(order.restaurant._id, order, order.order_cost * 0.9);
+        this.updateLedger(order.driver._id, order, order.delivery_fare * 0.9);
+      } else if (bill.payment_method === PaymentMethod.CASH){
+        // cập nhật ledgers cho restaurant và drivers trả 10% lợi nhận cho nền tảng
+        this.updateLedger(order.restaurant._id, order, order.order_cost * -0.1);
+        this.updateLedger(order.driver._id, order, order.delivery_fare * 0.9 );
       }
-
-      new_bill.discount = discount;
-      new_bill.total = new_bill.sub_total - discount + new_bill.platform_fee;
-
-      return await new_bill.save();
-    }
-
-    async getBill(id: string): Promise<BillDocument> {
-      return await this.billModel.findById(id).exec();
-    }
-
-    async updateBillComplete(order : OrderDetailsType) {
-      const bill = await this.billModel.findOne(order.bill).exec();
-
-      bill.status = BillStatus.COMPLETED;
-
-      if (order instanceof DeliveryOrder) {
-        if (bill.payment_method === PaymentMethod.VNPAY) {
-
-          // cập nhật ledger cho restaurant và driver với 90% lợi nhuận
-          this.updateLedger(order.restaurant._id, order, order.order_cost * 0.9);
-          this.updateLedger(order.driver._id, order, order .delivery_fare * 0.9);
-        } else if (bill.payment_method === PaymentMethod.CASH){
-          // cập nhật ledgers cho restaurant và drivers trả 10% lợi nhận cho nền tảng
-          this.updateLedger(order.restaurant._id, order, order.order_cost * -0.1);
-          this.updateLedger(order.driver._id, order, order.delivery_fare * -0.1);
-        }
-      } else if (order instanceof TransportOrder){
-        if (bill.payment_method === PaymentMethod.VNPAY) {
-          // cập nhật ledgers cho drivers với 90% lợi nhuận
-          this.updateLedger(order.driver._id, order, order.trip_fare * 0.9);
-        } else if (bill.payment_method === PaymentMethod.CASH){
-          // cập nhật ledgers cho drivers trả 10% lợi nhuận cho nền tảng
-          this.updateLedger(order.driver._id, order, order.trip_fare * -0.1);
-        }
+    } else if (order instanceof TransportOrder){
+      if (bill.payment_method === PaymentMethod.VNPAY) {
+        // cập nhật ledgers cho drivers với 90% lợi nhuận
+        this.updateLedger(order.driver._id, order, order.trip_fare * 0.9);
+      } else if (bill.payment_method === PaymentMethod.CASH){
+        // cập nhật ledgers cho drivers trả 10% lợi nhuận cho nền tảng
+        this.updateLedger(order.driver._id, order, order.trip_fare * 0.9 - bill.total);
       }
-
-      return await bill.save();
-
     }
 
-    async getLedger(owner_id: string): Promise<LedgerDocument> {
-      const ledger_exist = await this.ledgerModel.findOne({ owner_id: owner_id, closed: false },)
-      if (ledger_exist ) {
-        return ledger_exist;
-      }
+    return (await bill.save()).toObject();
 
-      return await new this.ledgerModel({
-        owner_id: owner_id,
-      }).save();
+  }
+
+  async getLedger(owner_id: string): Promise<LedgerDocument> {
+    const ledger_exist = await this.ledgerModel.findOne({ owner_id: owner_id, closed: false },)
+    if (ledger_exist ) {
+      return ledger_exist;
     }
 
-    async closeLedger(owner_id: string): Promise<LedgerDocument>{
-      const ledger = await this.getLedger(owner_id);
+    return (await new this.ledgerModel({
+      owner_id: owner_id,
+    }).save()).toObject();
+  }
 
-      ledger.closed = true;
+  async closeLedger(owner_id: string): Promise<LedgerDocument>{
+    const ledger = await this.getLedger(owner_id);
 
-      return await ledger.save();
-    }
+    ledger.closed = true;
 
-    async updateLedger(owner_id: string, order: Order, amount: number) {
-      const ledger = await this.getLedger(owner_id);
+    return (await ledger.save()).toObject();
+  }
 
-      ledger.orders.push(order);
-      ledger.total += amount;
+  async updateLedger(owner_id: string, order: Order, amount: number) {
+    const ledger = await this.getLedger(owner_id);
 
-      await ledger.save();
-    }
+    ledger.orders.push(order);
+    ledger.total += amount;
+
+    await ledger.save();
+  }
 
 
 }

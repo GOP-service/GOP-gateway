@@ -15,13 +15,7 @@ export class TransportOrder {
     pickup_location: LocationObject 
 
     @Prop({ })
-    pickup_address: string
-
-    @Prop({ })
     dropoff_location: LocationObject
-
-    @Prop({ })
-    dropoff_address: string
     
     @Prop({ })
     distance: number

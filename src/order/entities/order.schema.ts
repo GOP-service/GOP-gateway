@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document, HydratedDocument, Schema as MongooseSchema } from "mongoose";
+import { Document, HydratedDocument, SchemaTypes } from "mongoose";
 import { OrderType, OrderStatus, VehicleType } from "src/utils/enums";
 import { Bill, BillSchema } from "src/payment/entities/bill.schema";
 import { BaseEntity } from "src/utils/repository/base.entity";
@@ -25,10 +25,10 @@ export type OrderDetailsType = TransportOrderType | DeliveryOrderType
     discriminatorKey: 'order_type',
 })
 export class Order extends BaseEntity{
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Customer'})
+    @Prop({ type: SchemaTypes.ObjectId, ref: 'Customer'})
     customer: Customer
 
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Driver'})
+    @Prop({ type: SchemaTypes.ObjectId, ref: 'Driver'})
     driver: Driver
 
     @Prop({ enum: OrderStatus, type: String})
@@ -50,8 +50,14 @@ export class Order extends BaseEntity{
         ]})
     order_type: OrderType
 
-    @Prop({ type: BillSchema, ref: Bill.name })
+    @Prop({ type: SchemaTypes.ObjectId, ref: 'Bill' })
     bill: Bill
+
+    @Prop({})
+    cancel_reason: string
+
+    @Prop({default: []})
+    drivers_reject: string[]
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

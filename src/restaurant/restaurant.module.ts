@@ -27,7 +27,6 @@ import { FoodItemService } from './food_item.service';
       { name : ModifierGroup.name, schema: ModifierGroupSchema,},
       { name : Modifier.name, schema: ModifierSchema,},
     ]),
-    OrderModule,
     AzureStorageModule
     
   ],

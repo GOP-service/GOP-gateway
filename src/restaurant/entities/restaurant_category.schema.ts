@@ -25,7 +25,7 @@ export class RestaurantCategory extends BaseEntity{
     bio: string
 
     @Prop([{ type: SchemaTypes.ObjectId, ref: 'FoodItem', default: [] }])
-    food_items: string[]
+    food_items: FoodItem[] | string[]
 }
 
 export const RestaurantCategorySchema = SchemaFactory.createForClass(RestaurantCategory);

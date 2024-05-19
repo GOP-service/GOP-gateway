@@ -8,6 +8,7 @@ import { OTPType, OTPVerifyStatus, RoleType } from 'src/utils/enums';
 import { Otp, OtpDocument } from './entities/otp.schema';
 import { OtpTemplate } from 'src/utils/mail-template/otp';
 import { MailerService } from '@nestjs-modules/mailer';
+import { NotificationTemplate } from 'src/utils/mail-template/noti';
 
 @Injectable()
 export class AuthService {
@@ -26,7 +27,16 @@ export class AuthService {
       to: mail,
       subject: 'OTP verification',
       text: 'OTP verification',
-      html: OtpTemplate(usename,otp.otp,'',type),
+      html: OtpTemplate(usename,otp.otp,type),
+    });
+  }
+
+  async sendNotification(mail: string, usename: string,) {
+    return await this.mailerService.sendMail({
+      to: mail,
+      subject: 'OTP verification',
+      text: 'OTP verification',
+      html: NotificationTemplate(usename),
     });
   }
 

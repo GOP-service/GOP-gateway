@@ -44,7 +44,7 @@ export class AuthController {
       if (!account) {
         return res.status(HttpStatus.CONFLICT).json({message: 'Email is already in use'});
       }
-      this.accountService.sendOTPMail(account.email, account.full_name, account._id, OTPType.VERIFY_ACCOUNT);
+      this.accountService.sendNotification(account.email, account.full_name);
       return res.status(HttpStatus.CREATED).json({message: 'OK'});
     }).catch((err) => {
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({message: err.message});
@@ -53,7 +53,15 @@ export class AuthController {
 
   @Post('customer/signup')
   async signupCustomer(@Body() body: createCustomerDto , @Res() res: Response) {
-    this.sign_up(body, res, this.customerService);
+    this.customerService.signUp(body).then(async (account) => {
+      if (!account) {
+        return res.status(HttpStatus.CONFLICT).json({message: 'Email is already in use'});
+      }
+      this.accountService.sendOTPMail(account.email, account.full_name, account._id, OTPType.VERIFY_ACCOUNT);
+      return res.status(HttpStatus.CREATED).json({message: 'OK'});
+    }).catch((err) => {
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({message: err.message});
+    });
   }
 
   @Post('driver/signup')

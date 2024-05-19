@@ -13,7 +13,6 @@ import { AdminModule } from './admin/admin.module';
 import { AppController } from './app.controller';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { SocketModule } from './socket/socket.module';
-import { SocketGateway } from './socket/socket.gateway';
 import { VietMapModule } from './utils/map-api/viet-map.module';
 
 

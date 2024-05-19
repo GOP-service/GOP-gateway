@@ -25,10 +25,6 @@ import { UpdateCustomerDto } from './dto/update-customer.dto';
 export class CustomerController implements ICustomerController {
   constructor(
     private readonly customerService: CustomerService,
-    private readonly paymentService: PaymentService,
-    private readonly orderService: OrderService,
-    private readonly restaurantService: RestaurantService,
-    private readonly eventEmitter: EventEmitter2,
   ) {}
   
   // ACCOUNT MANAGEMT
@@ -65,63 +61,6 @@ export class CustomerController implements ICustomerController {
   @Delete('review/:id')
   async deleteReview(@Req() req: RequestWithUser,@Param() id: any, @Res() res: Response,) {
     
-  }
-
-  
-  // TRANPORT BOOKING
-  @Post('transport/quote')
-  quoteTransportOrder(@Body() createOrderDto: CreateTransportOrderDto, ) {
-    try {
-      return this.orderService.TransportOrderQuote(createOrderDto);
-    } catch (e) {
-      return e
-    }
-  }
-
-  @Post('transport/place')
-  async placeTransportOrder(@Body() createOrderDto: CreateTransportOrderDto, @Req() req: RequestWithUser ) {
-    try {
-      if (createOrderDto.payment_method == PaymentMethod.CASH) {
-        return await this.orderService.TransportOrderPlace_Cash(createOrderDto, req.user.sub).then(order => {
-          this.eventEmitter.emit('trasnport.order.created', order._id);
-          return order;
-        });
-
-      } else {
-        return 'Payment method not supported'
-      }
-    } catch (e) {
-      return e
-    }
-  }
-
-  // FOOD BOOKING  
-  @Post('delivery/quote')
-  async quoteFoodOrder(@Body() createOrderDto: CreateDeliveryOrderDto) {
-    // try {
-    //   let restaurant = await this.restaurantService.findOneId(createOrderDto.restaurant_id);
-    //   return await this.orderService.createDeliveryOrder_Cash(createOrderDto, '', restaurant.location)
-    // } catch (e) {
-    //   return e
-    // }
-  }
-
-  @Post('delivery/place')
-  async placeFoodOrder(@Body() createOrderDto: CreateDeliveryOrderDto, @Req() req: RequestWithUser) {
-    // try {      
-    //   let restaurant = await this.restaurantService.findOneId(createOrderDto.restaurant_id);
-    //   let new_delivery_order = await this.orderService.createDeliveryOrder_Cash(createOrderDto, req.user.role_id.customer, restaurant.location)
-    //   this.eventEmitter.emit('order.food.created', new_delivery_order);
-    //   return new_delivery_order;
-    // } catch (e) {
-    //   return e
-    // }
-  }
-
-  // APPLY PROMOTION
-  @Post('promotion/apply')
-  applyPromotion(@Req() req: RequestWithUser, @Body() body: ApplyPromotionDto){
-    return this.paymentService.validateAndApplyPromotion(req.user.sub, body)
   }
 
 }

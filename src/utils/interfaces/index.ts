@@ -3,6 +3,9 @@ import { RoleType } from "../enums";
 import { Response } from 'express';
 import { CreateDeliveryOrderDto } from "src/order/dto/create-delivery-order";
 import { ApplyPromotionDto } from "src/payment/dto/apply-promotion.dto";
+import { CancelOrderDto } from "src/order/dto/cancel-order.dto";
+import { TransportOrderType } from "src/order/entities/transport_order.schema";
+import { DeliveryOrderType } from "src/order/entities/delivery_order.schema";
 export interface JwtPayload {
     sub: string
     role: RoleType
@@ -45,31 +48,38 @@ export interface ICustomerController {
 
 export interface IDriverController {
 
+    getProfile(req: RequestWithUser, res: Response): Promise<any>
+
+    updateProfile(req: RequestWithUser, dto: any): Promise<any>
+
+    updateActiveStatus(req: RequestWithUser, dto: string): Promise<any>
+
+}
+
+export interface IRestaurantController {
     getProfile(): Promise<any>
 
     updateProfile(): Promise<any>
 
-    acceptOrder(): Promise<any>
+    createMenu(): Promise<any>
 
-    rejectOrder(): Promise<any>
+    updateMenu(): Promise<any>
 
-    updateActiveStatus(): Promise<any>
+    deleteMenu(): Promise<any>
 
-    arrivedPickup(): Promise<any>
+    createPromotion(): Promise<any>
 
-    pickedUp(): Promise<any>
+    updatePromotion(): Promise<any>
 
-    arrivedRestaurant(): Promise<any>
+    deletePromotion(): Promise<any>
 
-    completeOrder(): Promise<any>
+    createDiscount(): Promise<any>
 
-    cancelOrder(): Promise<any>
+    updateDiscount(): Promise<any>
 
-    getDriverRevenueStats(): Promise<any>
-}
+    deleteDiscount(): Promise<any>
 
-export interface IRestaurantController {
-
+    getRestaurantRevenueStats(): Promise<any>
 }
 
 export interface IAdminController {
@@ -77,7 +87,7 @@ export interface IAdminController {
 }
 
 export interface IPayment {
-    topup(): Promise<any>
+    topUp(): Promise<any>
 
     withdraw(): Promise<any>
 
@@ -85,18 +95,19 @@ export interface IPayment {
 
     cancelTransaction(): Promise<any>
 
-    performTransaction(): Promise<any>
-
     refundPayment(): Promise<any>
 }
 
 
 export interface IOrderController {
-    handleOrderCreatedEvent(payload: string): void; // initiate order 
+    // // event handlers
+    // handleTransportOrderCreatedEvent(payload: TransportOrderType): void; // initiate transport order 
 
-    handleOrderAssignedEvent(payload: string): void; // assign driver
+    // handleDeliveryOrderCreatedEvent(payload: DeliveryOrderType): void; // initiate delivery order
 
-    handleOrderStatusChangeEvent(payload: string): void; // tracking  order status
+    // handleOrderStatusChangeEvent(payload: any): void; // tracking  order status
+
+    // customer
 
     placeTransportOrder(createOrderDto: CreateTransportOrderDto, req: RequestWithUser): Promise<any>;
     
@@ -106,15 +117,41 @@ export interface IOrderController {
 
     quoteDeliveryOrder(createOrderDto: CreateTransportOrderDto): Promise<any>;
 
-    cancelOrder(dto:{reason:string, id: string}, req: RequestWithUser): Promise<any>;
+    cancelOrderCustomer(dto:CancelOrderDto, req: RequestWithUser): Promise<any>;
+
+    orderHistoryCustomer(req: RequestWithUser, dto: any): Promise<any>;
+
+    // driver
+
+    acceptOrderDriver(req: RequestWithUser, id: any): Promise<any>;
+
+    rejectOrderDriver(req: RequestWithUser, id: any, res: any): Promise<any>;
+
+    cancelOrderDriver(req: RequestWithUser, dto: CancelOrderDto): Promise<any>;
+
+    arriving(req: RequestWithUser, dto: any): Promise<any>;
+
+    arrivedPickup(req: RequestWithUser, dto: any): Promise<any>;
+
+    arrivedRestaurant(req: RequestWithUser, dto: any): Promise<any>;
+
+    pickedUp(req: RequestWithUser, dto: any): Promise<any>;
+
+    completeOrder(req: RequestWithUser, dto: any): Promise<any>;
+
+    orderHistoryDriver(req: RequestWithUser, dto: any): Promise<any>;
+
+    // restaurant
+
+    acceptOrderRestaurant(req: RequestWithUser, dto: any): Promise<any>;
+
+    rejectOrderRestaurant(req: RequestWithUser, dto: any): Promise<any>;
+
+    cancelOrderRestaurant(req: RequestWithUser, dto: CancelOrderDto): Promise<any>;
+
+    orderHistoryRestaurant(req: RequestWithUser, dto: any): Promise<any>;
 
     // updateOrder(id: string, dto: any): Promise<any>;
-
-    userGetOrder(req: RequestWithUser, dto: any): Promise<any>;
-
-    driverGetOrder(req: RequestWithUser, dto: any ): Promise<any>;
-
-    restaurantGetOrder(req: RequestWithUser, dto: any): Promise<any>;
 
     findOrderByDriverId(id: string): Promise<any>;
 

@@ -1,8 +1,10 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document } from "mongoose";
+import { Document, HydratedDocument, Schema as MongooseSchema } from "mongoose";
+import { Order } from "src/order/entities/order.schema";
 import { BillStatus, PaymentMethod } from "src/utils/enums";
+import { BaseEntity } from "src/utils/repository/base.entity";
 
-export type BillDocument = Bill & Document;
+export type BillDocument = HydratedDocument<Bill>;
 
 @Schema({
     toJSON: {
@@ -11,15 +13,18 @@ export type BillDocument = Bill & Document;
     },
     timestamps: true,
 })
-export class Bill {
+export class Bill extends BaseEntity {
     @Prop({ enum: BillStatus, default: BillStatus.PENDING })
     status: BillStatus
 
-    @Prop({ })
-    order_id: string
+    @Prop({ type: MongooseSchema.Types.ObjectId, required: true, ref: 'Order'})
+    order: Order
 
     @Prop({ required: true, enum: PaymentMethod, default: PaymentMethod.CASH })
     payment_method: PaymentMethod
+
+    @Prop()
+    transaction_id: string
 
     @Prop({ })
     promotion_id: string[]

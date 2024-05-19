@@ -21,23 +21,30 @@ export class DriverService extends AccountServiceAbstract<Driver>{
   logger = new Logger('DriverService');
  
   //TODO add filter to allocate driver
-  async findDriverInDistance(dto : AssignDriverDto): Promise<DriverDocument> {
-
-    const coor = dto.order instanceof TransportOrder ? dto.order.pickup_location.coordinates : dto.order.delivery_location.coordinates;
-    return await this.driverModel.findOne({
+  async findDriverInDistance(dto : AssignDriverDto): Promise<Driver> {
+    const coor = dto.coor
+    const driver = await this.driverModel.findOne({
       status: { $eq: DriverStatus.ONLINE },
       vehicle_type: { $eq: dto.vehicle_type },
       location: {
         $near: {
           $geometry: {
             type: "Point",
-            coordinates: coor
+            coordinates: coor.coordinates
           },
           $maxDistance: dto.distance
         }
-      }
-    });
+      },
+      _id: { $nin: dto.reject_drivers }
+    }).exec();
+    return driver? driver.toObject() : null;
   }
+
+  async updateDriverLocation(id: string, location: LocationObject) {
+    return this.update(id, {location: location});
+  }
+
+  
 
   // async findOneId(id: string): Promise<DriverDocument> {
   //   return this.driverModel.findById(id).exec();

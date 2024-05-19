@@ -72,8 +72,6 @@ export enum OrderStatus {
     FAILED = "FAILED"
 }
 
-
-
 export enum OrderType {
     DELIVERY = "DeliveryOrder",
     TRANSPORT = "TransportOrder" 

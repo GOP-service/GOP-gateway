@@ -1,20 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, InternalServerErrorException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, InternalServerErrorException, ConflictException, Res, Logger, BadRequestException } from '@nestjs/common';
 import { OrderService } from './order.service';
-import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger';
 import { CreateTransportOrderDto } from './dto/create-transport-order';
 import { RolesGuard } from 'src/utils/guards/roles.guard';
 import { AuthGuard } from '@nestjs/passport';
 import { IOrderController, RequestWithUser } from 'src/utils/interfaces';
 import { Roles } from 'src/utils/decorators/roles.decorator';
-import { OrderType, PaymentMethod, RoleType } from 'src/utils/enums';
+import { OrderStatus, OrderType, PaymentMethod, RoleType } from 'src/utils/enums';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { OrderDetails } from './entities/order.schema';
-import { DeliveryOrder, DeliveryOrderType } from './entities/delivery_order.schema';
-import { TransportOrder, TransportOrderType } from './entities/transport_order.schema';
-import { log } from 'console';
 import { SocketGateway } from 'src/socket/socket.gateway';
+import { CancelOrderDto } from './dto/cancel-order.dto';
+import { TransportOrderType } from './entities/transport_order.schema';
+import { DeliveryOrderType } from './entities/delivery_order.schema';
+import { DriverService } from 'src/driver/driver.service';
+import { Response } from 'express';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -25,33 +24,59 @@ export class OrderController implements IOrderController {
     private readonly orderService: OrderService,
     private readonly eventEmitter: EventEmitter2,
     private readonly socketGateway: SocketGateway,
+    private readonly driverService: DriverService,
   ) {}
 
-  async handleOrderCreatedEvent(payload: string) {
-    throw new Error('Method not implemented.');
+  private logger = new Logger('OrderController')
+  //**  EVENT HANDLE  **/
+  async handleTransportOrderAssignmentEvent(payload: TransportOrderType) {
+    if(payload.drivers_reject.length > 3) {
+      this.socketGateway.notifyOrderState(payload._id, OrderStatus.FAILED);
+      this.orderService.update(payload._id, {order_status: OrderStatus.FAILED})
+    }
+
+    const driver = await this.driverService.findDriverInDistance({
+      coor: payload.pickup_location,
+      vehicle_type: payload.vehicle_type,
+      distance: 5000, // 5km
+      reject_drivers: payload.drivers_reject
+    });
+
+    if (driver) {
+      this.logger.log(`Driver ${driver._id} has been assigned to order ${payload._id}`);
+      this.socketGateway.notifyOrderAssign_Driver(driver._id, payload._id);
+    } else {
+      this.logger.log(`No driver found for order ${payload._id}`);
+      this.socketGateway.notifyOrderState(payload._id, OrderStatus.FAILED);
+      this.orderService.update(payload._id, {order_status: OrderStatus.FAILED})
+    }
   }
-  async handleOrderAssignedEvent(payload: string) {
-    throw new Error('Method not implemented.');
-  }
-  async handleOrderStatusChangeEvent(payload: string) {
+
+  //todo ~~~~~~~~
+  async handleDeliveryOrderAssignmentEvent(payload: DeliveryOrderType) {
     throw new Error('Method not implemented.');
   }
 
+
+  async handleOrderStatusChangeEvent(payload: TransportOrderType, status: OrderStatus ) {
+    this.socketGateway.notifyOrderState(payload._id, status);
+  }
+
+  //**  CUSTOMER  **/
   @Roles(RoleType.CUSTOMER) 
   @Post('create/transport')
   async placeTransportOrder(@Body() createOrderDto: CreateTransportOrderDto,@Req() req: RequestWithUser): Promise<any> {
     try {
       if (createOrderDto.payment_method == PaymentMethod.CASH) {
-        return await this.orderService.TransportOrderPlace_Cash(createOrderDto, req.user.sub).then(order => {
-          this.eventEmitter.emit('trasnport.order.created', order._id);
-          return order;
-        });
-
+        const order = await this.orderService.TransportOrderPlace_Cash(createOrderDto, req.user.sub)
+         this.handleTransportOrderAssignmentEvent(order);
+        return order;
       } else {
         return 'Payment method not supported'
-      }
+      }  
     } catch (e) {
-      return e
+      this.logger.error(e)
+      throw e
     }
   }
 
@@ -77,37 +102,183 @@ export class OrderController implements IOrderController {
   }
 
   @Roles(RoleType.CUSTOMER)
-  @Post('cancel/:id')
-  cancelOrder(@Body() dto:{reason:string, id: string}, @Req() req:RequestWithUser, ): Promise<any> {
+  @Post('customer/cancel/:id')
+  async cancelOrderCustomer(@Body() dto: CancelOrderDto,@Req() req: RequestWithUser) {
+    if (await this.orderService.orderCustomerCheck(dto.id)) {
+      try {
+        dto.reason = `Customer:  + ${dto.reason}`
+        return await this.orderService.cancelOrder(dto);
+      } catch (error) {
+        throw error;
+      }
+    } else {
+      throw new ConflictException('You can not cancel this order');
+    }
+  }
+  
+  // todo update DTO
+  @Roles(RoleType.CUSTOMER)
+  @Post('customer/history')
+  async orderHistoryCustomer(@Req() req: RequestWithUser, @Body() dto:any) {
+    return await this.orderService.findAll({customer: req.user.sub, ...dto}).then(order => {
+      return order 
+    }).catch(e => { throw new InternalServerErrorException(e) });
+  }
+
+
+
+  //**  DRIVER  **/
+  @Roles(RoleType.DRIVER)
+  @ApiParam({
+    name: 'id',
+    required: true,
+    description: 'Order ID'
+  })
+  @Get('driver/accept/:id')
+  async acceptOrderDriver(@Req() req: RequestWithUser,@Param('id') dto: any) {
+    if(!dto) throw new BadRequestException('Order ID is required');
+    const driver = await this.driverService.findOneById(req.user.sub);
+    try {
+      this.handleOrderStatusChangeEvent(dto, OrderStatus.PENDING_PICKUP);
+      return await this.orderService.DriverAcceptOrder(dto, driver);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Roles(RoleType.DRIVER)
+  @ApiParam({
+    name: 'id',
+    description: 'Order ID'
+  })
+  @Get('driver/reject/:id')
+  async rejectOrderDriver(@Req() req: RequestWithUser,@Param('id') dto: any, @Res() res: Response) {
+    if(!dto) throw new BadRequestException('Order ID is required');
+    const driver = await this.driverService.findOneById(req.user.sub);
+    try {
+      const order = await this.orderService.DriverRejectOrder(dto, driver);
+      this.handleTransportOrderAssignmentEvent(order);
+      return res.status(200).json({message: 'Order rejected'});
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Roles(RoleType.DRIVER)
+  @Post('driver/cancel')
+  async cancelOrderDriver(@Req() req: RequestWithUser,@Body() dto: CancelOrderDto) {
+    if (this.orderService.orderDriverCheck(req.user.sub)) {
+      try {
+        dto.reason = `Driver:  + ${dto.reason}`
+        return this.orderService.cancelOrder(dto);
+      } catch (error) {
+        throw error;
+      }
+    }
+    return new ConflictException('You can not cancel this order');
+  }
+
+  @Roles(RoleType.DRIVER)
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'Order ID'
+  })
+  @Get('driver/arriving/:id')
+  async arriving(req: RequestWithUser, @Param('id') dto: any) {
+    return this.orderService.orderDriverCheckAndChangeStatus(req.user.sub, dto, OrderStatus.PICKING_UP);
+  }
+
+  @Roles(RoleType.DRIVER)
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'Order ID'
+  })
+  @Get('driver/arrived/pickup/:id')
+  async arrivedPickup(req: RequestWithUser, @Param('id') dto: any) {
+    return this.orderService.orderDriverCheckAndChangeStatus(req.user.sub, dto, OrderStatus.PENDING_DROP_OFF);
+  }
+
+  //todo update 
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'Order ID'
+  })
+  @Roles(RoleType.DRIVER)
+  @Get('driver/arrived/restaurant/:id')
+  async arrivedRestaurant(req: RequestWithUser, @Param('id') dto: any) {
+    throw new Error('Method not implemented.');
+  }
+
+  @Roles(RoleType.DRIVER)
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'Order ID'
+  })
+  @Get('driver/pickedup/:id')
+  async pickedUp(req: RequestWithUser, @Param() dto: any) {
+    return this.orderService.orderDriverCheckAndChangeStatus(req.user.sub, dto, OrderStatus.DROPPING_OFF);
+  }
+
+  @Roles(RoleType.DRIVER)
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'Order ID'
+  })
+  @Get('driver/complete/:id')
+  async completeOrder(req: RequestWithUser, @Param() dto: any) {
+    return this.orderService.orderDriverCheckAndChangeStatus(req.user.sub, dto, OrderStatus.COMPLETED);
+  }
+
+  @Roles(RoleType.DRIVER)
+  @Post('driver/history')
+  async orderHistoryDriver(@Req() req: RequestWithUser, @Body() dto: any) {
     throw new Error('Method not implemented.');
   }
 
   // todo update DTO
-  @Roles(RoleType.CUSTOMER) 
-  @Post('customer/history') 
-  async userGetOrder(@Req() req: RequestWithUser, dto: any): Promise<any> { 
-    return await this.orderService.findAll({customer: req.user.sub, ...dto}).then(order => {
-      return order 
-    }).catch(e => { throw new InternalServerErrorException(e) });
-  } 
-
-  // todo update DTO
   @Roles(RoleType.DRIVER)
   @Post('driver/history')
-  async driverGetOrder(@Req() req: RequestWithUser, dto: any): Promise<any> {
+  async driverGetOrder(@Req() req: RequestWithUser, dto: any) {
     return await this.orderService.findAll({dirver: req.user.sub, ...dto}).then(order => {
       return order
     }).catch(e => { throw new InternalServerErrorException(e) });
   }
 
+  //**  RESTAURANT  **/
+
+  @Roles(RoleType.RESTAURANT)
+  @Get('restaurant/accept/:id')  
+  acceptOrderRestaurant(@Req() req: RequestWithUser,@Body('id') dto: any): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+
+  @Roles(RoleType.RESTAURANT)
+  @Get('restaurant/reject/:id')
+  rejectOrderRestaurant(@Req() req: RequestWithUser,@Body('id') dto: any): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+
+  @Roles(RoleType.RESTAURANT)
+  @Post('restaurant/cancel')
+  cancelOrderRestaurant(@Req() req: RequestWithUser,@Body() dto: CancelOrderDto): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+  
   // todo update DTO
   @Roles(RoleType.RESTAURANT)
   @Post('restaurant/history')
-  async restaurantGetOrder(@Req() req: RequestWithUser, dto: any): Promise<any> {
+  async orderHistoryRestaurant(@Req() req: RequestWithUser, dto: any): Promise<any> {
     return await this.orderService.findAll({order_type: OrderType.DELIVERY, restaurant: req.user.sub, ...dto}).then(order => {
       return order
     }).catch(e => { throw new InternalServerErrorException(e) });
   }
+
+  //**  COMMON FOR ADMIN  **/
 
   findOrderByDriverId(id: string): Promise<any> {
     throw new Error('Method not implemented.');

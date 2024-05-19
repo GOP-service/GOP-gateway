@@ -6,7 +6,11 @@ import { RestaurantModule } from 'src/restaurant/restaurant.module';
 import { OrderModule } from 'src/order/order.module';
 
 @Module({
-    imports: [],
+    imports: [
+        CustomerModule,
+        DriverModule,
+        RestaurantModule
+    ],
     providers: [SocketGateway],
     exports: [SocketGateway]
 })

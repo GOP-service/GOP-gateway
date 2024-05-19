@@ -26,7 +26,6 @@ import { UpdateRestaurantCategoryDto } from './dto/update-restaurant-category.dt
 @Controller('restaurant')
 export class RestaurantController {
   constructor(
-    private readonly orderService: OrderService,
     private readonly restaurantService: RestaurantService,
     private readonly eventEmitter: EventEmitter2,
   ) {}

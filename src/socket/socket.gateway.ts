@@ -12,6 +12,7 @@ import { OrderService } from 'src/order/order.service';
 import { OrderStatus, OrderType, VehicleType } from 'src/utils/enums';
 import { CreateDeliveryOrderDto } from 'src/order/dto/create-delivery-order';
 import { error } from 'console';
+import { TransportOrderType } from 'src/order/entities/transport_order.schema';
 
 
 
@@ -23,7 +24,11 @@ export class SocketGateway implements NestGateway {
   @WebSocketServer()
   server: Server;
   
-  constructor() {}
+  constructor(
+    private readonly driverService: DriverService,
+    private readonly restaurantService: RestaurantService,
+    private readonly customerService: CustomerService
+  ) {}
   private logger = new Logger('SocketGateway')
 
   afterInit(server: Server) {
@@ -31,37 +36,43 @@ export class SocketGateway implements NestGateway {
   }
 
   handleConnection(client: Socket, ...args: any[]) {
-    console.log('Client connected with id: ', client.id);
+    this.logger.log(`Client connected with id: ${client.id}`);
   }
 
   handleDisconnect(client: Socket) {
-    console.log('Client disconnected');
+    this.logger.log('Client disconnected');
   }
 
-  notifyOrderState_customer(customer: string, order: string, order_status: OrderStatus){
+  // * STATE TRACKING
+  notifyOrderState(order: string, order_status: OrderStatus){
     const msg = {
       order_id: order,
       message: order_status
     }
-    this.server.emit(`customer.order.status.${customer}`, msg);
+    this.server.emit(`order.status.${order}`, msg);
   }
 
-  notifyOrderState_driver(driver: string, order: string, order_status: OrderStatus){
-    const msg = {
-      order_id: order,
-      message: order_status
-    }
-    this.server.emit(`driver.order.status.${driver}`, msg);
-  }
+  // @OnEvent('transport.order.created')
+  // async handleTransportOrderCreatedEvent(payload: TransportOrderType) {
+  //   const driver = await this.driverService.findDriverInDistance({
+  //     coor: payload.pickup_location,
+  //     vehicle_type: payload.vehicle_type,
+  //     distance: 5000, // 5km
+  //     reject_drivers: payload.drivers_reject
+  //   });
 
-  notifyOrderState_restaurant(restaurant: string, order: string, order_status: OrderStatus){
-    const msg = {
-      order_id: order,
-      message: order_status
-    }
-    this.server.emit(`restaurant.order.status.${restaurant}`, msg);
-  }
+  //   if (driver) {
+  //     this.logger.log(`Driver ${driver._id} has been assigned to order ${payload._id}`);
+  //     this.notifyOrderAssign_Driver(driver._id, payload._id);
+  //   } else {
+  //     this.logger.log(`No driver found for order ${payload._id}`);
+  //     this.notifyOrderState(payload._id, OrderStatus.FAILED);
 
+  //     this.orderService.update(payload._id, {order_status: OrderStatus.FAILED})
+  //   }
+  // }
+
+  // *ASSIGN ORDER TRACKING
   notifyOrderAssign_Driver(driver: string, order: string){
     const msg = {
       order_id: order,
@@ -76,6 +87,11 @@ export class SocketGateway implements NestGateway {
     this.server.emit(`restaurant.order.assign.${restaurant}`, msg);
   }
 
+  @SubscribeMessage('driver.location')
+  async handleDriverLocation(client: Socket, @MessageBody() payload: UpdateLocationDriverDto){
+    this.logger.log(`Driver ${payload.driver} is at ${payload.location.coordinates}`);
+    await this.driverService.updateDriverLocation(payload.driver, payload.location);
+  }
 
 
   // // DELIVERY ORDER

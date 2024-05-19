@@ -3,6 +3,6 @@ import { PaymentMethod } from "src/utils/enums";
 
 export class CreateBillDto {
     payment_method: PaymentMethod;
-    promotion_id: string[];
+    promotion_id?: string[];
     order: OrderDetailsType;
 }

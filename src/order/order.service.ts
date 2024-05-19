@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, Logger } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Schema } from 'mongoose';
 import { CreateTransportOrderDto } from './dto/create-transport-order';
 import { VietMapService } from 'src/utils/map-api/viet-map.service';
-import { BikeFare, CarFare, DistanceFare, OTPType, OTPVerifyStatus, OrderStatus, PaymentMethod, VehicleType } from 'src/utils/enums';
+import { BikeFare, BillStatus, CarFare, DistanceFare, OTPType, OTPVerifyStatus, OrderStatus, PaymentMethod, VehicleType } from 'src/utils/enums';
 import { CreateDeliveryOrderDto } from './dto/create-delivery-order';
 import { LocationObject } from 'src/utils/subschemas/location.schema';
 import { OrderFoodItems, OrderFoodItemsDocument } from './entities/order_food_items.schema';
@@ -16,6 +16,8 @@ import { Order, OrderDetails } from './entities/order.schema';
 import { TransportOrder, TransportOrderType } from './entities/transport_order.schema';
 import { DeliveryOrder, DeliveryOrderType } from './entities/delivery_order.schema';
 import { BaseServiceAbstract } from 'src/utils/repository/base.service';
+import { CancelOrderDto } from './dto/cancel-order.dto';
+import { Driver } from 'src/driver/entities/driver.schema';
 
 @Injectable()
 export class OrderService extends BaseServiceAbstract< OrderDetails >{
@@ -30,6 +32,7 @@ export class OrderService extends BaseServiceAbstract< OrderDetails >{
         super(orderModel);
     }
 
+    private logger = new Logger('OrderService');
     // async createDeliveryOrder_Cash(dto: CreateDeliveryOrderDto, customer_id: string, restaurant_location: LocationObject): Promise<deliveryOrderModel>{
     //     const subtotal = dto.items.reduce((total, item) => total + item.price * item.quantity, 0)
 
@@ -55,7 +58,7 @@ export class OrderService extends BaseServiceAbstract< OrderDetails >{
         } else {
             new_transport_order.trip_fare = this.calculateFare(distance , BikeFare);
         }        
-        return new_transport_order;
+        return new_transport_order.toObject();
     }
 
     async TransportOrderPlace_Cash(dto: CreateTransportOrderDto, customer_id: string ): Promise<TransportOrderType> {
@@ -74,15 +77,81 @@ export class OrderService extends BaseServiceAbstract< OrderDetails >{
         }
 
         // Create bill for the order
+    
         const bill = await this.paymentService.createBill({
             payment_method: PaymentMethod.CASH,
-            promotion_id: dto.promotion_id,
+            // promotion_id: dto.promotion_id,
             order: new_transport_order,
         });
+        new_transport_order.bill = bill;
 
-        // new_transport_order.bill = bill;
         
-        return new_transport_order.save();
+        return (await new_transport_order.save()).toObject();
+    }
+
+    async cancelOrder(payload: CancelOrderDto){
+        const order = await this.findOneByCondition({
+            _id: payload.id,
+            order_status: OrderStatus.PENDING_COMFIRM || OrderStatus.ALLOCATING || OrderStatus.PENDING_PICKUP
+        });
+        if(order){
+            order.order_status = OrderStatus.CANCELLED;
+            order.cancel_reason = payload.reason;
+            return  this.update(order._id, order);
+        } else {
+            throw new ConflictException('Can not cancel this order');
+        }
+    }
+
+    async orderCustomerCheck(id: string): Promise<boolean> {
+        if( await this.orderModel.find({customer: id }).exec()){
+            return true;
+        } 
+        return false;
+    }
+
+    async orderDriverCheck(id: string): Promise<boolean> {
+        if( await this.orderModel.find({driver: id }).exec()){
+            return true;
+        } 
+        return false;
+    }
+
+    async orderRestaurantCheck(id: string): Promise<boolean> {
+        if( await this.orderModel.find({restaurant: id }).exec()){
+            return true;
+        } 
+        return false;
+    }
+
+    async DriverAcceptOrder(order_id: string, driver: Driver): Promise<OrderDetails> {
+        const order = await this.findOneById(order_id);
+        order.driver = driver;
+        order.order_status = OrderStatus.PENDING_PICKUP;
+        return this.update(order_id, order);
+    }
+
+    async DriverRejectOrder(order_id: string, driver: Driver): Promise<OrderDetails> {
+        const order = await this.findOneById(order_id);
+        order.drivers_reject.push(driver._id);
+        return this.update(order_id, order);
+    }
+
+    async orderDriverCheckAndChangeStatus(id: string, driver_id: string, status: OrderStatus): Promise<OrderDetails> {
+        const order = await this.findOneById(id);
+        if(order.driver._id != driver_id){
+            throw new ConflictException('Driver not match');
+        } else {
+            order.order_status = status;
+            return order;
+        }
+    }
+
+    async orderComplete(id: string, driver_id: string) {
+        const order = await this.findOneByCondition({_id: id, driver: driver_id}); 
+        order.order_status = OrderStatus.COMPLETED;
+
+        this.paymentService.updateBillComplete(order);
     }
 
     
