@@ -18,6 +18,7 @@ import { FoodItemDto } from './dto/food-item.dto';
 import { CreateFoodItemDto } from './dto/create-food-item.dto';
 import { RestaurantCategoryService } from './restaurant_category.service';
 import { UpdateRestaurantCategoryDto } from './dto/update-restaurant-category.dto';
+import { UpdateFoodItemDto } from './dto/update-food-item.dto';
 
 
 @ApiBearerAuth()
@@ -145,7 +146,7 @@ export class RestaurantController implements IRestaurantController, ICampaign{
   @Post('fooditem/create')
   async createFoodItem(@Req() req: RequestWithUser, @Body() body: CreateFoodItemDto, @UploadedFile() image): Promise<any> {
     try {
-      const restaurant = await this.restaurantService.createFoodItem(req.user.sub, body);
+      const restaurant = await this.restaurantService.createFoodItem(req.user.sub, body, image);
       return restaurant;
     } catch (error) {
       return error
@@ -154,7 +155,7 @@ export class RestaurantController implements IRestaurantController, ICampaign{
 
   @Roles(RoleType.RESTAURANT)
   @Patch('fooditem/:id/update')
-  updateFoodItem(): Promise<any> {
+  updateFoodItem(@Param('id') food_item_id: string, @Body() body: UpdateFoodItemDto): Promise<any> {
     throw new Error('Method not implemented.');
   }
 

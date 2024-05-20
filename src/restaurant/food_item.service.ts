@@ -29,4 +29,15 @@ export class FoodItemService extends BaseServiceAbstract<FoodItem> {
         // dto.modifier_groups = mg
         // return await this.update(id, dto);
     }
+
+    async updateFoodItemImg(id: string, imgUrl: string) {
+        const img = await this.update(id, {
+            image: imgUrl
+        })
+    }
+
+    async getFoodItemPrice(id: string): Promise<number> {
+        const foodItem = await this.findOneById(id);
+        return foodItem.price
+    }
 }

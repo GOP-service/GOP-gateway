@@ -189,6 +189,10 @@ export class PaymentService {
     return (await new_bill.save()).toObject();
   }
 
+  async updateBillCancel(order : OrderDetailsType) {
+    await this.billModel.findOneAndUpdate(order.bill,{ status: BillStatus.CANCELLED}).exec();
+  }
+
   async getBill(id: string): Promise<BillDocument> {
     return await this.billModel.findById(id).exec();
   }

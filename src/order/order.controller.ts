@@ -14,6 +14,7 @@ import { TransportOrderType } from './entities/transport_order.schema';
 import { DeliveryOrderType } from './entities/delivery_order.schema';
 import { DriverService } from 'src/driver/driver.service';
 import { Response } from 'express';
+import { CreateDeliveryOrderDto } from './dto/create-delivery-order';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -32,7 +33,7 @@ export class OrderController implements IOrderController {
   async handleTransportOrderAssignmentEvent(payload: TransportOrderType) {
     if(payload.drivers_reject.length > 3) {
       this.socketGateway.notifyOrderState(payload._id, OrderStatus.FAILED);
-      this.orderService.update(payload._id, {order_status: OrderStatus.FAILED})
+      this.orderService.failOrder(payload._id)
     }
 
     const driver = await this.driverService.findDriverInDistance({
@@ -48,7 +49,7 @@ export class OrderController implements IOrderController {
     } else {
       this.logger.log(`No driver found for order ${payload._id}`);
       this.socketGateway.notifyOrderState(payload._id, OrderStatus.FAILED);
-      this.orderService.update(payload._id, {order_status: OrderStatus.FAILED})
+      this.orderService.failOrder(payload._id)
     }
   }
 
@@ -91,12 +92,12 @@ export class OrderController implements IOrderController {
 
 
   @Roles(RoleType.CUSTOMER)
-  @Post('create/delivery')
-  placeDeliveryOrder(@Body() createOrderDto: CreateTransportOrderDto,@Req() req: RequestWithUser): Promise<any> {
-    throw new Error('Method not implemented.');
+  @Post('quote/delivery')
+  placeDeliveryOrder(@Body() createOrderDto: CreateDeliveryOrderDto,@Req() req: RequestWithUser): Promise<any> {
+    return this.orderService.DeliveryOrderQuote(createOrderDto);
   }
 
-  @Post('quote/delivery')
+  @Post('create/delivery')
   quoteDeliveryOrder(@Body() createOrderDto: CreateTransportOrderDto): Promise<any> {
     throw new Error('Method not implemented.');
   }

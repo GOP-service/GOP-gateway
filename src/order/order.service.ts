@@ -8,7 +8,7 @@ import { VietMapService } from 'src/utils/map-api/viet-map.service';
 import { BikeFare, BillStatus, CarFare, DistanceFare, OTPType, OTPVerifyStatus, OrderStatus, PaymentMethod, VehicleType } from 'src/utils/enums';
 import { CreateDeliveryOrderDto } from './dto/create-delivery-order';
 import { LocationObject } from 'src/utils/subschemas/location.schema';
-import { OrderFoodItems, OrderFoodItemsDocument } from './entities/order_food_items.schema';
+import { OrderFoodItems } from './entities/order_food_items.schema';
 import { Otp, OtpDocument } from 'src/auth/entities/otp.schema';
 import { PaymentService } from 'src/payment/payment.service';
 import { CreateBillDto } from 'src/payment/dto/create-bill.dto';
@@ -18,6 +18,8 @@ import { DeliveryOrder, DeliveryOrderType } from './entities/delivery_order.sche
 import { BaseServiceAbstract } from 'src/utils/repository/base.service';
 import { CancelOrderDto } from './dto/cancel-order.dto';
 import { Driver } from 'src/driver/entities/driver.schema';
+import { RestaurantService } from 'src/restaurant/restaurant.service';
+import { FoodItemDto } from 'src/restaurant/dto/food-item.dto';
 
 @Injectable()
 export class OrderService extends BaseServiceAbstract< OrderDetails >{
@@ -25,7 +27,7 @@ export class OrderService extends BaseServiceAbstract< OrderDetails >{
         @InjectModel(Order.name) private readonly orderModel: Model< OrderDetails >,
         @InjectModel(TransportOrder.name) private readonly transportOrderModel: Model<TransportOrderType>,
         @InjectModel(DeliveryOrder.name) private readonly deliveryOrderModel: Model<DeliveryOrderType>,
-        @InjectModel(OrderFoodItems.name) private readonly orderFoodItemsModel: Model<OrderFoodItemsDocument>,
+        private readonly restaurantService: RestaurantService,
         private readonly vietMapService: VietMapService,
         private readonly paymentService: PaymentService,
     ) {
@@ -33,19 +35,6 @@ export class OrderService extends BaseServiceAbstract< OrderDetails >{
     }
 
     private logger = new Logger('OrderService');
-    // async createDeliveryOrder_Cash(dto: CreateDeliveryOrderDto, customer_id: string, restaurant_location: LocationObject): Promise<deliveryOrderModel>{
-    //     const subtotal = dto.items.reduce((total, item) => total + item.price * item.quantity, 0)
-
-    //     const new_dto = {...dto, subtotal: subtotal, order_status: OrderStatus.PENDING_COMFIRM, customer_id: customer_id, order_time: new Date(Date.now()+7*60*60*1000)};
-
-    //     let new_delivery_order = new this.deliveryOrderModel(new_dto);
-
-    //     Object.assign(new_delivery_order, await this.vietMapService.getDistanceNDuration(restaurant_location, dto.delivery_location, VehicleType.BIKE));
-
-    //     new_delivery_order.delivery_fare = this.calculateFare(new_delivery_order.distance , BikeFare);
-
-    //     return new_delivery_order.save();
-    // }
 
     async TransportOrderQuote(dto: CreateTransportOrderDto): Promise< TransportOrderType > {
         const new_transport_order = new this.transportOrderModel(dto);
@@ -80,13 +69,51 @@ export class OrderService extends BaseServiceAbstract< OrderDetails >{
     
         const bill = await this.paymentService.createBill({
             payment_method: PaymentMethod.CASH,
-            campaign_id: dto.campaign_id,
             order: new_transport_order,
         });
         new_transport_order.bill = bill;
-
         
         return (await new_transport_order.save()).toObject();
+    }
+
+
+    async DeliveryOrderQuote(dto: CreateDeliveryOrderDto){
+        const restaurant_location = await this.restaurantService.getRestaurantLocation(dto.restaurant_id);
+        const new_order = new this.deliveryOrderModel(dto);
+
+        Object.assign(new_order, await this.vietMapService.getDistanceNDuration(restaurant_location, dto.delivery_location, VehicleType.BIKE));
+
+        new_order.delivery_fare = this.calculateFare(new_order.distance, BikeFare);
+        // dto.items.forEach( async (item) => {
+        //     new_order.order_cost += await this.restaurantService.food_calculateFare(item)
+        //     this.logger.log(new_order.order_cost);
+        // });
+        for (let item of dto.items){
+            new_order.order_cost += await this.restaurantService.food_calculateFare(item)
+        }
+        
+        return new_order;
+    }
+
+    async DeliveryOrderPlace_Cash(dto: CreateDeliveryOrderDto, customer_id: string): Promise<DeliveryOrderType> {
+        const restaurant_location = await this.restaurantService.getRestaurantLocation(dto.restaurant_id);
+        const new_order = new this.deliveryOrderModel(dto);
+
+        Object.assign(new_order, await this.vietMapService.getDistanceNDuration(restaurant_location, dto.delivery_location, VehicleType.BIKE));
+
+        new_order.delivery_fare = this.calculateFare(new_order.distance, BikeFare);
+        for (let item of dto.items){
+            new_order.order_cost += await this.restaurantService.food_calculateFare(item)
+        }
+
+        const bill = await this.paymentService.createBill({
+            payment_method: PaymentMethod.CASH,
+            campaign_id: dto.campaign_id,
+            order: new_order,
+        });
+        new_order.bill = bill;
+
+        return (await new_order.save()).toObject();
     }
 
     async cancelOrder(payload: CancelOrderDto){
@@ -97,10 +124,19 @@ export class OrderService extends BaseServiceAbstract< OrderDetails >{
         if(order){
             order.order_status = OrderStatus.CANCELLED;
             order.cancel_reason = payload.reason;
-            return  this.update(order._id, order);
+            this.paymentService.updateBillCancel(order);
+            return this.update(order._id, order);
         } else {
             throw new ConflictException('Can not cancel this order');
         }
+    }
+    
+    async failOrder(id: string){
+        const order = await this.findOneById(id);
+        order.order_status = OrderStatus.FAILED;
+
+        this.paymentService.updateBillCancel(order);
+        return this.update(id, order);
     }
 
     async orderCustomerCheck(id: string): Promise<boolean> {
