@@ -20,5 +20,10 @@ export class ModifierService extends BaseServiceAbstract<Modifier>{
         }))
     }
 
+    async getModifierPrice(id: string): Promise<number> {
+        const modifier = await this.findOneById(id);
+        return modifier.price
+    }
+
 
 }

@@ -9,6 +9,8 @@ import { Modifier } from "src/restaurant/entities/modifier.schema";
         virtuals: true,
     },
     timestamps: true,
+    id: false,
+    _id: false,
 })
 export class OrderFoodItems {
     constructor(food_id: string, quantity: number, modifiers: string[]){

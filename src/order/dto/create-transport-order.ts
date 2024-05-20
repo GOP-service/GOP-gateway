@@ -11,11 +11,6 @@ export class CreateTransportOrderDto extends CreateOrderDto {
     @IsEnum(PaymentMethod)
     payment_method: PaymentMethod
 
-    @ApiProperty({
-        example: []
-    })
-    @IsArray()
-    campaign_id: string[]
 
     @ApiProperty({
         title: 'LONG -> LAT',
@@ -25,25 +20,10 @@ export class CreateTransportOrderDto extends CreateOrderDto {
     pickup_location: LocationObject
 
     @ApiProperty({
-        title: 'Long -> Lat',
-        example: 'coffe izy'
-    })
-    @IsString()
-    @IsNotEmpty()
-    pickup_address: string
-
-    @ApiProperty({
         example: new LocationObject([106.7957762,10.8452565], 'ĐH SPKT TP.HCM - Cơ sở 2')
     })
     @IsNotEmpty()
     dropoff_location: LocationObject
-
-    @ApiProperty({
-        example: 'ĐH SPKT TP.HCM - Cơ sở 2'
-    })
-    @IsString()
-    @IsNotEmpty()
-    dropoff_address: string
 
     @ApiProperty({
         enum: VehicleType

@@ -30,7 +30,14 @@ export class FoodItemService extends BaseServiceAbstract<FoodItem> {
         // return await this.update(id, dto);
     }
 
-    async updateFoodItemImg(imgUrl: string) {
+    async updateFoodItemImg(id: string, imgUrl: string) {
+        const img = await this.update(id, {
+            image: imgUrl
+        })
+    }
 
+    async getFoodItemPrice(id: string): Promise<number> {
+        const foodItem = await this.findOneById(id);
+        return foodItem.price
     }
 }

@@ -90,6 +90,9 @@ export class SocketGateway implements NestGateway {
   @SubscribeMessage('driver.location')
   async handleDriverLocation(client: Socket, @MessageBody() payload: UpdateLocationDriverDto){
     this.logger.log(`Driver ${payload.driver} is at ${payload.location.coordinates}`);
+    if(payload.order_id){
+      this.notifyOrderState(payload.order_id, payload.order_status);
+    }
     await this.driverService.updateDriverLocation(payload.driver, payload.location);
   }
 

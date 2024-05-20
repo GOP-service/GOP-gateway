@@ -12,6 +12,7 @@ import { DeliveryOrder, DeliveryOrderSchema } from './entities/delivery_order.sc
 import { TransportOrder, TransportOrderSchema } from './entities/transport_order.schema';
 import { SocketModule } from 'src/socket/socket.module';
 import { DriverModule } from 'src/driver/driver.module';
+import { RestaurantModule } from 'src/restaurant/restaurant.module';
 
 
 @Module({
@@ -27,6 +28,7 @@ import { DriverModule } from 'src/driver/driver.module';
       },
     ]),
     DriverModule,
+    RestaurantModule,
     PaymentModule,
     VietMapModule,
     SocketModule

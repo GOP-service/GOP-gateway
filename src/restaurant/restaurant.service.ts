@@ -25,6 +25,7 @@ import { RestaurantCategoryService } from './restaurant_category.service';
 import { ModifierGroupService } from './modifier_groups.service';
 import { ModifierService } from './modifier.service';
 import { UpdateRestaurantCategoryDto } from './dto/update-restaurant-category.dto';
+import { OrderFoodItems } from 'src/order/entities/order_food_items.schema';
 
 @Injectable()
 export class RestaurantService extends AccountServiceAbstract<Restaurant>{
@@ -61,6 +62,16 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
     return restaurant;
   }
 
+  async food_calculateFare(dto: OrderFoodItems): Promise<number> {
+    let fare = await this.foodItemService.getFoodItemPrice(dto.food_id)
+    
+    for (const item of dto.modifiers as string[]) {
+      fare += await this.modifierService.getModifierPrice(item)
+    }
+    fare = fare * dto.quantity
+    return fare;
+}
+
   async updateCategory(restaurant_id: string, cate_id: string, dto: UpdateRestaurantCategoryDto): Promise<RestaurantCategory> {
     if(this.isCategoryOwnedByRestaurant(restaurant_id, cate_id)){
       const category = await this.restaurantCategoryService.updateCategory(cate_id ,dto);
@@ -86,15 +97,34 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
       return await this.restaurantCategoryService.deleteCategory(category_id)
     }
   }
-
-  async createFoodItem(restaurant_id: string, dto: CreateFoodItemDto){
+  
+  async createFoodItem(restaurant_id: string, dto: CreateFoodItemDto, img: Express.Multer.File){
     const restaurant = await this.findOneById(restaurant_id);
     if(restaurant){
       const foodItem = await this.foodItemService.createFoodItem(dto);
-      this.restaurantCategoryService.addFoodItem(foodItem._id, dto.category_id)
-      return foodItem;
+      await this.restaurantCategoryService.addFoodItem(foodItem._id, dto.category_id)
+      foodItem.image = await this.updateFoodItemImg(foodItem._id, img)
+      return foodItem
     }
     else throw new NotFoundException("Restaurant not found")
+  }
+  
+  async getRestaurantLocation(restaurant_id: string){
+    const restaurant = await this.findOneById(restaurant_id)
+    return restaurant.location;
+  }
+
+  async updateFoodItemImg(id: string, img: Express.Multer.File): Promise<string>{
+    if(img){
+      const foodImgUrl = await this.azureStorage.uploadFile(img, 'restaurant-food-items', id);
+      if(!foodImgUrl){
+        return ""
+      }
+      else {
+        await this.foodItemService.updateFoodItemImg(id, foodImgUrl)
+        return foodImgUrl
+      }
+    }
   }
   // // async addCategory(id: string, dto: CreateRestaurantCategoryDto): Promise<RestaurantDocument> {
   // //   const restaurant = await this.restaurantModel.findById(id).exec();

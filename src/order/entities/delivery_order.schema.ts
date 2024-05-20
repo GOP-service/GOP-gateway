@@ -24,18 +24,15 @@ export class DeliveryOrder {
     delivery_location: LocationObject
 
     @Prop({ })
-    delivery_address: string
-
-    @Prop({ })
     distance: number
 
     @Prop({ })
     duration: number
 
-    @Prop({  })
+    @Prop({ default: 0})
     delivery_fare: number
 
-    @Prop({ })
+    @Prop({ default:0 })
     order_cost: number  
 }
 
