@@ -25,5 +25,12 @@ export class ModifierService extends BaseServiceAbstract<Modifier>{
         return modifier.price
     }
 
-
+    async getModifiers(id: string[]){
+        const modifier = await Promise.all(
+            id.map(async md_id => {
+                return await this.findOneById(md_id)
+            })
+        )
+        return modifier
+    }
 }

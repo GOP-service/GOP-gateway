@@ -21,8 +21,8 @@ import { UpdateRestaurantCategoryDto } from './dto/update-restaurant-category.dt
 import { UpdateFoodItemDto } from './dto/update-food-item.dto';
 
 
-@ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'),RolesGuard)
+// @ApiBearerAuth()
+// @UseGuards(AuthGuard('jwt'),RolesGuard)
 @ApiTags('Restaurants')
 @Controller('restaurant')
 export class RestaurantController implements IRestaurantController, ICampaign{
@@ -30,6 +30,23 @@ export class RestaurantController implements IRestaurantController, ICampaign{
     private readonly restaurantService: RestaurantService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
+
+  @Post('info/:id')
+  fetchRestaurantInfo(@Param('id') id: string, @Body() body: { coordinates: number[] }) {
+    return this.restaurantService.getRestaurantInfo(id, body.coordinates);
+  }
+
+  @Get('menu/:id')
+  async fetchMenu(@Param('id') id: string) {
+    return await this.restaurantService.getMenu(id);
+  }
+
+  @Post('recommended')
+  async getRestaurants(@Body() body:  { coordinates: number[] }) {
+    const res = await this.restaurantService.getRestaurantsByCustomer( body.coordinates);
+    return res;
+  }
+
   getProfile(): Promise<any> {
     throw new Error('Method not implemented.');
   }
@@ -157,6 +174,14 @@ export class RestaurantController implements IRestaurantController, ICampaign{
   @Patch('fooditem/:id/update')
   updateFoodItem(@Param('id') food_item_id: string, @Body() body: UpdateFoodItemDto): Promise<any> {
     throw new Error('Method not implemented.');
+  }
+
+  @Roles(RoleType.RESTAURANT)
+  @UseInterceptors(FileInterceptor('image'))
+  @Patch('fooditem/:id/update-image')
+  updateFoodItemImage(@Param('id') food_item_id: string, @UploadedFile() image: Express.Multer.File): Promise<any> {
+    const uploadImage = this.restaurantService.updateFoodItemImg(food_item_id, image);
+    return uploadImage;
   }
 
   @Roles(RoleType.RESTAURANT)

@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { ModifierGroup } from "./entities/modifier_groups.schema";
+import { ModifierGroup, ModifierGroupDocument } from "./entities/modifier_groups.schema";
 import { BaseServiceAbstract } from "src/utils/repository/base.service";
 import { Model } from "mongoose";
 import { InjectModel } from "@nestjs/mongoose";
@@ -28,5 +28,16 @@ export class ModifierGroupService extends BaseServiceAbstract<ModifierGroup>{
         return await Promise.all(dto.map(async (item) => {
             return (await this.createModifieriGroup(item))._id
         }))
+    }
+
+    async getModifierGrps(id: string[]){
+        const modifier_groups =  await Promise.all(
+            id.map(async item_id => {
+                const modifierGr = await this.findOneById(item_id)
+                const modifier = await this.modfierService.getModifiers(modifierGr.modifier as string[])
+                return { ...(modifierGr as ModifierGroupDocument).toObject(), modifier }
+            })
+        )
+        return modifier_groups;
     }
 }

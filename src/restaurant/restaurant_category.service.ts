@@ -5,11 +5,13 @@ import { Model } from "mongoose";
 import { BaseServiceAbstract } from "src/utils/repository/base.service";
 import { CreateRestaurantCategoryDto } from "./dto/create-restaurant-category.dto";
 import { UpdateRestaurantCategoryDto } from "./dto/update-restaurant-category.dto";
+import { FoodItemService } from "./food_item.service";
 
 @Injectable()
 export class RestaurantCategoryService extends BaseServiceAbstract<RestaurantCategory> {
     constructor(
         @InjectModel(RestaurantCategory.name) private readonly restaurantCategoryModel: Model<RestaurantCategory>,
+        private readonly foodItemService: FoodItemService
     ){
         super(restaurantCategoryModel);
     }
@@ -40,4 +42,10 @@ export class RestaurantCategoryService extends BaseServiceAbstract<RestaurantCat
           },
         { new: true })
     } 
+
+    async getMenuDetails(id: string) {
+        const cate = await this.findOneById(id);
+        const food_items = await this.foodItemService.getFoodItems((cate.food_items as string[]));
+        return { ...(cate as RestaurantCategoryDocument).toObject(), food_items }
+    }
 }

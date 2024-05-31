@@ -58,9 +58,16 @@ export interface IDriverController {
 }
 
 export interface IRestaurantController {
+
+    fetchRestaurantInfo(id: string, body: { coordinates: number[] })
+
+    fetchMenu(id: string)
+
     getProfile(): Promise<any>
 
     updateProfile(): Promise<any>
+
+    getRestaurants(body: { coordinates: number[] }): Promise<any>
 
     createMenu(): Promise<any>
 
@@ -91,6 +98,8 @@ export interface IRestaurantController {
     createFoodItem(req: RequestWithUser, body: CreateFoodItemDto, image: any): Promise<any>
 
     updateFoodItem(food_item_id: string, body: UpdateFoodItemDto): Promise<any>
+
+    updateFoodItemImage(food_item_id: string, image: Express.Multer.File): Promise<any>
 
     deleteFoodItem(): Promise<any>
 }

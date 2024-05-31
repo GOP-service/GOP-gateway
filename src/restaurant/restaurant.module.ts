@@ -16,6 +16,7 @@ import { ModifierService } from './modifier.service';
 import { ModifierGroupService } from './modifier_groups.service';
 import { RestaurantCategoryService } from './restaurant_category.service';
 import { FoodItemService } from './food_item.service';
+import { VietMapModule } from 'src/utils/map-api/viet-map.module';
 
 @Module({
   imports: [
@@ -27,8 +28,8 @@ import { FoodItemService } from './food_item.service';
       { name : ModifierGroup.name, schema: ModifierGroupSchema,},
       { name : Modifier.name, schema: ModifierSchema,},
     ]),
-    AzureStorageModule
-    
+    AzureStorageModule,
+    VietMapModule
   ],
   controllers: [RestaurantController],
   providers: [RestaurantService, RestaurantCategoryService, FoodItemService, ModifierGroupService, ModifierService],

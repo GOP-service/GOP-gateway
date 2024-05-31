@@ -40,4 +40,14 @@ export class FoodItemService extends BaseServiceAbstract<FoodItem> {
         const foodItem = await this.findOneById(id);
         return foodItem.price
     }
+
+    async getFoodItems(id: string[]){
+        const foodItems = await Promise.all(
+            id.map(async food_id => {
+                const food = await this.findOneById(food_id)
+                return food;
+            })
+        )
+        return foodItems
+    }
 }
