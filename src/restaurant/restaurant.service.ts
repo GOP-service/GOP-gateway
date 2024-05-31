@@ -104,6 +104,11 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
     }
   }
   
+  async getFooditemDetails(id: string) {
+    const foodDetails = await this.foodItemService.getFoodItemDetails(id);
+    return foodDetails
+  }
+
   async createFoodItem(restaurant_id: string, dto: CreateFoodItemDto, img: Express.Multer.File){
     const restaurant = await this.findOneById(restaurant_id);
     if(restaurant){

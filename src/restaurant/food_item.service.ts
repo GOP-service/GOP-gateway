@@ -50,4 +50,19 @@ export class FoodItemService extends BaseServiceAbstract<FoodItem> {
         )
         return foodItems
     }
+
+    async getFoodItemDetails(id: string) {
+        const food = await this.foodItemModel
+          .findById(id)
+          .populate({ 
+              path: 'modifier_groups',
+              populate: {
+                path: 'modifier',
+                model: 'Modifier'
+              } 
+           })
+          .exec();
+      
+        return food ? food.toJSON() : null;
+      }
 }

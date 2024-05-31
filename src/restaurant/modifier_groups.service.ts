@@ -35,7 +35,7 @@ export class ModifierGroupService extends BaseServiceAbstract<ModifierGroup>{
             id.map(async item_id => {
                 const modifierGr = await this.findOneById(item_id)
                 const modifier = await this.modfierService.getModifiers(modifierGr.modifier as string[])
-                return { ...(modifierGr as ModifierGroupDocument).toObject(), modifier }
+                return { ...(modifierGr as ModifierGroupDocument).toJSON(), modifier }
             })
         )
         return modifier_groups;

@@ -158,6 +158,13 @@ export class RestaurantController implements IRestaurantController, ICampaign{
     }
   }
 
+  @Roles(RoleType.CUSTOMER)
+  @Get('fooditem/:id')
+  async fetchFoodDetails(@Param('id') id: string) {
+    const foodItem = await this.restaurantService.getFooditemDetails(id)
+    return foodItem
+  }
+
   @Roles(RoleType.RESTAURANT)
   @UseInterceptors(FileInterceptor('image'))
   @Post('fooditem/create')
