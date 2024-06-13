@@ -15,6 +15,7 @@ import { DeliveryOrderType } from './entities/delivery_order.schema';
 import { DriverService } from 'src/driver/driver.service';
 import { Response } from 'express';
 import { CreateDeliveryOrderDto } from './dto/create-delivery-order';
+import { log } from 'console';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -94,7 +95,7 @@ export class OrderController implements IOrderController {
   @Roles(RoleType.CUSTOMER)
   @Post('quote/delivery')
   placeDeliveryOrder(@Body() createOrderDto: CreateDeliveryOrderDto,@Req() req: RequestWithUser): Promise<any> {
-    return this.orderService.DeliveryOrderQuote(createOrderDto);
+    return this.orderService.DeliveryOrderQuote(createOrderDto, req.user.sub);
   }
 
   @Post('create/delivery')

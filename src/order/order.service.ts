@@ -77,9 +77,12 @@ export class OrderService extends BaseServiceAbstract< OrderDetails >{
     }
 
 
-    async DeliveryOrderQuote(dto: CreateDeliveryOrderDto){
+    async DeliveryOrderQuote(dto: CreateDeliveryOrderDto, customer_id: string){
         const restaurant_location = await this.restaurantService.getRestaurantLocation(dto.restaurant_id);
-        const new_order = new this.deliveryOrderModel(dto);
+        
+        const new_dto = {...dto, customer: customer_id}
+
+        const new_order = new this.deliveryOrderModel(new_dto);
 
         Object.assign(new_order, await this.vietMapService.getDistanceNDuration(restaurant_location, dto.delivery_location, VehicleType.BIKE));
 
@@ -92,7 +95,14 @@ export class OrderService extends BaseServiceAbstract< OrderDetails >{
             new_order.order_cost += await this.restaurantService.food_calculateFare(item)
         }
         
-        return new_order;
+        const bill = await this.paymentService.quoteBill({
+            payment_method: PaymentMethod.CASH,
+            campaign_id: dto.campaign_id,
+            order: new_order,
+        });
+        const discount = bill.discount;
+        const total = bill.total;
+        return { ...new_order.toJSON(), discount, total };
     }
 
     async DeliveryOrderPlace_Cash(dto: CreateDeliveryOrderDto, customer_id: string): Promise<DeliveryOrderType> {

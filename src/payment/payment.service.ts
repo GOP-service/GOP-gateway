@@ -10,10 +10,9 @@ import { Model } from 'mongoose';
 import { BillStatus, CampaignDiscountType, CampaignScopeType, OrderType, PaymentMethod } from 'src/utils/enums';
 import { Bill, BillDocument } from './entities/bill.schema';
 import { Ledger, LedgerDocument } from './entities/ledger.schema';
-import { OrderDetailsType } from 'src/order/entities/order.schema';
 import { DeliveryOrder } from 'src/order/entities/delivery_order.schema';
 import { TransportOrder } from 'src/order/entities/transport_order.schema';
-import { Order, OrderDetails } from 'src/order/entities/order.schema';
+import { Order, OrderDetailsType } from 'src/order/entities/order.schema';
 import { RevenueHistory, RevenueHistoryDocument } from './entities/revenue_history.schem';
 import { Campaign, CampaignDocument } from './entities/campaign.schema';
 import { CreateCampaignDto } from './dto/create-campaign.dto';
@@ -116,17 +115,34 @@ export class PaymentService {
       campaignDto.subtotal >= campaign.conditions.minBasketAmount;
   }
 
-  async validateAndApplyCampaign(customer_id: string, campaignDto: ApplyCampaignDto): Promise<number> {
+  async validateAndApplyCampaign(customer_id: string, campaignDto: ApplyCampaignDto, quote: boolean = false): Promise<number>{
     let total_discount_value = 0;
-    for (const campaign_id of campaignDto.list_compaign_id) {
+    for (const campaign_id of campaignDto.compaign_ids) {
       const campaign = await this.campaignModdel.findById(campaign_id);
       if (this.isValidCampaign(customer_id, campaign, campaignDto)) {
-        campaign.unavailable_users.push(customer_id)
-        await campaign.save();
+        if(!quote){
+          campaign.unavailable_users.push(customer_id);
+          campaign.save();
+        }
+
         switch (campaign.discount.type) {
           case CampaignDiscountType.DELIVERY:
             total_discount_value += (campaignDto.delivery_fare - campaign.discount.value) > 0 ? campaign.discount.value : campaignDto.delivery_fare;
             break;
+    
+          case CampaignDiscountType.NET:
+            switch(campaign.discount.scope.type) {
+              case CampaignScopeType.ORDER:
+                const discount_value = campaignDto.subtotal - campaign.discount.value;
+                total_discount_value += discount_value > 0 ? campaign.discount.value : campaignDto.subtotal 
+                break;
+              case CampaignScopeType.CATEGORY: 
+                break;
+              case CampaignScopeType.ITEMS:
+                break;
+            }  
+            break;    
+
           case CampaignDiscountType.PERCENTAGE: 
             switch(campaign.discount.scope.type){
               case CampaignScopeType.ORDER: 
@@ -141,28 +157,50 @@ export class PaymentService {
                 break;
             }
             break;
+
           case CampaignDiscountType.TRANSPORT:
             const discount_value = campaignDto.subtotal - campaign.discount.value;
             total_discount_value += discount_value > 0 ? campaign.discount.value : campaignDto.subtotal
             break;
-          case CampaignDiscountType.NET:
-            switch(campaign.discount.scope.type) {
-              case CampaignScopeType.ORDER:
-                const discount_value = campaignDto.subtotal - campaign.discount.value;
-                total_discount_value += discount_value > 0 ? campaign.discount.value : campaignDto.subtotal 
-                break;
-              case CampaignScopeType.CATEGORY: 
-                break;
-              case CampaignScopeType.ITEMS:
-                break;
-            }
-            break;
+
           default: 
             break
         }
       }
     }
-    return -total_discount_value;
+    return total_discount_value;
+  }
+
+  async quoteBill(createBillDto: CreateBillDto) {
+    const initStatus = createBillDto.payment_method === PaymentMethod.CASH ? BillStatus.PENDING : BillStatus.PAID;
+    const new_bill = new this.billModel({
+      order: createBillDto.order,
+      status: initStatus,
+      payment_method: createBillDto.payment_method,
+    });
+
+    //todo tính tiền từ promotion
+    let campaignDto: ApplyCampaignDto = {
+      compaign_ids: createBillDto.campaign_id,
+      subtotal: 0,
+      delivery_fare: 0
+    }  
+    if (createBillDto.order.order_type === OrderType.DELIVERY) {
+      const order = createBillDto.order as DeliveryOrder
+      new_bill.sub_total = order.order_cost + order.delivery_fare;
+      campaignDto.delivery_fare = order.delivery_fare
+      campaignDto.subtotal = order.order_cost;
+    } else {
+      const order = createBillDto.order as TransportOrder
+      new_bill.sub_total = order.trip_fare;      
+      campaignDto.subtotal = order.trip_fare;
+    }
+    
+    let discount = await this.validateAndApplyCampaign(createBillDto.order.customer._id, campaignDto, true);
+    new_bill.discount = discount;
+    new_bill.total = new_bill.sub_total - discount + new_bill.platform_fee;
+
+    return new_bill;
   }
 
   async createBill(createBillDto: CreateBillDto) {
@@ -177,11 +215,11 @@ export class PaymentService {
     let discount = 0;
 
     //todo tính tiền từ promotion
-    if (createBillDto.order instanceof DeliveryOrder) {
-      new_bill.sub_total = createBillDto.order.delivery_fare + createBillDto.order.order_cost;
-    } else {
-      new_bill.sub_total = createBillDto.order.trip_fare;        
-    }
+    // if (createBillDto.order instanceof DeliveryOrder) {
+    //   new_bill.sub_total = createBillDto.order.delivery_fare + createBillDto.order.order_cost;
+    // } else {
+    //   new_bill.sub_total = createBillDto.order.trip_fare;        
+    // }
 
     new_bill.discount = discount;
     new_bill.total = new_bill.sub_total - discount + new_bill.platform_fee;

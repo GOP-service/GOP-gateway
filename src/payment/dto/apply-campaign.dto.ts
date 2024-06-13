@@ -6,7 +6,7 @@ export class ApplyCampaignDto {
         example: ['1', '2']
     })
     @IsNotEmpty()
-    list_compaign_id: string[]
+    compaign_ids: string[]
 
     @ApiProperty({
         example: 200000
@@ -18,4 +18,6 @@ export class ApplyCampaignDto {
         example: 12000
     })
     delivery_fare: number
+
+    constructor(){}
 }

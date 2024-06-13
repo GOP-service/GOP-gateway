@@ -32,7 +32,7 @@ export class Bill extends BaseEntity {
     @Prop({ })
     total: number
 
-    @Prop({ })
+    @Prop({ default:0})
     sub_total: number
 
     @Prop({  })

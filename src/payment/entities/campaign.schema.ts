@@ -38,6 +38,9 @@ export class Campaign extends BaseEntity{
 
     @Prop({ default: CurrencyCode.VND })
     currency_code: CurrencyCode
+
+    @Prop({ default: 'https://media.be.com.vn/bizops/image/aacff7f7-52cd-11ee-b2af-3ea2e1c5510b/original' })
+    image: string
 }
 
 export const CampaignSchema = SchemaFactory.createForClass(Campaign)

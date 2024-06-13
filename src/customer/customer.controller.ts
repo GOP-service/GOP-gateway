@@ -8,7 +8,7 @@ import { PaymentMethod, RoleType } from 'src/utils/enums';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OrderService } from 'src/order/order.service';
 import { CreateTransportOrderDto } from 'src/order/dto/create-transport-order';
-import { ICustomerController, RequestWithUser } from 'src/utils/interfaces';
+import { ICampaign, ICustomerController, RequestWithUser } from 'src/utils/interfaces';
 import { CreateDeliveryOrderDto } from 'src/order/dto/create-delivery-order';
 import { RestaurantService } from 'src/restaurant/restaurant.service';
 import { PaymentService } from 'src/payment/payment.service';
@@ -22,10 +22,32 @@ import { UpdateCustomerDto } from './dto/update-customer.dto';
 @ApiTags('Customer')
 @Controller('customer')
 @Roles(RoleType.CUSTOMER)
-export class CustomerController implements ICustomerController {
+export class CustomerController implements ICustomerController, ICampaign {
   constructor(
     private readonly customerService: CustomerService,
+    private readonly paymentService: PaymentService
   ) {}
+
+  // CAMPAIGNS
+  @Get('campaigns')
+  async getCampaigns(): Promise<any> {
+    const campaigns = await this.paymentService.getAllCampaign();
+    if(campaigns) 
+      return campaigns;
+    throw new Error('No campaigns found');
+  }
+  getCampaignDetails(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+  createCampaign(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+  updateCampaign(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+  deleteCampaign(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
   
   // ACCOUNT MANAGEMT
   @Get('profile')
