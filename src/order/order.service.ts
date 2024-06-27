@@ -97,7 +97,7 @@ export class OrderService extends BaseServiceAbstract< OrderDetails >{
         
         const bill = await this.paymentService.quoteBill({
             payment_method: PaymentMethod.CASH,
-            campaign_id: dto.campaign_id,
+            campaign_id: dto.campaign_ids,
             order: new_order,
         });
         const discount = bill.discount;
@@ -118,7 +118,7 @@ export class OrderService extends BaseServiceAbstract< OrderDetails >{
 
         const bill = await this.paymentService.createBill({
             payment_method: PaymentMethod.CASH,
-            campaign_id: dto.campaign_id,
+            campaign_id: dto.campaign_ids,
             order: new_order,
         });
         new_order.bill = bill;

@@ -59,9 +59,11 @@ export interface IDriverController {
 
 export interface IRestaurantController {
 
-    fetchRestaurantInfo(id: string, body: { coordinates: number[] })
+    fetchInfoByCustomer(id: string, body: { coordinates: number[] })
 
-    fetchMenu(id: string)
+    fetchInfo(req: RequestWithUser)
+
+    fetchMenu(req: RequestWithUser ,id: string)
 
     getProfile(): Promise<any>
 
@@ -88,6 +90,8 @@ export interface IRestaurantController {
     deleteOrder(): Promise<any>
 
     getRevenueStatistics(): Promise<any>
+
+    fetchCategory(req: RequestWithUser)
 
     createCategory(req: RequestWithUser, body: CreateRestaurantCategoryDto): Promise<any>
 

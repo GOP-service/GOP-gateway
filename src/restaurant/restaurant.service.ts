@@ -179,7 +179,7 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
     return menu
   }
 
-  async getRestaurantInfo(id: string, coordinates: number[]){
+  async getInfoByCustomer(id: string, coordinates: number[]){
     const restaurant = await this.findOneById(id)
     const {balance, verified, deleted_at, email, password, refresh_token, full_name, ...restaurant_info} = (restaurant as RestaurantDocument).toObject()
     const customerLocation = new LocationObject(coordinates, '');
@@ -188,6 +188,21 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
     return {
       ...restaurant_info, distance, duration, rating
     }
+  }
+
+  async getInfo(id: string) {
+    const restaurant = await this.findOneById(id)
+    const {verified, email, full_name, ...restaurant_info} = (restaurant as RestaurantDocument).toJSON();
+    return restaurant_info;
+  }
+
+  async findCategoryByRestaurant(id: string) {
+    const restaurant = await this.restaurantModel.findById(id)
+    .populate({
+      path: 'restaurant_categories',
+      model: 'RestaurantCategory'
+    })
+    return restaurant.restaurant_categories;
   }
   // // async addCategory(id: string, dto: CreateRestaurantCategoryDto): Promise<RestaurantDocument> {
   // //   const restaurant = await this.restaurantModel.findById(id).exec();

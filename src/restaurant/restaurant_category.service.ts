@@ -1,11 +1,12 @@
 import { RestaurantCategory, RestaurantCategoryDocument } from "./entities/restaurant_category.schema";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { FilterQuery, Model, QueryOptions } from "mongoose";
 import { BaseServiceAbstract } from "src/utils/repository/base.service";
 import { CreateRestaurantCategoryDto } from "./dto/create-restaurant-category.dto";
 import { UpdateRestaurantCategoryDto } from "./dto/update-restaurant-category.dto";
 import { FoodItemService } from "./food_item.service";
+import { FindAllResponse } from "src/utils/interfaces";
 
 @Injectable()
 export class RestaurantCategoryService extends BaseServiceAbstract<RestaurantCategory> {
@@ -15,7 +16,7 @@ export class RestaurantCategoryService extends BaseServiceAbstract<RestaurantCat
     ){
         super(restaurantCategoryModel);
     }
-
+    
     async createCategory(dto: CreateRestaurantCategoryDto){
         const category = await this.create(dto)
         return category;
@@ -44,8 +45,11 @@ export class RestaurantCategoryService extends BaseServiceAbstract<RestaurantCat
     } 
 
     async getMenuDetails(id: string) {
-        const cate = await this.findOneById(id);
-        const food_items = await this.foodItemService.getFoodItems((cate.food_items as string[]));
-        return { ...(cate as RestaurantCategoryDocument).toObject(), food_items }
+        const cate = await this.restaurantCategoryModel.findById(id)
+        .populate({
+            path: 'food_items',
+            model: 'FoodItem'
+        }).exec();
+        return cate;
     }
 }

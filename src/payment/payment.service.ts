@@ -29,12 +29,12 @@ export class PaymentService {
 
     ) {}
 
-  getURLVnPay(ip: string, amount: number, orderId: string) {
+  getURLVnPay(ip: string, amount: number, orderId: string, url: string) {
       const date = new Date();
       let tmnCode = '0NDLY2ZY';
       let secretKey = 'DGCULOB4IRXO70APD55EP36RID3LL2LJ';
       let vnpUrl = 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html';
-      let returnUrl = 'https://gop-payment.vercel.app/user/payment';
+      let returnUrl = url; //'https://gop-payment.vercel.app/user/payment'
       let locale = 'vn';
       let currCode = 'VND';
       let vnp_Params = {};

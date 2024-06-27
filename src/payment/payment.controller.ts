@@ -10,10 +10,10 @@ export class PaymentController{
     private readonly paymentService: PaymentService,
   ) {}
 
-  @Get('vnpay')
-  async getVnpayLink(@Req() req: RequestWithUser, @Ip() ip: string){
+  @Post('vnpay')
+  async getVnpayLink(@Req() req: RequestWithUser, @Ip() ip: string, @Body() body: { amount: number, returnUrl: string }){
     try {
-      return this.paymentService.getURLVnPay(ip, 100000, new Date().getTime().toString());
+      return this.paymentService.getURLVnPay(ip, body.amount, new Date().getTime().toString(), body.returnUrl);
     } catch (e) {
       return e;
     }

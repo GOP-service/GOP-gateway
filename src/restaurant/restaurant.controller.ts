@@ -21,8 +21,8 @@ import { UpdateRestaurantCategoryDto } from './dto/update-restaurant-category.dt
 import { UpdateFoodItemDto } from './dto/update-food-item.dto';
 
 
-// @ApiBearerAuth()
-// @UseGuards(AuthGuard('jwt'),RolesGuard)
+@ApiBearerAuth()
+@UseGuards(AuthGuard('jwt'),RolesGuard)
 @ApiTags('Restaurants')
 @Controller('restaurant')
 export class RestaurantController implements IRestaurantController, ICampaign{
@@ -32,13 +32,19 @@ export class RestaurantController implements IRestaurantController, ICampaign{
   ) {}
 
   @Post('info/:id')
-  fetchRestaurantInfo(@Param('id') id: string, @Body() body: { coordinates: number[] }) {
-    return this.restaurantService.getRestaurantInfo(id, body.coordinates);
+  fetchInfoByCustomer(@Param('id') id: string, @Body() body: { coordinates: number[] }) {
+    return this.restaurantService.getInfoByCustomer(id, body.coordinates);
   }
 
-  @Get('menu/:id')
-  async fetchMenu(@Param('id') id: string) {
-    return await this.restaurantService.getMenu(id);
+  @Roles(RoleType.RESTAURANT)
+  @Get('info')
+  fetchInfo(@Req() req: RequestWithUser) {
+    return this.restaurantService.getInfo(req.user.sub);
+  }
+
+  @Get('menu/:id?')
+  async fetchMenu(@Req() req: RequestWithUser ,@Param('id') id?: string) {
+    return await this.restaurantService.getMenu(id ?? req.user.sub);
   }
 
   @Post('recommended')
@@ -125,6 +131,12 @@ export class RestaurantController implements IRestaurantController, ICampaign{
   }
 
   @Roles(RoleType.RESTAURANT)
+  @Get('category')
+  fetchCategory(@Req() req: RequestWithUser) {
+    return this.restaurantService.findCategoryByRestaurant(req.user.sub)
+  }
+
+  @Roles(RoleType.RESTAURANT)
   @Post('category/create')
   async createCategory(@Req() req: RequestWithUser, @Body() body: CreateRestaurantCategoryDto): Promise<any> {
     try {
@@ -158,7 +170,6 @@ export class RestaurantController implements IRestaurantController, ICampaign{
     }
   }
 
-  @Roles(RoleType.CUSTOMER)
   @Get('fooditem/:id')
   async fetchFoodDetails(@Param('id') id: string) {
     const foodItem = await this.restaurantService.getFooditemDetails(id)

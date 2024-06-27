@@ -17,7 +17,7 @@ export class CreateDeliveryOrderDto extends CreateOrderDto {
         example: []
     })
     @IsArray()
-    campaign_id: string[]
+    campaign_ids: string[]
     
     @ApiProperty({
         title: 'LONG -> LAT',

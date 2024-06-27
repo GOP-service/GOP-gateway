@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, HydratedDocument } from "mongoose";
+import { OrderType } from "src/utils/enums";
 import { BaseEntity } from "src/utils/repository/base.entity";
 
 export type RestaurantFoodReviewDocument = HydratedDocument<RestaurantFoodReview>;
@@ -18,8 +19,8 @@ export class RestaurantFoodReview extends BaseEntity {
     @Prop({ })
     content: string
 
-    @Prop({ })
-    type: string
+    @Prop({ default: OrderType.DELIVERY })
+    type: OrderType
 
     @Prop({ min: 0, max: 5 })
     rating: number
