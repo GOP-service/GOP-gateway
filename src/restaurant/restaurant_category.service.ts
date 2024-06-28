@@ -1,5 +1,5 @@
 import { RestaurantCategory, RestaurantCategoryDocument } from "./entities/restaurant_category.schema";
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { FilterQuery, Model, QueryOptions } from "mongoose";
 import { BaseServiceAbstract } from "src/utils/repository/base.service";
@@ -48,8 +48,24 @@ export class RestaurantCategoryService extends BaseServiceAbstract<RestaurantCat
         const cate = await this.restaurantCategoryModel.findById(id)
         .populate({
             path: 'food_items',
-            model: 'FoodItem'
+            model: 'FoodItem',
+            match: { deleted_at: null }
         }).exec();
         return cate;
+    }
+
+    async deleteFoodItem(category_id: string, food_id: string) {
+        const category = await this.findOneByCondition({ _id: category_id, food_items: food_id })
+        if (!category) {
+          throw new NotFoundException('Category not found');
+        }
+
+        const newFoodItems = category.food_items.filter(itemId => itemId !== food_id) as string[]
+
+        await this.update(category_id, {
+            food_items: newFoodItems
+        })
+
+        return await this.foodItemService.deleteFoodItem(food_id);
     }
 }

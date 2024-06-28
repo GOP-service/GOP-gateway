@@ -36,11 +36,20 @@ export class FoodItemService extends BaseServiceAbstract<FoodItem> {
         })
     }
 
+    async deleteFoodItem(id: string) {
+        const now = new Date(); 
+        now.setTime(now.getTime() + (7 * 60 * 60 * 1000)); 
+        const foodItem = await this.update(id, {
+            deleted_at: now
+        })
+        return foodItem;
+    }
+
     async getFoodItemPrice(id: string): Promise<number> {
         const foodItem = await this.findOneById(id);
         return foodItem.price
     }
-    
+
     async getFoodItemDetails(id: string) {
         const food = await this.foodItemModel
           .findById(id)

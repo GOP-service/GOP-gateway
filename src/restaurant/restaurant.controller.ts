@@ -148,7 +148,7 @@ export class RestaurantController implements IRestaurantController, ICampaign{
   }
 
   @Roles(RoleType.RESTAURANT)
-  @Patch('catrgory/:id/update')
+  @Patch('category/:id/update')
   async updateCategory(@Req() req: RequestWithUser, @Param('id') id: string, @Body() body: UpdateRestaurantCategoryDto): Promise<any> {
      try {
       const restaurant = await this.restaurantService.updateCategory(req.user.sub, id, body)
@@ -179,9 +179,9 @@ export class RestaurantController implements IRestaurantController, ICampaign{
   @Roles(RoleType.RESTAURANT)
   @UseInterceptors(FileInterceptor('image'))
   @Post('fooditem/create')
-  async createFoodItem(@Req() req: RequestWithUser, @Body() body: CreateFoodItemDto, @UploadedFile() image): Promise<any> {
+  async createFoodItem(@Req() req: RequestWithUser, @Body() body: CreateFoodItemDto): Promise<any> {
     try {
-      const restaurant = await this.restaurantService.createFoodItem(req.user.sub, body, image);
+      const restaurant = await this.restaurantService.createFoodItem(req.user.sub, body);
       return restaurant;
     } catch (error) {
       return error
@@ -203,9 +203,14 @@ export class RestaurantController implements IRestaurantController, ICampaign{
   }
 
   @Roles(RoleType.RESTAURANT)
-  @Delete('fooditem/:id/delete')
-  deleteFoodItem(): Promise<any> {
-    throw new Error('Method not implemented.');
+  @Post('fooditem/delete')
+  async deleteFoodItem(@Req() req: RequestWithUser, @Body() body: { category_id: string, foodItem_id: string }): Promise<any> {
+    try {
+      const foodItems = await this.restaurantService.deleteFoodItem(req.user.sub, body.category_id, body.foodItem_id);
+      return foodItems;
+    } catch (error) {
+      throw new Error('Delete fooditem failed');
+    }
   }
 
   @Roles(RoleType.RESTAURANT)

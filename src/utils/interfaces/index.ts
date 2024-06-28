@@ -107,7 +107,7 @@ export interface IRestaurantController {
 
     updateFoodItemImage(food_item_id: string, image: Express.Multer.File): Promise<any>
 
-    deleteFoodItem(): Promise<any>
+    deleteFoodItem(req: RequestWithUser, body: { category_id: string, foodItem_id: string }): Promise<any>
 }
 
 export interface IAdminController {

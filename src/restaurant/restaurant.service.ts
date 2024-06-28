@@ -53,10 +53,20 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
     return restaurant;
   }
 
-  async addCategory(restaurant_id: string, dto: CreateRestaurantCategoryDto): Promise<Restaurant>{
+  async findCategoryByRestaurant(id: string) {
+    const restaurant = await this.restaurantModel.findById(id)
+    .populate({
+      path: 'restaurant_categories',
+      model: 'RestaurantCategory',
+    })
+    .exec();
+    return restaurant.restaurant_categories;
+  }
+
+  async addCategory(restaurant_id: string, dto: CreateRestaurantCategoryDto): Promise<RestaurantCategory> {
     const category = await this.restaurantCategoryService.createCategory(dto);
 
-    const restaurant = await this.restaurantModel.findByIdAndUpdate(restaurant_id, 
+    await this.restaurantModel.findByIdAndUpdate(restaurant_id, 
       { 
         $push: {
           restaurant_categories: category._id
@@ -65,7 +75,7 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
       { new: true }
     ).exec();
 
-    return restaurant;
+    return category;
   }
 
   async food_calculateFare(dto: OrderFoodItems): Promise<number> {
@@ -78,30 +88,31 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
     return fare;
 }
 
-  async updateCategory(restaurant_id: string, cate_id: string, dto: UpdateRestaurantCategoryDto): Promise<RestaurantCategory> {
-    if(this.isCategoryOwnedByRestaurant(restaurant_id, cate_id)){
-      const category = await this.restaurantCategoryService.updateCategory(cate_id ,dto);
-      return category;
+  async updateCategory(restaurant_id: string, cate_id: string, dto: UpdateRestaurantCategoryDto): Promise<any> {
+    const restaurant = await this.findOneByCondition({ _id: restaurant_id, restaurant_categories: cate_id })
+    if (!restaurant) {
+      throw new NotFoundException('Restaurant or Category not found');
     }
-    else throw new NotFoundException("Restaurant not found")
+    const category = await this.restaurantCategoryService.updateCategory(cate_id, dto);
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
+    return category
   }
 
-  async isCategoryOwnedByRestaurant(restaurant_id: string, cate_id: string): Promise<boolean> {
-    const restaurant = await this.findOneById(restaurant_id);
-    return  restaurant && (restaurant.restaurant_categories.filter(cate => (cate as RestaurantCategory)._id == cate_id || (cate as string) == cate_id )).length > 0;
-  }
-  
   async deleteCategory(category_id: string, restaurant_id: string) {
-    if(this.isCategoryOwnedByRestaurant(restaurant_id, category_id)){
-      const restaurant = await this.findOneById(restaurant_id)
-      const new_cate = restaurant.restaurant_categories.filter(cate_id => cate_id != category_id) as RestaurantCategory[]
-
-      await this.update(restaurant_id, {
-        restaurant_categories: new_cate
-      })
-      
-      return await this.restaurantCategoryService.deleteCategory(category_id)
+    const restaurant = await this.findOneByCondition({ _id: restaurant_id, restaurant_categories: category_id })
+    if (!restaurant) {
+      throw new NotFoundException('Restaurant or Category not found');
     }
+
+    const new_cate = restaurant.restaurant_categories.filter(cate_id => cate_id != category_id) as RestaurantCategory[]
+
+    await this.update(restaurant_id, {
+      restaurant_categories: new_cate
+    })
+    
+    return await this.restaurantCategoryService.deleteCategory(category_id)
   }
   
   async getFooditemDetails(id: string) {
@@ -109,12 +120,11 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
     return foodDetails
   }
 
-  async createFoodItem(restaurant_id: string, dto: CreateFoodItemDto, img: Express.Multer.File){
+  async createFoodItem(restaurant_id: string, dto: CreateFoodItemDto){
     const restaurant = await this.findOneById(restaurant_id);
     if(restaurant){
       const foodItem = await this.foodItemService.createFoodItem(dto);
       await this.restaurantCategoryService.addFoodItem(foodItem._id, dto.category_id)
-      foodItem.image = await this.updateFoodItemImg(foodItem._id, img)
       return foodItem
     }
     else throw new NotFoundException("Restaurant not found")
@@ -136,6 +146,17 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
         return foodImgUrl
       }
     }
+  }
+
+  async deleteFoodItem(restaurant_id: string, category_id, food_id: string) {
+    const restaurant = await this.findOneByCondition({ _id: restaurant_id, restaurant_categories: category_id })
+    if (!restaurant) {
+      throw new NotFoundException('Restaurant or Category not found');
+    }
+
+    const newFoodItem = await this.restaurantCategoryService.deleteFoodItem(category_id, food_id);
+
+    return newFoodItem;
   }
 
   async getRestaurantsByCustomer(coordinates: number[]) {
@@ -194,15 +215,6 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
     const restaurant = await this.findOneById(id)
     const {verified, email, full_name, ...restaurant_info} = (restaurant as RestaurantDocument).toJSON();
     return restaurant_info;
-  }
-
-  async findCategoryByRestaurant(id: string) {
-    const restaurant = await this.restaurantModel.findById(id)
-    .populate({
-      path: 'restaurant_categories',
-      model: 'RestaurantCategory'
-    })
-    return restaurant.restaurant_categories;
   }
   // // async addCategory(id: string, dto: CreateRestaurantCategoryDto): Promise<RestaurantDocument> {
   // //   const restaurant = await this.restaurantModel.findById(id).exec();
