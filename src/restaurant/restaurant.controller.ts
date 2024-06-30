@@ -189,9 +189,9 @@ export class RestaurantController implements IRestaurantController, ICampaign{
   }
 
   @Roles(RoleType.RESTAURANT)
-  @Patch('fooditem/:id/update')
-  updateFoodItem(@Param('id') food_item_id: string, @Body() body: UpdateFoodItemDto): Promise<any> {
-    throw new Error('Method not implemented.');
+  @Patch('fooditem/update')
+  async updateFoodItem(@Body() body: UpdateFoodItemDto): Promise<any> {
+    return await this.restaurantService.updateFoodItem(body);
   }
 
   @Roles(RoleType.RESTAURANT)

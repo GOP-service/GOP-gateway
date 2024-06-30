@@ -103,7 +103,7 @@ export interface IRestaurantController {
 
     createFoodItem(req: RequestWithUser, body: CreateFoodItemDto, image: any): Promise<any>
 
-    updateFoodItem(food_item_id: string, body: UpdateFoodItemDto): Promise<any>
+    updateFoodItem(body: UpdateFoodItemDto): Promise<any>
 
     updateFoodItemImage(food_item_id: string, image: Express.Multer.File): Promise<any>
 

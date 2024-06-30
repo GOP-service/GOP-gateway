@@ -3,6 +3,8 @@ import { IsNotEmpty, IsString } from "class-validator";
 import { ModifierDto } from "./modifier.dto";
 
 export class ModifierGroupsDto {
+    _id?: string
+
     @ApiProperty({
         example: 'say oh yeahhhhhhh'
     })

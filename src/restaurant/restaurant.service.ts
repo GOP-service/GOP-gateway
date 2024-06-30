@@ -31,6 +31,8 @@ import { count, log } from 'console';
 import { FindAllResponse } from 'src/utils/interfaces';
 import { VietMapService } from 'src/utils/map-api/viet-map.service';
 import { LocationObject } from 'src/utils/subschemas/location.schema';
+import { UpdateFoodItemDto } from './dto/update-food-item.dto';
+import { ModifierDto } from './dto/modifier.dto';
 
 @Injectable()
 export class RestaurantService extends AccountServiceAbstract<Restaurant>{
@@ -146,6 +148,11 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
         return foodImgUrl
       }
     }
+  }
+
+  async updateFoodItem(foodItem: UpdateFoodItemDto) {
+    const newFoodItem = await this.foodItemService.updateFoodItem(foodItem);
+    return newFoodItem;
   }
 
   async deleteFoodItem(restaurant_id: string, category_id, food_id: string) {

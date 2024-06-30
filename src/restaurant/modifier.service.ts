@@ -33,4 +33,34 @@ export class ModifierService extends BaseServiceAbstract<Modifier>{
         )
         return modifier
     }
+
+    async updateModifiers(modifierDto: ModifierDto[]): Promise<string[]> {
+        let modifierIds = [];
+        for (const modifier of modifierDto) {
+            modifierIds.push(await this.updateModifier(modifier));
+        }
+        return modifierIds;
+    }
+
+    async updateModifier(modifierDto: ModifierDto): Promise<string> {
+        const modifier = modifierDto._id ? await this.modifierModel.findById(modifierDto._id) : new this.modifierModel();
+        modifier.name = modifierDto.name;
+        modifier.price = modifierDto.price
+        await modifier.save();
+        return modifier._id;
+    }
+
+    deleteModifiers(Ids: string[]) {
+        for (const id of Ids) {
+            this.deleteModifier(id);
+        }
+    }
+
+    async deleteModifier(id: string) {
+        const now = new Date(); 
+        now.setTime(now.getTime() + (7 * 60 * 60 * 1000)); 
+        await this.update(id, {
+            deleted_at: now
+        })  
+    }
 }
