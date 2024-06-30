@@ -151,7 +151,11 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
   }
 
   async updateFoodItem(foodItem: UpdateFoodItemDto) {
-    const newFoodItem = await this.foodItemService.updateFoodItem(foodItem);
+    const updateFoodItemPromise = this.foodItemService.updateFoodItem(foodItem);
+    const changeFoodItemCategoryPromise = this.restaurantCategoryService.updateFoodItemCategory(foodItem._id, foodItem.category_id);
+
+    const [newFoodItem] = await Promise.all([updateFoodItemPromise, changeFoodItemCategoryPromise]);
+
     return newFoodItem;
   }
 

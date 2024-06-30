@@ -7,6 +7,7 @@ import { CreateRestaurantCategoryDto } from "./dto/create-restaurant-category.dt
 import { UpdateRestaurantCategoryDto } from "./dto/update-restaurant-category.dto";
 import { FoodItemService } from "./food_item.service";
 import { FindAllResponse } from "src/utils/interfaces";
+import { FoodItem } from "./entities/food_item.schema";
 
 @Injectable()
 export class RestaurantCategoryService extends BaseServiceAbstract<RestaurantCategory> {
@@ -35,6 +36,45 @@ export class RestaurantCategoryService extends BaseServiceAbstract<RestaurantCat
         })
         return category;
     }
+
+    async updateFoodItemCategory(food_item_id: string, category_id: string) {
+        const currCategory = await this.findOneByCondition({
+            food_items: food_item_id
+        })
+
+        if(category_id != currCategory._id) {
+            const newCate = await this.findOneById(category_id);
+            if(!newCate) {
+                throw new NotFoundException('new category not found')
+            }
+
+            await Promise.all([
+                this.removeFoodItem(food_item_id, currCategory._id),
+                this.addFoodItem(food_item_id, category_id)
+            ])
+        }
+
+    }
+
+    async findCategoriesByFoodItemId (food_item_id: string) {
+        const categories = await this.findOneByCondition({
+            food_items: food_item_id
+        })
+        return categories;
+    }
+
+    async removeFoodItem(food_item_id: string, category_id: string) {
+        const result = await this.restaurantCategoryModel.findByIdAndUpdate(
+            category_id,
+            { $pull: { food_items: food_item_id } },
+            { new: true }
+          );
+      
+        if (!result) {
+            throw new NotFoundException('Category or FoodItem not found');
+        }
+    }
+
     async addFoodItem(food_item_id: string, category_id: string){
         return await this.restaurantCategoryModel.findByIdAndUpdate(category_id, { 
             $push: {
