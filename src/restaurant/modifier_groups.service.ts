@@ -32,10 +32,9 @@ export class ModifierGroupService extends BaseServiceAbstract<ModifierGroup>{
     }
 
     async updateModifierGroups(modifier_groups: ModifierGroupsDto[]): Promise<string[]> {
-        let groupIds = [];
-        for (const group of modifier_groups) {
-            groupIds.push(await this.updateModifierGroup(group));
-        }
+        const groupIds = await Promise.all(
+            modifier_groups.map(group => this.updateModifierGroup(group))
+        );
         return groupIds;
     }
 

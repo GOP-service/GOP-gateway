@@ -35,10 +35,9 @@ export class ModifierService extends BaseServiceAbstract<Modifier>{
     }
 
     async updateModifiers(modifierDto: ModifierDto[]): Promise<string[]> {
-        let modifierIds = [];
-        for (const modifier of modifierDto) {
-            modifierIds.push(await this.updateModifier(modifier));
-        }
+        const modifierIds = await Promise.all(
+            modifierDto.map(modifier => this.updateModifier(modifier))
+          );
         return modifierIds;
     }
 

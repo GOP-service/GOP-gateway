@@ -36,6 +36,7 @@ export class FoodItemService extends BaseServiceAbstract<FoodItem> {
             foodItem.name = foodItemDto.name;
             foodItem.bio = foodItemDto.bio;
             foodItem.price = foodItemDto.price;
+            
             const currentModifierGroupIds = (foodItem.modifier_groups as string[]).map(groupId =>  groupId.toString())
             const updatedModifierGroupIds = (foodItemDto.modifier_groups as ModifierGroupsDto[]).map(group => group._id);
             const modifierGroupsToDelete = currentModifierGroupIds.filter(id => !updatedModifierGroupIds.includes(id));
@@ -47,7 +48,7 @@ export class FoodItemService extends BaseServiceAbstract<FoodItem> {
             foodItem.modifier_groups = newMdGroups;
 
             await foodItem.save();
-            
+
             return foodItem;
         } 
     }
