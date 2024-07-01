@@ -22,7 +22,7 @@ import { UpdateCustomerDto } from './dto/update-customer.dto';
 @ApiTags('Customer')
 @Controller('customer')
 @Roles(RoleType.CUSTOMER)
-export class CustomerController implements ICustomerController, ICampaign {
+export class CustomerController implements ICustomerController {
   constructor(
     private readonly customerService: CustomerService,
     private readonly paymentService: PaymentService
@@ -36,16 +36,14 @@ export class CustomerController implements ICustomerController, ICampaign {
       return campaigns;
     throw new Error('No campaigns found');
   }
+
+  @Roles(RoleType.RESTAURANT)
+  @Get('campaigns/:id')
+  getCampaignsByOwnerId(@Param('id') id: string): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+
   getCampaignDetails(): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-  createCampaign(): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-  updateCampaign(): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-  deleteCampaign(): Promise<any> {
     throw new Error('Method not implemented.');
   }
   

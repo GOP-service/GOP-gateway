@@ -19,6 +19,8 @@ import { CreateFoodItemDto } from './dto/create-food-item.dto';
 import { RestaurantCategoryService } from './restaurant_category.service';
 import { UpdateRestaurantCategoryDto } from './dto/update-restaurant-category.dto';
 import { UpdateFoodItemDto } from './dto/update-food-item.dto';
+import { PaymentService } from 'src/payment/payment.service';
+import { CreateCampaignDto } from 'src/payment/dto/create-campaign.dto';
 
 
 @ApiBearerAuth()
@@ -29,6 +31,7 @@ export class RestaurantController implements IRestaurantController, ICampaign{
   constructor(
     private readonly restaurantService: RestaurantService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly paymentService: PaymentService
   ) {}
 
   @Post('info/:id')
@@ -220,6 +223,12 @@ export class RestaurantController implements IRestaurantController, ICampaign{
   }
 
   @Roles(RoleType.RESTAURANT)
+  @Get(':id/campaigns')
+  async getCampaignsByOwnerId(@Param('id') id: string): Promise<any> {
+    return await this.paymentService.getCampaignByOwnerId(id); 
+  }
+
+  @Roles(RoleType.RESTAURANT)
   @Get('campaign/:id')
   getCampaignDetails(): Promise<any> {
     throw new Error('Method not implemented.');
@@ -227,8 +236,8 @@ export class RestaurantController implements IRestaurantController, ICampaign{
 
   @Roles(RoleType.RESTAURANT)
   @Post('campaign/create')
-  createCampaign(): Promise<any> {
-    throw new Error('Method not implemented.');
+  async createCampaign(@Body() body: CreateCampaignDto): Promise<any> {
+    return await this.paymentService.createCampaign(body);
   }
 
   @Roles(RoleType.RESTAURANT)

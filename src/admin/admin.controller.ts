@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { PaymentService } from 'src/payment/payment.service';
 import { IAdminController, ICampaign } from 'src/utils/interfaces';
@@ -18,6 +18,11 @@ export class AdminController implements IAdminController, ICampaign{
 
   @Get('campaigns')
   getCampaigns(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+
+  @Get(':id/campaigns')
+  getCampaignsByOwnerId(@Param('id') id: string): Promise<any> {
     throw new Error('Method not implemented.');
   }
 

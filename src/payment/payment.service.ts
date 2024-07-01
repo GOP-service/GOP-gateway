@@ -85,9 +85,24 @@ export class PaymentService {
     return campaign;
   }
 
+  async getCampaignByOwnerId(id: string): Promise<Campaign[]> {
+    const campaign = await this.campaignModdel.find({
+      restaurant_id: id
+    });
+    return campaign;
+  }
+
   async createCampaign(dto: CreateCampaignDto) {
-    const campaign = await new this.campaignModdel(dto);
-    return campaign.save();
+    // const newStartTime = new Date(dto.conditions.start_time);
+    // newStartTime.setTime(newStartTime.getTime() + (7 * 60 * 60 * 1000));
+    // const newEndTime = new Date(dto.conditions.start_time);
+    // newEndTime.setTime(newEndTime.getTime() + (7 * 60 * 60 * 1000));
+
+    // dto.conditions.start_time = newStartTime;
+    // dto.conditions.end_time = newEndTime;
+
+    const campaign = new this.campaignModdel(dto);
+    return await campaign.save();
   }
 
   async deleteCampaign(campaign_id: string) {
