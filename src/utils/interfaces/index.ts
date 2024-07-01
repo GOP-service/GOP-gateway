@@ -9,6 +9,7 @@ import { CreateFoodItemDto } from "src/restaurant/dto/create-food-item.dto";
 import { CancelOrderDto } from "src/order/dto/cancel-order.dto";
 import { UpdateFoodItemDto } from "src/restaurant/dto/update-food-item.dto";
 import { CreateCampaignDto } from "src/payment/dto/create-campaign.dto";
+import { UpdateCampaignnDto } from "src/payment/dto/update-campaign.dto";
 export interface JwtPayload {
     sub: string
     role: RoleType
@@ -141,8 +142,8 @@ export interface ICampaign {
     getCampaignsByOwnerId(id: string): Promise<any>
     getCampaignDetails(): Promise<any>
     createCampaign(body: CreateCampaignDto): Promise<any>
-    updateCampaign(): Promise<any>
-    deleteCampaign(): Promise<any>
+    updateCampaign(body: UpdateCampaignnDto): Promise<any>
+    deleteCampaign( id: string, req: RequestWithUser): Promise<any>
 }
 
 export interface IPayment {

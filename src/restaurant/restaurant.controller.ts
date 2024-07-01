@@ -21,6 +21,7 @@ import { UpdateRestaurantCategoryDto } from './dto/update-restaurant-category.dt
 import { UpdateFoodItemDto } from './dto/update-food-item.dto';
 import { PaymentService } from 'src/payment/payment.service';
 import { CreateCampaignDto } from 'src/payment/dto/create-campaign.dto';
+import { UpdateCampaignnDto } from 'src/payment/dto/update-campaign.dto';
 
 
 @ApiBearerAuth()
@@ -241,15 +242,23 @@ export class RestaurantController implements IRestaurantController, ICampaign{
   }
 
   @Roles(RoleType.RESTAURANT)
-  @Patch('campaign/:id/update')
-  updateCampaign(): Promise<any> {
-    throw new Error('Method not implemented.');
+  @Patch('campaign/update')
+  async updateCampaign(@Body() body: UpdateCampaignnDto): Promise<any> {
+    try {
+      return await this.paymentService.updateCampaign(body);
+    } catch (error) {
+      throw new Error('Update campaign failed!')
+    }
   }
 
   @Roles(RoleType.RESTAURANT)
   @Delete('campaign/:id/delete')
-  deleteCampaign(): Promise<any> {
-    throw new Error('Method not implemented.');
+  async deleteCampaign(@Param('id') id: string, @Req() req: RequestWithUser): Promise<any> {
+    try {
+      return await this.paymentService.deleteCampaign(id, req.user.sub)
+    } catch (error) {
+      throw new Error('Delete campaign failed')
+    }
   }
   
   // RESTAURANT

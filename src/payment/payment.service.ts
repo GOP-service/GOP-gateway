@@ -25,8 +25,7 @@ export class PaymentService {
     constructor(
       @InjectModel(Bill.name) private readonly billModel: Model<Bill>,
       @InjectModel(Ledger.name) private readonly ledgerModel: Model<Ledger>,
-      @InjectModel(Campaign.name) private readonly campaignModdel: Model<Campaign>
-
+      @InjectModel(Campaign.name) private readonly campaignModel: Model<Campaign>
     ) {}
 
   getURLVnPay(ip: string, amount: number, orderId: string, url: string) {
@@ -81,43 +80,45 @@ export class PaymentService {
   }
 
   async getAllCampaign(): Promise<Campaign[]>{
-    const campaign = await this.campaignModdel.find();
+    const campaign = await this.campaignModel.find();
     return campaign;
   }
 
   async getCampaignByOwnerId(id: string): Promise<Campaign[]> {
-    const campaign = await this.campaignModdel.find({
-      restaurant_id: id
+    const campaign = await this.campaignModel.find({
+      restaurant_id: id,
+      deleted_at: null
     });
     return campaign;
   }
 
   async createCampaign(dto: CreateCampaignDto) {
-    // const newStartTime = new Date(dto.conditions.start_time);
-    // newStartTime.setTime(newStartTime.getTime() + (7 * 60 * 60 * 1000));
-    // const newEndTime = new Date(dto.conditions.start_time);
-    // newEndTime.setTime(newEndTime.getTime() + (7 * 60 * 60 * 1000));
-
-    // dto.conditions.start_time = newStartTime;
-    // dto.conditions.end_time = newEndTime;
-
-    const campaign = new this.campaignModdel(dto);
+    const campaign = new this.campaignModel(dto);
     return await campaign.save();
   }
 
-  async deleteCampaign(campaign_id: string) {
-    const campaign = await this.campaignModdel.findByIdAndDelete(campaign_id)
-    if (!campaign) {
-      throw new NotFoundException("Campaign not found!");
+  async deleteCampaign(campaign_id: string, restaurant_id: string) {
+    const now = new Date(); 
+    now.setTime(now.getTime() + (7 * 60 * 60 * 1000)); 
+
+    const campaign = await this.campaignModel.findOne({
+      _id: campaign_id,
+      restaurant_id: restaurant_id
+    })
+
+    if(!campaign) {
+      throw new NotFoundException('Campaign not found')
     }
+
+    campaign.deleted_at = now;
+    await campaign.save();
+
     return campaign;
   }
 
   async updateCampaign(dto: UpdateCampaignnDto) {
-    const campaign = await this.campaignModdel.findByIdAndUpdate(dto.id, dto, { new: true })
-    if(campaign)
-      return campaign
-    throw new Error('Update state failed')
+    const campaign = await this.campaignModel.findByIdAndUpdate(dto.id, dto, { new: true })
+    return campaign;
   }
 
   isValidCampaign(customer_id: string, campaign: Campaign, campaignDto: ApplyCampaignDto){
@@ -133,7 +134,7 @@ export class PaymentService {
   async validateAndApplyCampaign(customer_id: string, campaignDto: ApplyCampaignDto, quote: boolean = false): Promise<number>{
     let total_discount_value = 0;
     for (const campaign_id of campaignDto.compaign_ids) {
-      const campaign = await this.campaignModdel.findById(campaign_id);
+      const campaign = await this.campaignModel.findById(campaign_id);
       if (this.isValidCampaign(customer_id, campaign, campaignDto)) {
         if(!quote){
           campaign.unavailable_users.push(customer_id);
