@@ -54,9 +54,9 @@ export class FoodItemService extends BaseServiceAbstract<FoodItem> {
     }
 
     async updateFoodItemImg(id: string, imgUrl: string) {
-        const img = await this.update(id, {
+        await this.foodItemModel.findByIdAndUpdate(id, {
             image: imgUrl
-        })
+        }, { new: true })
     }
 
     async deleteFoodItem(id: string) {
@@ -78,9 +78,11 @@ export class FoodItemService extends BaseServiceAbstract<FoodItem> {
           .findById(id)
           .populate({ 
               path: 'modifier_groups',
+              match: { deleted_at: null },
               populate: {
                 path: 'modifier',
-                model: 'Modifier'
+                model: 'Modifier',
+                match: { deleted_at: null }
               } 
            })
           .exec();

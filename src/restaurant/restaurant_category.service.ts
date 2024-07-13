@@ -102,9 +102,9 @@ export class RestaurantCategoryService extends BaseServiceAbstract<RestaurantCat
 
         const newFoodItems = category.food_items.filter(itemId => itemId !== food_id) as string[]
 
-        await this.update(category_id, {
+        await this.restaurantCategoryModel.findByIdAndUpdate(category_id, {
             food_items: newFoodItems
-        })
+        }, { new: true })
 
         return await this.foodItemService.deleteFoodItem(food_id);
     }

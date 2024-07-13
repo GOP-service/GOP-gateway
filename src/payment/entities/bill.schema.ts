@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document, HydratedDocument, Schema as MongooseSchema } from "mongoose";
+import { HydratedDocument, Schema as MongooseSchema, SchemaTypes } from "mongoose";
 import { Order } from "src/order/entities/order.schema";
 import { BillStatus, PaymentMethod } from "src/utils/enums";
 import { BaseEntity } from "src/utils/repository/base.entity";
@@ -26,7 +26,7 @@ export class Bill extends BaseEntity {
     @Prop()
     transaction_id: string
 
-    @Prop({ })
+    @Prop({ type: [SchemaTypes.ObjectId], ref: 'Campaign' })
     campaign_id: string[]
 
     @Prop({ })

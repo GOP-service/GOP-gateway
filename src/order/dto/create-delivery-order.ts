@@ -3,6 +3,7 @@ import { IsArray, IsEnum, IsNotEmpty, IsString } from "class-validator";
 import { CreateOrderDto } from "./create-order.dto";
 import { LocationObject } from "src/utils/subschemas/location.schema";
 import { OrderFoodItems } from "../entities/order_food_items.schema";
+import { PaymentMethod } from "src/utils/enums";
 
 export class CreateDeliveryOrderDto extends CreateOrderDto {
     @ApiProperty({
@@ -12,12 +13,22 @@ export class CreateDeliveryOrderDto extends CreateOrderDto {
     @IsNotEmpty()
     restaurant_id: string
 
+    @ApiProperty({
+        example: PaymentMethod.CASH
+    })
+    @IsEnum(PaymentMethod)
+    payment_method: PaymentMethod
     
     @ApiProperty({
         example: []
     })
     @IsArray()
     campaign_ids: string[]
+
+    @ApiProperty({
+        example: '0987654321'
+    })
+    phone: string
     
     @ApiProperty({
         title: 'LONG -> LAT',

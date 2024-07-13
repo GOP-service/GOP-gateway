@@ -33,6 +33,7 @@ import { VietMapService } from 'src/utils/map-api/viet-map.service';
 import { LocationObject } from 'src/utils/subschemas/location.schema';
 import { UpdateFoodItemDto } from './dto/update-food-item.dto';
 import { ModifierDto } from './dto/modifier.dto';
+import { FirebaseService } from 'src/utils/firebase/firebase.service';
 
 @Injectable()
 export class RestaurantService extends AccountServiceAbstract<Restaurant>{
@@ -44,11 +45,27 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
     private readonly modifierGroupService: ModifierGroupService,
     private readonly modifierService: ModifierService,
     private azureStorage: AzureStorageService,
-    private vietmapService: VietMapService
+    private vietmapService: VietMapService,
+    private firebaseService: FirebaseService
   ) {
     super(restaurantModel);
   }
 
+  async findFoodDetailsFromOrder(orderFoodItems: OrderFoodItems[]) {
+    const newOrderFoodItems = await Promise.all( 
+      orderFoodItems.map(async (item) => {
+      const food = await this.foodItemService.findOneById(item.food_id);
+    
+      return {
+        food_id: item.food_id,
+        quantity: item.food_id,
+        image: food.image,
+        name: food.name
+      }
+    }))
+
+    return newOrderFoodItems;
+  }
 
   async updateRestaurant(id: string, dto: UpdateRestaurantDto): Promise<Restaurant> {
     const restaurant = await this.update(id, dto as Partial<UpdateRestaurantDto>)
@@ -124,7 +141,7 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
 
   async createFoodItem(restaurant_id: string, dto: CreateFoodItemDto){
     const restaurant = await this.findOneById(restaurant_id);
-    if(restaurant){
+    if(restaurant) {
       const foodItem = await this.foodItemService.createFoodItem(dto);
       await this.restaurantCategoryService.addFoodItem(foodItem._id, dto.category_id)
       return foodItem
@@ -137,16 +154,11 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
     return restaurant.location;
   }
 
-  async updateFoodItemImg(id: string, img: Express.Multer.File): Promise<string>{
-    if(img){
-      const foodImgUrl = await this.azureStorage.uploadFile(img, 'restaurant-food-items', id);
-      if(!foodImgUrl){
-        return ""
-      }
-      else {
-        await this.foodItemService.updateFoodItemImg(id, foodImgUrl)
-        return foodImgUrl
-      }
+  async updateFoodItemImg(foodItem_id: string, img: Express.Multer.File){
+    const url = await this.firebaseService.uploadFile(foodItem_id,  img);
+    await this.foodItemService.updateFoodItemImg(foodItem_id, url)
+    return {
+      imgUrl: url
     }
   }
 

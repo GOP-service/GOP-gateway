@@ -45,7 +45,7 @@ export class ModifierGroupService extends BaseServiceAbstract<ModifierGroup>{
         mdGroup.max = modifier_group.max;
 
         const currentModifierIds = (mdGroup.modifier as string[]).map(id => id.toString());
-        const updatedModifierIds = (modifier_group.modifier as ModifierDto[]).map(modifier => modifier._id || null)
+        const updatedModifierIds = (modifier_group.modifier as ModifierDto[]).map(modifier => modifier._id)
         const modifierToDelete = currentModifierIds.filter(id => !updatedModifierIds.includes(id))
 
         this.modfierService.deleteModifiers(modifierToDelete);

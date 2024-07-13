@@ -18,6 +18,7 @@ import { RestaurantCategoryService } from './restaurant_category.service';
 import { FoodItemService } from './food_item.service';
 import { VietMapModule } from 'src/utils/map-api/viet-map.module';
 import { PaymentModule } from 'src/payment/payment.module';
+import { FirebaseModule } from 'src/utils/firebase/firebase.module';
 
 @Module({
   imports: [
@@ -31,7 +32,8 @@ import { PaymentModule } from 'src/payment/payment.module';
     ]),
     AzureStorageModule,
     VietMapModule,
-    PaymentModule
+    PaymentModule,
+    FirebaseModule
   ],
   controllers: [RestaurantController],
   providers: [RestaurantService, RestaurantCategoryService, FoodItemService, ModifierGroupService, ModifierService],

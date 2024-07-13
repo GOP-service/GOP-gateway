@@ -107,7 +107,7 @@ export interface IRestaurantController {
 
     updateFoodItem(body: UpdateFoodItemDto): Promise<any>
 
-    updateFoodItemImage(food_item_id: string, image: Express.Multer.File): Promise<any>
+    updateFoodItemImage(food_item_id: string, image: Express.Multer.File): any
 
     deleteFoodItem(req: RequestWithUser, body: { category_id: string, foodItem_id: string }): Promise<any>
 }
@@ -173,9 +173,9 @@ export interface IOrderController {
     
     quoteTransportOrder(createOrderDto: CreateTransportOrderDto): Promise<any>;
 
-    placeDeliveryOrder(createOrderDto: any, req: RequestWithUser): Promise<any>;
+    placeDeliveryOrder(createOrderDto: any, req: RequestWithUser);
 
-    quoteDeliveryOrder(createOrderDto: any): Promise<any>;
+    quoteDeliveryOrder(createOrderDto: any, req: RequestWithUser): Promise<any>;
 
     cancelOrderCustomer(dto:CancelOrderDto, req: RequestWithUser): Promise<any>;
 

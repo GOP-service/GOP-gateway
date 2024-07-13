@@ -181,12 +181,11 @@ export class RestaurantController implements IRestaurantController, ICampaign{
   }
 
   @Roles(RoleType.RESTAURANT)
-  @UseInterceptors(FileInterceptor('image'))
   @Post('fooditem/create')
   async createFoodItem(@Req() req: RequestWithUser, @Body() body: CreateFoodItemDto): Promise<any> {
     try {
-      const restaurant = await this.restaurantService.createFoodItem(req.user.sub, body);
-      return restaurant;
+      const foodItem = await this.restaurantService.createFoodItem(req.user.sub, body);
+      return foodItem;
     } catch (error) {
       return error
     }
@@ -199,9 +198,9 @@ export class RestaurantController implements IRestaurantController, ICampaign{
   }
 
   @Roles(RoleType.RESTAURANT)
+  @Post('fooditem/:id/update-image')
   @UseInterceptors(FileInterceptor('image'))
-  @Patch('fooditem/:id/update-image')
-  updateFoodItemImage(@Param('id') food_item_id: string, @UploadedFile() image: Express.Multer.File): Promise<any> {
+  updateFoodItemImage(@Param('id') food_item_id: string, @UploadedFile() image: Express.Multer.File) {
     const uploadImage = this.restaurantService.updateFoodItemImg(food_item_id, image);
     return uploadImage;
   }
@@ -214,6 +213,19 @@ export class RestaurantController implements IRestaurantController, ICampaign{
       return foodItems;
     } catch (error) {
       throw new Error('Delete fooditem failed');
+    }
+  }
+
+  @Post('upload-image')
+  @UseInterceptors(FileInterceptor('image'))
+  updateAvatar(@UploadedFile() image: Express.Multer.File) {
+    try {
+      if (!image) {
+        throw new BadRequestException('file is required');
+      }
+      return this.restaurantService.updateFoodItemImg('6647a4011216ae8cfd4a9c21', image)
+    } catch (error) {
+      return error;
     }
   }
 

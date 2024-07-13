@@ -94,13 +94,18 @@ export class OrderController implements IOrderController {
 
   @Roles(RoleType.CUSTOMER)
   @Post('quote/delivery')
-  placeDeliveryOrder(@Body() createOrderDto: CreateDeliveryOrderDto,@Req() req: RequestWithUser): Promise<any> {
+  quoteDeliveryOrder(@Body() createOrderDto: CreateDeliveryOrderDto, @Req() req: RequestWithUser): Promise<any> {
     return this.orderService.DeliveryOrderQuote(createOrderDto, req.user.sub);
   }
 
   @Post('create/delivery')
-  quoteDeliveryOrder(@Body() createOrderDto: CreateTransportOrderDto): Promise<any> {
-    throw new Error('Method not implemented.');
+  async placeDeliveryOrder(@Body() createOrderDto: CreateDeliveryOrderDto, @Req() req: RequestWithUser) {
+    const bill = await this.orderService.DeliveryOrderPlace(createOrderDto, req.user.sub);
+    this.socketGateway.placeDeliveryOrder(createOrderDto.restaurant_id);
+    return {
+      msg: 'place order successfully',
+      bill: bill
+    }
   }
 
   @Roles(RoleType.CUSTOMER)
@@ -301,6 +306,32 @@ export class OrderController implements IOrderController {
   
   @Get('all')
   async findAll() {
-    return await this.orderService.findAll({});
+    try {
+      const orders = this.orderService.findAllOrder();
+      return orders;
+    } catch (error) {
+      throw new Error('Get orders failed')
+    }
+  }
+
+  @Get(':id/details')
+  findOrderDetails(@Param('id') id: string) {
+    try {
+      const order = this.orderService.getOrderDetails(id);
+      return order;
+    } catch (error) {
+      throw new Error('Order not found')
+    }
+  }
+
+  @Roles(RoleType.RESTAURANT)
+  @Get('state/pending-confirm')
+  OrderPendingByRestaurant(@Req() req: RequestWithUser){
+      try {
+        const orders = this.orderService.findOrderByState(req.user.sub, OrderStatus.PENDING_COMFIRM)
+        return orders;
+      } catch (error) {
+        throw new Error('Failed')
+      }
   }
 }

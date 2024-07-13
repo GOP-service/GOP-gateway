@@ -137,8 +137,8 @@ export class PaymentService {
       const campaign = await this.campaignModel.findById(campaign_id);
       if (this.isValidCampaign(customer_id, campaign, campaignDto)) {
         if(!quote){
-          campaign.unavailable_users.push(customer_id);
-          campaign.save();
+          // campaign.unavailable_users.push(customer_id);
+          // campaign.save();
         }
 
         switch (campaign.discount.type) {
@@ -225,22 +225,31 @@ export class PaymentService {
       order: createBillDto.order,
       status: initStatus,
       payment_method: createBillDto.payment_method,
+      campaign_id: createBillDto.campaign_id
     });
 
-    //todo check promotion các kiểu đà điểu
-    let discount = 0;
-
     //todo tính tiền từ promotion
-    // if (createBillDto.order instanceof DeliveryOrder) {
-    //   new_bill.sub_total = createBillDto.order.delivery_fare + createBillDto.order.order_cost;
-    // } else {
-    //   new_bill.sub_total = createBillDto.order.trip_fare;        
-    // }
-
+    let campaignDto: ApplyCampaignDto = {
+      compaign_ids: createBillDto.campaign_id,
+      subtotal: 0,
+      delivery_fare: 0
+    }  
+    if (createBillDto.order.order_type === OrderType.DELIVERY) {
+      const order = createBillDto.order as DeliveryOrder
+      new_bill.sub_total = order.order_cost + order.delivery_fare;
+      campaignDto.delivery_fare = order.delivery_fare
+      campaignDto.subtotal = order.order_cost;
+    } else {
+      const order = createBillDto.order as TransportOrder
+      new_bill.sub_total = order.trip_fare;      
+      campaignDto.subtotal = order.trip_fare;
+    }
+    
+    let discount = await this.validateAndApplyCampaign(createBillDto.order.customer._id, campaignDto, true);
     new_bill.discount = discount;
     new_bill.total = new_bill.sub_total - discount + new_bill.platform_fee;
 
-    return (await new_bill.save()).toObject();
+    return (await new_bill.save()).toJSON();
   }
 
   async updateBillCancel(order : OrderDetailsType) {
