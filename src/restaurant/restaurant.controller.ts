@@ -36,7 +36,6 @@ export class RestaurantController implements IRestaurantController, ICampaign{
     private readonly paymentService: PaymentService
   ) {}
 
-
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleType.CUSTOMER)
   @Post('review')
@@ -57,7 +56,6 @@ export class RestaurantController implements IRestaurantController, ICampaign{
       throw new Error(error) 
     }
   }
-
 
   @Post('info/:id')
   fetchInfoByCustomer(@Param('id') id: string, @Body() body: { coordinates: number[] }) {
