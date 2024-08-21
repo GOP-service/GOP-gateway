@@ -39,12 +39,12 @@ import { VietMapModule } from './utils/map-api/viet-map.module';
     MailerModule.forRootAsync({
       useFactory: () => ({
           transport: {
-              host: 'smtp.nbphuoc.id.vn',
+              host: 'mail.nbphuoc.id.vn',
               port: 465,
               secure: true,
               auth: {
                   user: 'nbphuoc@nbphuoc.id.vn',
-                  pass: 'kq82h3d6'
+                  pass: 'Male.0011'
               },
           },
           defaults: {

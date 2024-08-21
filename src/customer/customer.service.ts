@@ -18,6 +18,15 @@ export class  CustomerService extends AccountServiceAbstract<Customer> {
     
   }
   
-  
-  
+  async findAllCustomer() {
+    const customers = await this.customerModel.find().exec();
+    return customers;
+  }
+
+  async changeVerifyStatus(verified: boolean, _id: string) {
+    const customer = await this.customerModel.findByIdAndUpdate(_id, {
+      verified: verified
+    }, { new: true }).exec();
+    return customer;
+  }
 }

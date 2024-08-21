@@ -6,6 +6,7 @@ import { Modifier } from "../entities/modifier.schema"
 
 export class RestaurantCategoryDto {
     _id?: string
+    
     @ApiProperty({
         examples: ['Ăn sáng', 'Ăn trưa', 'Ăn tối', 'Ăn vặt', 'Đồ uống']
     })

@@ -61,7 +61,7 @@ export enum CuisinesCategory {
 
 // * Order
 export enum OrderStatus {
-    PENDING_COMFIRM = "PENDING_COMFIRM",
+    PENDING_CONFIRM = "PENDING_CONFIRM",
     ALLOCATING = "ALLOCATING",
     PENDING_PICKUP = "PENDING_PICKUP",
     PICKING_UP = "PICKING_UP",
@@ -69,7 +69,8 @@ export enum OrderStatus {
     DROPPING_OFF = "DROPPING_OFF",
     COMPLETED = "COMPLETED",
     CANCELLED = "CANCELLED",
-    FAILED = "FAILED"
+    FAILED = "FAILED",
+    PROGRESSING = 'PROGRESSING'
 }
 
 export enum OrderType {

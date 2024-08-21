@@ -10,10 +10,9 @@ import { Model } from 'mongoose';
 import { BillStatus, CampaignDiscountType, CampaignScopeType, OrderType, PaymentMethod } from 'src/utils/enums';
 import { Bill, BillDocument } from './entities/bill.schema';
 import { Ledger, LedgerDocument } from './entities/ledger.schema';
-import { OrderDetailsType } from 'src/order/entities/order.schema';
 import { DeliveryOrder } from 'src/order/entities/delivery_order.schema';
 import { TransportOrder } from 'src/order/entities/transport_order.schema';
-import { Order, OrderDetails } from 'src/order/entities/order.schema';
+import { Order, OrderDetailsType } from 'src/order/entities/order.schema';
 import { RevenueHistory, RevenueHistoryDocument } from './entities/revenue_history.schem';
 import { Campaign, CampaignDocument } from './entities/campaign.schema';
 import { CreateCampaignDto } from './dto/create-campaign.dto';
@@ -26,16 +25,15 @@ export class PaymentService {
     constructor(
       @InjectModel(Bill.name) private readonly billModel: Model<Bill>,
       @InjectModel(Ledger.name) private readonly ledgerModel: Model<Ledger>,
-      @InjectModel(Campaign.name) private readonly campaignModdel: Model<Campaign>
-
+      @InjectModel(Campaign.name) private readonly campaignModel: Model<Campaign>
     ) {}
 
-  getURLVnPay(ip: string, amount: number, orderId: string) {
+  createURLVnPay(ip: string, amount: number, orderId: string, url: string) {
       const date = new Date();
       let tmnCode = '0NDLY2ZY';
       let secretKey = 'DGCULOB4IRXO70APD55EP36RID3LL2LJ';
       let vnpUrl = 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html';
-      let returnUrl = 'https://gop-payment.vercel.app/user/payment';
+      let returnUrl = url; //'https://gop-payment.vercel.app/user/payment'
       let locale = 'vn';
       let currCode = 'VND';
       let vnp_Params = {};
@@ -51,7 +49,7 @@ export class PaymentService {
       vnp_Params['vnp_Amount'] = amount*100;
       vnp_Params['vnp_ReturnUrl'] = returnUrl;
       vnp_Params['vnp_IpAddr'] = ip;
-      vnp_Params['vnp_CreateDate'] = format(date, 'yyyyMMddHHmmss');;
+      vnp_Params['vnp_CreateDate'] = format(date, 'yyyyMMddHHmmss');
       vnp_Params['vnp_BankCode'] = 'NCB';
   
       vnp_Params = this.sortObject(vnp_Params);
@@ -63,7 +61,30 @@ export class PaymentService {
       vnpUrl += '?' + qs.stringify(vnp_Params, { encode: false });
   
       return vnpUrl;
-    }
+  }
+
+  createRefundUrlVNPay(orderId: string, amount: number, transDate: string) {
+    const date = new Date();
+    let secretKey = 'DGCULOB4IRXO70APD55EP36RID3LL2LJ';
+    let vnp_ApiUrl = 'https://sandbox.vnpayment.vn/merchant_webapi/api/transaction';
+    const vnp_Params = {};
+
+    vnp_Params["vnp_Version"] = '2.1.0',
+    vnp_Params["vnp_Command"] = 'refund',
+    vnp_Params["vnp_TmnCode"] = '0NDLY2ZY',
+    vnp_Params["vnp_TxnRef"] = orderId,
+    vnp_Params["vnp_Amount"] = amount * 100,
+    vnp_Params["vnp_TransDate"] = transDate,
+    vnp_Params["vnp_CreateDate"] = format(date, 'yyyyMMddHHmmss'),
+
+    vnp_Params['vnp_SecureHashType'] = 'SHA256';
+    let signData = qs.stringify(vnp_Params, { encode: false });
+    let hmac = crypto.createHmac("sha512", secretKey);
+    let signed = hmac.update(Buffer.from(signData, 'utf-8')).digest("hex"); 
+    vnp_Params['vnp_SecureHash'] = signed;
+    const querystring = new URLSearchParams(vnp_Params).toString();
+    return `${vnp_ApiUrl}?${querystring}`;
+  }
   
   sortObject(obj) {
     let sorted = {};
@@ -82,28 +103,45 @@ export class PaymentService {
   }
 
   async getAllCampaign(): Promise<Campaign[]>{
-    const campaign = await this.campaignModdel.find();
+    const campaign = await this.campaignModel.find();
+    return campaign;
+  }
+
+  async getCampaignByOwnerId(id: string): Promise<Campaign[]> {
+    const campaign = await this.campaignModel.find({
+      restaurant_id: id,
+      deleted_at: null
+    });
     return campaign;
   }
 
   async createCampaign(dto: CreateCampaignDto) {
-    const campaign = await new this.campaignModdel(dto);
-    return campaign.save();
+    const campaign = new this.campaignModel(dto);
+    return await campaign.save();
   }
 
-  async deleteCampaign(campaign_id: string) {
-    const campaign = await this.campaignModdel.findByIdAndDelete(campaign_id)
-    if (!campaign) {
-      throw new NotFoundException("Campaign not found!");
+  async deleteCampaign(campaign_id: string, restaurant_id: string) {
+    const now = new Date(); 
+    now.setTime(now.getTime() + (7 * 60 * 60 * 1000)); 
+
+    const campaign = await this.campaignModel.findOne({
+      _id: campaign_id,
+      restaurant_id: restaurant_id
+    })
+
+    if(!campaign) {
+      throw new NotFoundException('Campaign not found')
     }
+
+    campaign.deleted_at = now;
+    await campaign.save();
+
     return campaign;
   }
 
   async updateCampaign(dto: UpdateCampaignnDto) {
-    const campaign = await this.campaignModdel.findByIdAndUpdate(dto.id, dto, { new: true })
-    if(campaign)
-      return campaign
-    throw new Error('Update state failed')
+    const campaign = await this.campaignModel.findByIdAndUpdate(dto.id, dto, { new: true })
+    return campaign;
   }
 
   isValidCampaign(customer_id: string, campaign: Campaign, campaignDto: ApplyCampaignDto){
@@ -116,17 +154,34 @@ export class PaymentService {
       campaignDto.subtotal >= campaign.conditions.minBasketAmount;
   }
 
-  async validateAndApplyCampaign(customer_id: string, campaignDto: ApplyCampaignDto): Promise<number> {
+  async validateAndApplyCampaign(customer_id: string, campaignDto: ApplyCampaignDto, quote: boolean = false): Promise<number>{
     let total_discount_value = 0;
-    for (const campaign_id of campaignDto.list_compaign_id) {
-      const campaign = await this.campaignModdel.findById(campaign_id);
+    for (const campaign_id of campaignDto.compaign_ids) {
+      const campaign = await this.campaignModel.findById(campaign_id);
       if (this.isValidCampaign(customer_id, campaign, campaignDto)) {
-        campaign.unavailable_users.push(customer_id)
-        await campaign.save();
+        if(!quote){
+          // campaign.unavailable_users.push(customer_id);
+          // campaign.save();
+        }
+
         switch (campaign.discount.type) {
           case CampaignDiscountType.DELIVERY:
             total_discount_value += (campaignDto.delivery_fare - campaign.discount.value) > 0 ? campaign.discount.value : campaignDto.delivery_fare;
             break;
+    
+          case CampaignDiscountType.NET:
+            switch(campaign.discount.scope.type) {
+              case CampaignScopeType.ORDER:
+                const discount_value = campaignDto.subtotal - campaign.discount.value;
+                total_discount_value += discount_value > 0 ? campaign.discount.value : campaignDto.subtotal 
+                break;
+              case CampaignScopeType.CATEGORY: 
+                break;
+              case CampaignScopeType.ITEMS:
+                break;
+            }  
+            break;    
+
           case CampaignDiscountType.PERCENTAGE: 
             switch(campaign.discount.scope.type){
               case CampaignScopeType.ORDER: 
@@ -141,31 +196,21 @@ export class PaymentService {
                 break;
             }
             break;
+
           case CampaignDiscountType.TRANSPORT:
             const discount_value = campaignDto.subtotal - campaign.discount.value;
             total_discount_value += discount_value > 0 ? campaign.discount.value : campaignDto.subtotal
             break;
-          case CampaignDiscountType.NET:
-            switch(campaign.discount.scope.type) {
-              case CampaignScopeType.ORDER:
-                const discount_value = campaignDto.subtotal - campaign.discount.value;
-                total_discount_value += discount_value > 0 ? campaign.discount.value : campaignDto.subtotal 
-                break;
-              case CampaignScopeType.CATEGORY: 
-                break;
-              case CampaignScopeType.ITEMS:
-                break;
-            }
-            break;
+
           default: 
             break
         }
       }
     }
-    return -total_discount_value;
+    return total_discount_value;
   }
 
-  async createBill(createBillDto: CreateBillDto) {
+  async quoteBill(createBillDto: CreateBillDto) {
     const initStatus = createBillDto.payment_method === PaymentMethod.CASH ? BillStatus.PENDING : BillStatus.PAID;
     const new_bill = new this.billModel({
       order: createBillDto.order,
@@ -173,20 +218,62 @@ export class PaymentService {
       payment_method: createBillDto.payment_method,
     });
 
-    //todo check promotion các kiểu đà điểu
-    let discount = 0;
-
     //todo tính tiền từ promotion
-    if (createBillDto.order instanceof DeliveryOrder) {
-      new_bill.sub_total = createBillDto.order.delivery_fare + createBillDto.order.order_cost;
+    let campaignDto: ApplyCampaignDto = {
+      compaign_ids: createBillDto.campaign_id,
+      subtotal: 0,
+      delivery_fare: 0
+    }  
+    if (createBillDto.order.order_type === OrderType.DELIVERY) {
+      const order = createBillDto.order as DeliveryOrder
+      new_bill.sub_total = order.order_cost + order.delivery_fare;
+      campaignDto.delivery_fare = order.delivery_fare
+      campaignDto.subtotal = order.order_cost;
     } else {
-      new_bill.sub_total = createBillDto.order.trip_fare;        
+      const order = createBillDto.order as TransportOrder
+      new_bill.sub_total = order.trip_fare;      
+      campaignDto.subtotal = order.trip_fare;
     }
-
+    
+    let discount = await this.validateAndApplyCampaign(createBillDto.order.customer._id, campaignDto, true);
     new_bill.discount = discount;
     new_bill.total = new_bill.sub_total - discount + new_bill.platform_fee;
 
-    return (await new_bill.save()).toObject();
+    return new_bill;
+  }
+
+  async createBill(createBillDto: CreateBillDto) {
+    console.log(createBillDto.payment_method)
+    const initStatus = createBillDto.payment_method === PaymentMethod.CASH ? BillStatus.PENDING : BillStatus.PAID;
+    const new_bill = new this.billModel({
+      order: createBillDto.order,
+      status: initStatus,
+      payment_method: createBillDto.payment_method,
+      campaign_id: createBillDto.campaign_id
+    });
+
+    //todo tính tiền từ promotion
+    let campaignDto: ApplyCampaignDto = {
+      compaign_ids: createBillDto.campaign_id,
+      subtotal: 0,
+      delivery_fare: 0
+    }  
+    if (createBillDto.order.order_type === OrderType.DELIVERY) {
+      const order = createBillDto.order as DeliveryOrder
+      new_bill.sub_total = order.order_cost + order.delivery_fare;
+      campaignDto.delivery_fare = order.delivery_fare
+      campaignDto.subtotal = order.order_cost;
+    } else {
+      const order = createBillDto.order as TransportOrder
+      new_bill.sub_total = order.trip_fare;      
+      campaignDto.subtotal = order.trip_fare;
+    }
+    
+    let discount = await this.validateAndApplyCampaign(createBillDto.order.customer._id, campaignDto, true);
+    new_bill.discount = discount;
+    new_bill.total = new_bill.sub_total - discount + new_bill.platform_fee;
+
+    return (await new_bill.save()).toJSON();
   }
 
   async updateBillCancel(order : OrderDetailsType) {

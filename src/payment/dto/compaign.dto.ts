@@ -12,4 +12,5 @@ export class CampaignDto {
     discount: CampaignDiscountDto
     unavailable_users: string[]
     currency_code: CurrencyCode
+    image: string
 }
