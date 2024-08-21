@@ -114,31 +114,6 @@ export class RestaurantController implements IRestaurantController, ICampaign{
     return res;
   }
 
-  getProfile(): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-  updateProfile(): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-  createMenu(): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-  updateMenu(): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-  deleteMenu(): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-  createPromotion(): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-  updatePromotion(): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-  deletePromotion(): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-
   @Get('profile')
   getProile(): Promise<any> {
     throw new Error('Method not implemented.');
