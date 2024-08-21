@@ -7,6 +7,9 @@ import { CreateRestaurantCategoryDto } from "src/restaurant/dto/create-restauran
 import { UpdateRestaurantCategoryDto } from "src/restaurant/dto/update-restaurant-category.dto";
 import { CreateFoodItemDto } from "src/restaurant/dto/create-food-item.dto";
 import { CancelOrderDto } from "src/order/dto/cancel-order.dto";
+import { UpdateFoodItemDto } from "src/restaurant/dto/update-food-item.dto";
+import { CreateCampaignDto } from "src/payment/dto/create-campaign.dto";
+import { UpdateCampaignnDto } from "src/payment/dto/update-campaign.dto";
 export interface JwtPayload {
     sub: string
     role: RoleType
@@ -57,9 +60,18 @@ export interface IDriverController {
 }
 
 export interface IRestaurantController {
+
+    fetchInfoByCustomer(id: string, body: { coordinates: number[] })
+
+    fetchInfo(req: RequestWithUser)
+
+    fetchMenu(id: string)
+
     getProfile(): Promise<any>
 
     updateProfile(): Promise<any>
+
+    getRestaurants(body: { coordinates: number[] }): Promise<any>
 
     createMenu(): Promise<any>
 
@@ -81,17 +93,23 @@ export interface IRestaurantController {
 
     getRevenueStatistics(): Promise<any>
 
+    fetchCategory(req: RequestWithUser)
+
     createCategory(req: RequestWithUser, body: CreateRestaurantCategoryDto): Promise<any>
 
     updateCategory(req: RequestWithUser, id: string, body: UpdateRestaurantCategoryDto): Promise<any>
 
     deleteCategory(req: RequestWithUser, id: string): Promise<any>
 
-    createFoodItem(req: RequestWithUser, body: CreateFoodItemDto, image: File): Promise<any>
+    fetchFoodDetails(id: string)
 
-    updateFoodItem(): Promise<any>
+    createFoodItem(req: RequestWithUser, body: CreateFoodItemDto, image: any): Promise<any>
 
-    deleteFoodItem(): Promise<any>
+    updateFoodItem(body: UpdateFoodItemDto): Promise<any>
+
+    updateFoodItemImage(food_item_id: string, image: Express.Multer.File): any
+
+    deleteFoodItem(req: RequestWithUser, body: { category_id: string, foodItem_id: string }): Promise<any>
 }
 
 export interface IAdminController {
@@ -121,10 +139,11 @@ export interface IAdminController {
 
 export interface ICampaign {
     getCampaigns(): Promise<any>
+    getCampaignsByOwnerId(id: string): Promise<any>
     getCampaignDetails(): Promise<any>
-    createCampaign(): Promise<any>
-    updateCampaign(): Promise<any>
-    deleteCampaign(): Promise<any>
+    createCampaign(body: CreateCampaignDto): Promise<any>
+    updateCampaign(body: UpdateCampaignnDto): Promise<any>
+    deleteCampaign( id: string, req: RequestWithUser): Promise<any>
 }
 
 export interface IPayment {
@@ -154,9 +173,9 @@ export interface IOrderController {
     
     quoteTransportOrder(createOrderDto: CreateTransportOrderDto): Promise<any>;
 
-    placeDeliveryOrder(createOrderDto: CreateTransportOrderDto, req: RequestWithUser): Promise<any>;
+    placeDeliveryOrder(createOrderDto: any, req: RequestWithUser);
 
-    quoteDeliveryOrder(createOrderDto: CreateTransportOrderDto): Promise<any>;
+    quoteDeliveryOrder(createOrderDto: any, req: RequestWithUser): Promise<any>;
 
     cancelOrderCustomer(dto:CancelOrderDto, req: RequestWithUser): Promise<any>;
 

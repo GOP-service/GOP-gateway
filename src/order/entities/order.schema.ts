@@ -9,6 +9,7 @@ import { DeliveryOrder,  DeliveryOrderSchema, DeliveryOrderType } from "./delive
 import { TransportOrder, TransportOrderSchema, TransportOrderType } from "./transport_order.schema";
 import { Driver } from "src/driver/entities/driver.schema";
 import { Customer } from "src/customer/entities/customer.schema";
+import { Restaurant } from "src/restaurant/entities/restaurant.schema";
 
 export type OrderDocument = HydratedDocument<Order>
 
@@ -28,8 +29,14 @@ export class Order extends BaseEntity{
     @Prop({ type: SchemaTypes.ObjectId, ref: 'Customer'})
     customer: Customer
 
+    @Prop({})
+    phone: string
+
     @Prop({ type: SchemaTypes.ObjectId, ref: 'Driver'})
     driver: Driver
+
+    @Prop({ type: SchemaTypes.ObjectId, ref: 'Restaurant'})
+    restaurant: Restaurant
 
     @Prop({ enum: OrderStatus, type: String})
     order_status: OrderStatus
@@ -38,7 +45,7 @@ export class Order extends BaseEntity{
     order_time: Date
 
     @Prop({ type: Date })
-    submit_time: Date
+    confirm_time: Date
 
     @Prop({ type: Date })
     complete_time: Date

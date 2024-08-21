@@ -1,17 +1,35 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEnum, IsNotEmpty, IsString } from "class-validator";
+import { IsArray, IsEnum, IsNotEmpty, IsString } from "class-validator";
 import { CreateOrderDto } from "./create-order.dto";
 import { LocationObject } from "src/utils/subschemas/location.schema";
 import { OrderFoodItems } from "../entities/order_food_items.schema";
+import { PaymentMethod } from "src/utils/enums";
 
 export class CreateDeliveryOrderDto extends CreateOrderDto {
     @ApiProperty({
         title: 'Restaurant ID',
-        example: '661f7f2fc8760e2c2737fb8c'
+        example: '6640631fc9edf07952c1683e'
     })
     @IsNotEmpty()
     restaurant_id: string
 
+    @ApiProperty({
+        example: PaymentMethod.CASH
+    })
+    @IsEnum(PaymentMethod)
+    payment_method: PaymentMethod
+    
+    @ApiProperty({
+        example: []
+    })
+    @IsArray()
+    campaign_ids: string[]
+
+    @ApiProperty({
+        example: '0987654321'
+    })
+    phone: string
+    
     @ApiProperty({
         title: 'LONG -> LAT',
         example: new LocationObject([106.77163744626203, 10.849841965343426], 'Đại học Sư phạm Kỹ thuật TP.HCM')
@@ -20,22 +38,13 @@ export class CreateDeliveryOrderDto extends CreateOrderDto {
     delivery_location: LocationObject
 
     @ApiProperty({
-        title: 'Address',
-        example: 'Đại học Sư phạm Kỹ thuật TP.HCM'
-    })
-    @IsString()
-    @IsNotEmpty()
-    delivery_address: string
-
-    @ApiProperty({
-        title: 'Items',
-        example: [{
-            name: 'Cà phê đen',
-            modifiers: [],
-            price: 32000,
-            quantity: 1,
-            specification: ''
-        }]
+        example: [
+            new OrderFoodItems(
+                '6647a4011216ae8cfd4a9c21',
+                2,
+                ['6647a3ff1216ae8cfd4a9c11', '6647a3ff1216ae8cfd4a9c0c', '6647a3ff1216ae8cfd4a9c0e']
+            )
+        ]
     })
     @IsNotEmpty()
     items: OrderFoodItems[]

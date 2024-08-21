@@ -3,7 +3,7 @@ import { OrderService } from './order.service';
 import { OrderController } from './order.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { VietMapModule } from 'src/utils/map-api/viet-map.module';
-import { FoodItemsSchema, OrderFoodItems } from './entities/order_food_items.schema';
+import { OrderFoodItems } from './entities/order_food_items.schema';
 import { Otp, OtpSchema } from 'src/auth/entities/otp.schema';
 import { AuthModule } from 'src/auth/auth.module';
 import { PaymentModule } from 'src/payment/payment.module';
@@ -12,6 +12,7 @@ import { DeliveryOrder, DeliveryOrderSchema } from './entities/delivery_order.sc
 import { TransportOrder, TransportOrderSchema } from './entities/transport_order.schema';
 import { SocketModule } from 'src/socket/socket.module';
 import { DriverModule } from 'src/driver/driver.module';
+import { RestaurantModule } from 'src/restaurant/restaurant.module';
 
 
 @Module({
@@ -25,9 +26,9 @@ import { DriverModule } from 'src/driver/driver.module';
           { name: TransportOrder.name, schema: TransportOrderSchema },
         ]
       },
-      { name: OrderFoodItems.name, schema: FoodItemsSchema },
     ]),
     DriverModule,
+    RestaurantModule,
     PaymentModule,
     VietMapModule,
     SocketModule

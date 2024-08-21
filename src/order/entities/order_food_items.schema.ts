@@ -3,33 +3,33 @@ import { SchemaTypes, Types } from "mongoose";
 import { Modifier } from "src/restaurant/entities/modifier.schema";
 
 
-export type OrderFoodItemsDocument = OrderFoodItems & Document;
-
 @Schema({
     toJSON: {
         getters: true,
         virtuals: true,
     },
     timestamps: true,
+    id: false,
+    _id: false,
 })
 export class OrderFoodItems {
-    @Prop({ required: true})
-    id: string
+    constructor(food_id: string, quantity: number, modifiers: string[]){
+        this.food_id = food_id,
+        this.quantity = quantity,
+        this.modifiers = modifiers
+    }
+    @Prop({ type: SchemaTypes.ObjectId, ref: 'FoodItem'  })
+    food_id: string
 
-    @Prop({ required: true})
-    name: string
-
-    @Prop({ required: true, default: 'ố deeeeeeeeeee'})
+    @Prop({ default: 'ố deeeeeeeeeee'})
     quantity: number
 
     @Prop()
     price: number
 
     @Prop({ type: [SchemaTypes.ObjectId], ref: 'Modifier'})
-    modifiers: Modifier[]
+    modifiers: Modifier[] | string[]
 
-    @Prop()
-    specifications: string
+
 }
 
-export const FoodItemsSchema = SchemaFactory.createForClass(OrderFoodItems);

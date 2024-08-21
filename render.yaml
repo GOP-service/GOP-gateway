@@ -1,0 +1,20 @@
+# Exported from Render on 2024-06-02T15:08:55Z
+services:
+- type: web
+  name: GOP-gateway
+  runtime: node
+  repo: https://github.com/GOP-service/GOP-gateway
+  plan: free
+  envVars:
+  - key: VIETMAP_API_KEY
+    sync: false
+  - key: JWT_ACCESS_SECRET
+    sync: false
+  - key: JWT_REFRESH_SECRET
+    sync: false
+  - key: MONGO_URI
+    sync: false
+  region: singapore
+  buildCommand: npm install; npm run build
+  startCommand: npm run start:prod
+version: "1"

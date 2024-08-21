@@ -6,7 +6,7 @@ import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/utils/guards/roles.guard';
 import { Roles } from 'src/utils/decorators/roles.decorator';
-import { OTPType, OTPVerifyStatus, OrderStatus, RoleType } from 'src/utils/enums';
+import { OTPType, OTPVerifyStatus, OrderStatus, RestaurantStatus, RoleType } from 'src/utils/enums';
 import { AuthService } from 'src/auth/auth.service';
 import { ICampaign, IRestaurantController, RequestWithUser } from 'src/utils/interfaces';
 import { CreateRestaurantCategoryDto } from './dto/create-restaurant-category.dto';
@@ -18,18 +18,102 @@ import { FoodItemDto } from './dto/food-item.dto';
 import { CreateFoodItemDto } from './dto/create-food-item.dto';
 import { RestaurantCategoryService } from './restaurant_category.service';
 import { UpdateRestaurantCategoryDto } from './dto/update-restaurant-category.dto';
+import { UpdateFoodItemDto } from './dto/update-food-item.dto';
+import { PaymentService } from 'src/payment/payment.service';
+import { CreateCampaignDto } from 'src/payment/dto/create-campaign.dto';
+import { UpdateCampaignnDto } from 'src/payment/dto/update-campaign.dto';
+import { ReviewDto } from './dto/review.dto';
+import e from 'express';
 
 
 @ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'),RolesGuard)
 @ApiTags('Restaurants')
 @Controller('restaurant')
 export class RestaurantController implements IRestaurantController, ICampaign{
   constructor(
     private readonly restaurantService: RestaurantService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly paymentService: PaymentService
   ) {}
   
+  getProfile(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+  updateProfile(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+  createMenu(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+  updateMenu(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+  deleteMenu(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+  createPromotion(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+  updatePromotion(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+  deletePromotion(): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleType.CUSTOMER)
+  @Post('review')
+  async createRestaurantReview(@Body() body: ReviewDto) {
+    try {
+      return await this.restaurantService.createReview(body);
+    } catch (error) {
+      throw new Error("create review failed")
+    }
+  }
+
+  @Get(':id/reviews')
+  async findReviewsByResId(@Param('id') id: string){
+    try {
+      const reviews = await this.restaurantService.getReivewsByRes(id);
+      return reviews;
+    } catch (error) {
+      throw new Error(error) 
+    }
+  }
+
+
+  @Post('info/:id')
+  fetchInfoByCustomer(@Param('id') id: string, @Body() body: { coordinates: number[] }) {
+    return this.restaurantService.getInfoByCustomer(id, body.coordinates);
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleType.RESTAURANT)
+  @Get('info')
+  fetchInfo(@Req() req: RequestWithUser) {
+    return this.restaurantService.getInfo(req.user.sub);
+  }
+
+  @Get('menu/:id')
+  async fetchMenu(@Param('id') id?: string) {
+    return await this.restaurantService.getMenu(id);
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleType.RESTAURANT)
+  @Get('menu')
+  async fetchMenuByRes(@Req() req: RequestWithUser) {
+    return await this.restaurantService.getMenu(req.user.sub);
+  }
+
+  @Post('recommended')
+  async getRestaurants(@Body() body:  { coordinates: number[] }) {
+    const res = await this.restaurantService.getRestaurantsByCustomer(body.coordinates);
+    return res;
+  }
+
   getProfile(): Promise<any> {
     throw new Error('Method not implemented.');
   }
@@ -60,6 +144,7 @@ export class RestaurantController implements IRestaurantController, ICampaign{
     throw new Error('Method not implemented.');
   }
 
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleType.RESTAURANT)
   @Patch('info/update')
   async updateRestaurant(@Req() req: RequestWithUser, @Body() body: UpdateRestaurantDto): Promise<any> {
@@ -107,6 +192,14 @@ export class RestaurantController implements IRestaurantController, ICampaign{
     throw new Error('Method not implemented.');
   }
 
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleType.RESTAURANT)
+  @Get('category')
+  fetchCategory(@Req() req: RequestWithUser) {
+    return this.restaurantService.findCategoryByRestaurant(req.user.sub)
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleType.RESTAURANT)
   @Post('category/create')
   async createCategory(@Req() req: RequestWithUser, @Body() body: CreateRestaurantCategoryDto): Promise<any> {
@@ -119,7 +212,16 @@ export class RestaurantController implements IRestaurantController, ICampaign{
   }
 
   @Roles(RoleType.RESTAURANT)
-  @Patch('catrgory/:id/update')
+  @Post('category/:id/update-image')
+  @UseInterceptors(FileInterceptor('image'))
+  updateCategoryImage(@Param('id') cate_id: string, @UploadedFile() image: Express.Multer.File) {
+    const uploadImage = this.restaurantService.updateCategoryImg(cate_id, image);
+    return uploadImage;
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleType.RESTAURANT)
+  @Patch('category/:id/update')
   async updateCategory(@Req() req: RequestWithUser, @Param('id') id: string, @Body() body: UpdateRestaurantCategoryDto): Promise<any> {
      try {
       const restaurant = await this.restaurantService.updateCategory(req.user.sub, id, body)
@@ -129,6 +231,7 @@ export class RestaurantController implements IRestaurantController, ICampaign{
     }
   }
 
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleType.RESTAURANT)
   @Delete('category/:id/delete')
   async deleteCategory(@Req()  req: RequestWithUser, @Param('id') id: string): Promise<any> {
@@ -141,34 +244,76 @@ export class RestaurantController implements IRestaurantController, ICampaign{
     }
   }
 
+  @Get('fooditem/:id')
+  async fetchFoodDetails(@Param('id') id: string) {
+    const foodItem = await this.restaurantService.getFooditemDetails(id)
+    return foodItem
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleType.RESTAURANT)
-  @UseInterceptors(FileInterceptor('image'))
   @Post('fooditem/create')
-  async createFoodItem(@Req() req: RequestWithUser, @Body() body: CreateFoodItemDto, @UploadedFile() image): Promise<any> {
+  async createFoodItem(@Req() req: RequestWithUser, @Body() body: CreateFoodItemDto): Promise<any> {
     try {
-      const restaurant = await this.restaurantService.createFoodItem(req.user.sub, body);
-      return restaurant;
+      const foodItem = await this.restaurantService.createFoodItem(req.user.sub, body);
+      return foodItem;
     } catch (error) {
       return error
     }
   }
 
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleType.RESTAURANT)
-  @Patch('fooditem/:id/update')
-  updateFoodItem(): Promise<any> {
-    throw new Error('Method not implemented.');
+  @Patch('fooditem/update')
+  async updateFoodItem(@Body() body: UpdateFoodItemDto): Promise<any> {
+    return await this.restaurantService.updateFoodItem(body);
   }
 
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleType.RESTAURANT)
-  @Delete('fooditem/:id/delete')
-  deleteFoodItem(): Promise<any> {
-    throw new Error('Method not implemented.');
+  @Post('fooditem/:id/update-image')
+  @UseInterceptors(FileInterceptor('image'))
+  updateFoodItemImage(@Param('id') food_item_id: string, @UploadedFile() image: Express.Multer.File) {
+    const uploadImage = this.restaurantService.updateFoodItemImg(food_item_id, image);
+    return uploadImage;
   }
 
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleType.RESTAURANT)
+  @Post('fooditem/delete')
+  async deleteFoodItem(@Req() req: RequestWithUser, @Body() body: { category_id: string, foodItem_id: string }): Promise<any> {
+    try {
+      const foodItems = await this.restaurantService.deleteFoodItem(req.user.sub, body.category_id, body.foodItem_id);
+      return foodItems;
+    } catch (error) {
+      throw new Error('Delete fooditem failed');
+    }
+  }
+
+  @Post('upload-image')
+  @UseInterceptors(FileInterceptor('image'))
+  updateAvatar(@UploadedFile() image: Express.Multer.File) {
+    try {
+      if (!image) {
+        throw new BadRequestException('file is required');
+      }
+      return this.restaurantService.updateFoodItemImg('6647a4011216ae8cfd4a9c21', image)
+    } catch (error) {
+      return error;
+    }
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleType.RESTAURANT)
   @Get('campaigns')
   getCampaigns(): Promise<any> {
     throw new Error('Method not implemented.');
+  }
+
+  @Roles(RoleType.RESTAURANT)
+  @Get(':id/campaigns')
+  async getCampaignsByOwnerId(@Param('id') id: string): Promise<any> {
+    return await this.paymentService.getCampaignByOwnerId(id); 
   }
 
   @Roles(RoleType.RESTAURANT)
@@ -177,22 +322,40 @@ export class RestaurantController implements IRestaurantController, ICampaign{
     throw new Error('Method not implemented.');
   }
 
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleType.RESTAURANT)
   @Post('campaign/create')
-  createCampaign(): Promise<any> {
-    throw new Error('Method not implemented.');
+  async createCampaign(@Body() body: CreateCampaignDto): Promise<any> {
+    return await this.paymentService.createCampaign(body);
   }
 
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleType.RESTAURANT)
-  @Patch('campaign/:id/update')
-  updateCampaign(): Promise<any> {
-    throw new Error('Method not implemented.');
+  @Patch('campaign/update')
+  async updateCampaign(@Body() body: UpdateCampaignnDto): Promise<any> {
+    try {
+      return await this.paymentService.updateCampaign(body);
+    } catch (error) {
+      throw new Error('Update campaign failed!')
+    }
   }
 
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleType.RESTAURANT)
   @Delete('campaign/:id/delete')
-  deleteCampaign(): Promise<any> {
-    throw new Error('Method not implemented.');
+  async deleteCampaign(@Param('id') id: string, @Req() req: RequestWithUser): Promise<any> {
+    try {
+      return await this.paymentService.deleteCampaign(id, req.user.sub)
+    } catch (error) {
+      throw new Error('Delete campaign failed')
+    }
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleType.RESTAURANT)
+  @Patch('status')
+  updateActiveStatus(@Req() req: RequestWithUser, @Body() body: { status: RestaurantStatus }) {
+    return this.restaurantService.updateActiveStatus(req.user.sub, body.status);
   }
   
   // RESTAURANT

@@ -16,6 +16,10 @@ import { ModifierService } from './modifier.service';
 import { ModifierGroupService } from './modifier_groups.service';
 import { RestaurantCategoryService } from './restaurant_category.service';
 import { FoodItemService } from './food_item.service';
+import { VietMapModule } from 'src/utils/map-api/viet-map.module';
+import { PaymentModule } from 'src/payment/payment.module';
+import { FirebaseModule } from 'src/utils/firebase/firebase.module';
+import { Review, ReviewSchema } from './entities/review.schema';
 
 @Module({
   imports: [
@@ -27,8 +31,10 @@ import { FoodItemService } from './food_item.service';
       { name : ModifierGroup.name, schema: ModifierGroupSchema,},
       { name : Modifier.name, schema: ModifierSchema,},
     ]),
-    AzureStorageModule
-    
+    AzureStorageModule,
+    VietMapModule,
+    PaymentModule,
+    FirebaseModule
   ],
   controllers: [RestaurantController],
   providers: [RestaurantService, RestaurantCategoryService, FoodItemService, ModifierGroupService, ModifierService],
