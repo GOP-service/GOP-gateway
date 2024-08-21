@@ -1,8 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 import { ModifierGroup } from "../entities/modifier_groups.schema";
+import { ModifierGroupsDto } from "./modifier-groups.dto";
 
 export class FoodItemDto {
+    _id?: string
+    
     @ApiProperty({
         example: 'say oh yeahhhhhhh'
     })
@@ -30,5 +33,5 @@ export class FoodItemDto {
         example: 'tu nhap di'
     })
     @IsOptional()
-    modifier_groups: ModifierGroup[] | string[];
+    modifier_groups: ModifierGroupsDto[] | string[];
 }

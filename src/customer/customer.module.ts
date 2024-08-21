@@ -3,6 +3,8 @@ import { CustomerService } from './customer.service';
 import { CustomerController } from './customer.controller';
 import { Customer, CustomerSchema } from './entities/customer.schema';
 import { MongooseModule } from '@nestjs/mongoose';
+import { PaymentModule } from 'src/payment/payment.module';
+import { OrderModule } from 'src/order/order.module';
 
 
 @Module({
@@ -10,6 +12,7 @@ import { MongooseModule } from '@nestjs/mongoose';
     MongooseModule.forFeature([
       { name: Customer.name, schema: CustomerSchema, },
     ]),
+    PaymentModule,
   ],
   controllers: [CustomerController],
   providers: [CustomerService],

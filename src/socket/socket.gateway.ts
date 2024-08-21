@@ -87,6 +87,10 @@ export class SocketGateway implements NestGateway {
     this.server.emit(`restaurant.order.assign.${restaurant}`, msg);
   }
 
+  placeDeliveryOrder(restaurant_id: string) {
+    this.server.emit(`restaurant.${restaurant_id}.new_order`, `You have a new order`)
+  }
+
   @SubscribeMessage('driver.location')
   async handleDriverLocation(client: Socket, @MessageBody() payload: UpdateLocationDriverDto){
     this.logger.log(`Driver ${payload.driver} is at ${payload.location.coordinates}`);
@@ -94,6 +98,11 @@ export class SocketGateway implements NestGateway {
       this.notifyOrderState(payload.order_id, payload.order_status);
     }
     await this.driverService.updateDriverLocation(payload.driver, payload.location);
+  }
+
+  @SubscribeMessage('test')
+  test(){
+    this.server.emit(`restaurant.6640631fc9edf07952c1683e.new_order`, `You have a new order`)
   }
 
 

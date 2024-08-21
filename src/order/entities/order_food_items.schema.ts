@@ -18,7 +18,7 @@ export class OrderFoodItems {
         this.quantity = quantity,
         this.modifiers = modifiers
     }
-    @Prop({ })
+    @Prop({ type: SchemaTypes.ObjectId, ref: 'FoodItem'  })
     food_id: string
 
     @Prop({ default: 'ố deeeeeeeeeee'})

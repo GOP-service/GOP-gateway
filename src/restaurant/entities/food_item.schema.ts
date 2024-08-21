@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { HydratedDocument, SchemaTypes, Types } from "mongoose";
 import { ModifierGroup } from "./modifier_groups.schema";
 import { BaseEntity } from "src/utils/repository/base.entity";
+import { Review } from "./review.schema";
 
 export type FoodItemDocument = HydratedDocument<FoodItem>;
 

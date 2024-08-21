@@ -1,21 +1,27 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Ip } from '@nestjs/common';
 import { PaymentService } from './payment.service';
-import { CreateBillDto } from './dto/create-bill.dto';
-import { UpdateBillDto } from './dto/update-bill.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { RequestWithUser } from 'src/utils/interfaces';
 
 @ApiTags('Bill')
 @Controller('bill')
-export class PaymentController {
+export class PaymentController{
   constructor(
     private readonly paymentService: PaymentService,
   ) {}
-  
-  @Get('vnpay')
-  async getVnpayLink(@Req() req: RequestWithUser, @Ip() ip: string){
+
+  @Post('vnpay')
+  async getVnpayLink(@Req() req: RequestWithUser, @Ip() ip: string, @Body() body: { amount: number, returnUrl: string }){
     try {
-      return this.paymentService.getURLVnPay(ip, 100000, new Date().getTime().toString());
+      return this.paymentService.createURLVnPay(ip, body.amount, new Date().getTime().toString(), body.returnUrl);
+    } catch (e) {
+      return e;
+    }
+  }
+  @Post('vnpay/refund')
+  async getRefundUrl(@Req() req: RequestWithUser, @Ip() ip: string, @Body() body: { amount: number, orderId: string, transDate: string }){
+    try {
+      return this.paymentService.createRefundUrlVNPay(body.orderId, body.amount, body.transDate)
     } catch (e) {
       return e;
     }
