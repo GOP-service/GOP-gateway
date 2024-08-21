@@ -9,8 +9,9 @@ export class FirebaseService {
     constructor(
         private configService: ConfigService
     ){
+      const credentials = JSON.parse(this.configService.get<string>('FIREBASE_CREDENTIALS'));
         admin.initializeApp({
-            credential: admin.credential.cert('src/utils/firebase/serviceAccount.json'),
+            credential: admin.credential.cert(credentials),
             storageBucket: configService.get<string>('storageBucket')
         })
         this.storage = admin.storage();
