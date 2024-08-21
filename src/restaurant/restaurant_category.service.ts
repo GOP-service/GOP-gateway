@@ -8,7 +8,7 @@ import { UpdateRestaurantCategoryDto } from "./dto/update-restaurant-category.dt
 import { FoodItemService } from "./food_item.service";
 import { FindAllResponse } from "src/utils/interfaces";
 import { FoodItem } from "./entities/food_item.schema";
-
+import { ObjectId } from 'mongodb';
 @Injectable()
 export class RestaurantCategoryService extends BaseServiceAbstract<RestaurantCategory> {
     constructor(
@@ -18,6 +18,38 @@ export class RestaurantCategoryService extends BaseServiceAbstract<RestaurantCat
         super(restaurantCategoryModel);
     }
     
+    async getFoodItems(page: number, limit: number, category_id: string = '') {
+        const objectId = new ObjectId(category_id);
+        const foodItems = this.restaurantCategoryModel.aggregate([
+            {
+                $match: {
+                    _id: objectId
+                },
+            },
+            {
+                $lookup: {
+                  from: 'fooditems', 
+                  localField: 'food_items', 
+                  foreignField: '_id',
+                  as: 'food_items_details'
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    food_items: '$food_items_details'
+                }
+              }
+        ])
+        return foodItems
+    }
+
+    async updateImage(id: string, image:  string) {
+        await this.restaurantCategoryModel.findByIdAndUpdate(id, {
+            image: image
+        }, { new: true }).exec();
+    }
+
     async createCategory(dto: CreateRestaurantCategoryDto){
         const category = await this.create(dto)
         return category;

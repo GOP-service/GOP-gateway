@@ -65,7 +65,7 @@ export interface IRestaurantController {
 
     fetchInfo(req: RequestWithUser)
 
-    fetchMenu(req: RequestWithUser ,id: string)
+    fetchMenu(id: string)
 
     getProfile(): Promise<any>
 

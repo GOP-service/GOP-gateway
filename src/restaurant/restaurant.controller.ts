@@ -6,7 +6,7 @@ import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/utils/guards/roles.guard';
 import { Roles } from 'src/utils/decorators/roles.decorator';
-import { OTPType, OTPVerifyStatus, OrderStatus, RoleType } from 'src/utils/enums';
+import { OTPType, OTPVerifyStatus, OrderStatus, RestaurantStatus, RoleType } from 'src/utils/enums';
 import { AuthService } from 'src/auth/auth.service';
 import { ICampaign, IRestaurantController, RequestWithUser } from 'src/utils/interfaces';
 import { CreateRestaurantCategoryDto } from './dto/create-restaurant-category.dto';
@@ -22,10 +22,11 @@ import { UpdateFoodItemDto } from './dto/update-food-item.dto';
 import { PaymentService } from 'src/payment/payment.service';
 import { CreateCampaignDto } from 'src/payment/dto/create-campaign.dto';
 import { UpdateCampaignnDto } from 'src/payment/dto/update-campaign.dto';
+import { ReviewDto } from './dto/review.dto';
+import e from 'express';
 
 
 @ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'),RolesGuard)
 @ApiTags('Restaurants')
 @Controller('restaurant')
 export class RestaurantController implements IRestaurantController, ICampaign{
@@ -35,25 +36,56 @@ export class RestaurantController implements IRestaurantController, ICampaign{
     private readonly paymentService: PaymentService
   ) {}
 
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleType.CUSTOMER)
+  @Post('review')
+  async createRestaurantReview(@Body() body: ReviewDto) {
+    try {
+      return await this.restaurantService.createReview(body);
+    } catch (error) {
+      throw new Error("create review failed")
+    }
+  }
+
+  @Get(':id/reviews')
+  async findReviewsByResId(@Param('id') id: string){
+    try {
+      const reviews = await this.restaurantService.getReivewsByRes(id);
+      return reviews;
+    } catch (error) {
+      throw new Error(error) 
+    }
+  }
+
+
   @Post('info/:id')
   fetchInfoByCustomer(@Param('id') id: string, @Body() body: { coordinates: number[] }) {
     return this.restaurantService.getInfoByCustomer(id, body.coordinates);
   }
 
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleType.RESTAURANT)
   @Get('info')
   fetchInfo(@Req() req: RequestWithUser) {
     return this.restaurantService.getInfo(req.user.sub);
   }
 
-  @Get('menu/:id?')
-  async fetchMenu(@Req() req: RequestWithUser ,@Param('id') id?: string) {
-    return await this.restaurantService.getMenu(id ?? req.user.sub);
+  @Get('menu/:id')
+  async fetchMenu(@Param('id') id?: string) {
+    return await this.restaurantService.getMenu(id);
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleType.RESTAURANT)
+  @Get('menu')
+  async fetchMenuByRes(@Req() req: RequestWithUser) {
+    return await this.restaurantService.getMenu(req.user.sub);
   }
 
   @Post('recommended')
   async getRestaurants(@Body() body:  { coordinates: number[] }) {
-    const res = await this.restaurantService.getRestaurantsByCustomer( body.coordinates);
+    const res = await this.restaurantService.getRestaurantsByCustomer(body.coordinates);
     return res;
   }
 
@@ -87,6 +119,7 @@ export class RestaurantController implements IRestaurantController, ICampaign{
     throw new Error('Method not implemented.');
   }
 
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleType.RESTAURANT)
   @Patch('info/update')
   async updateRestaurant(@Req() req: RequestWithUser, @Body() body: UpdateRestaurantDto): Promise<any> {
@@ -134,12 +167,14 @@ export class RestaurantController implements IRestaurantController, ICampaign{
     throw new Error('Method not implemented.');
   }
 
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleType.RESTAURANT)
   @Get('category')
   fetchCategory(@Req() req: RequestWithUser) {
     return this.restaurantService.findCategoryByRestaurant(req.user.sub)
   }
 
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleType.RESTAURANT)
   @Post('category/create')
   async createCategory(@Req() req: RequestWithUser, @Body() body: CreateRestaurantCategoryDto): Promise<any> {
@@ -152,6 +187,15 @@ export class RestaurantController implements IRestaurantController, ICampaign{
   }
 
   @Roles(RoleType.RESTAURANT)
+  @Post('category/:id/update-image')
+  @UseInterceptors(FileInterceptor('image'))
+  updateCategoryImage(@Param('id') cate_id: string, @UploadedFile() image: Express.Multer.File) {
+    const uploadImage = this.restaurantService.updateCategoryImg(cate_id, image);
+    return uploadImage;
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleType.RESTAURANT)
   @Patch('category/:id/update')
   async updateCategory(@Req() req: RequestWithUser, @Param('id') id: string, @Body() body: UpdateRestaurantCategoryDto): Promise<any> {
      try {
@@ -162,6 +206,7 @@ export class RestaurantController implements IRestaurantController, ICampaign{
     }
   }
 
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleType.RESTAURANT)
   @Delete('category/:id/delete')
   async deleteCategory(@Req()  req: RequestWithUser, @Param('id') id: string): Promise<any> {
@@ -180,6 +225,7 @@ export class RestaurantController implements IRestaurantController, ICampaign{
     return foodItem
   }
 
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleType.RESTAURANT)
   @Post('fooditem/create')
   async createFoodItem(@Req() req: RequestWithUser, @Body() body: CreateFoodItemDto): Promise<any> {
@@ -191,12 +237,14 @@ export class RestaurantController implements IRestaurantController, ICampaign{
     }
   }
 
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleType.RESTAURANT)
   @Patch('fooditem/update')
   async updateFoodItem(@Body() body: UpdateFoodItemDto): Promise<any> {
     return await this.restaurantService.updateFoodItem(body);
   }
 
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleType.RESTAURANT)
   @Post('fooditem/:id/update-image')
   @UseInterceptors(FileInterceptor('image'))
@@ -205,6 +253,7 @@ export class RestaurantController implements IRestaurantController, ICampaign{
     return uploadImage;
   }
 
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleType.RESTAURANT)
   @Post('fooditem/delete')
   async deleteFoodItem(@Req() req: RequestWithUser, @Body() body: { category_id: string, foodItem_id: string }): Promise<any> {
@@ -229,6 +278,7 @@ export class RestaurantController implements IRestaurantController, ICampaign{
     }
   }
 
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleType.RESTAURANT)
   @Get('campaigns')
   getCampaigns(): Promise<any> {
@@ -247,12 +297,14 @@ export class RestaurantController implements IRestaurantController, ICampaign{
     throw new Error('Method not implemented.');
   }
 
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleType.RESTAURANT)
   @Post('campaign/create')
   async createCampaign(@Body() body: CreateCampaignDto): Promise<any> {
     return await this.paymentService.createCampaign(body);
   }
 
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleType.RESTAURANT)
   @Patch('campaign/update')
   async updateCampaign(@Body() body: UpdateCampaignnDto): Promise<any> {
@@ -263,6 +315,7 @@ export class RestaurantController implements IRestaurantController, ICampaign{
     }
   }
 
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleType.RESTAURANT)
   @Delete('campaign/:id/delete')
   async deleteCampaign(@Param('id') id: string, @Req() req: RequestWithUser): Promise<any> {
@@ -271,6 +324,13 @@ export class RestaurantController implements IRestaurantController, ICampaign{
     } catch (error) {
       throw new Error('Delete campaign failed')
     }
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleType.RESTAURANT)
+  @Patch('status')
+  updateActiveStatus(@Req() req: RequestWithUser, @Body() body: { status: RestaurantStatus }) {
+    return this.restaurantService.updateActiveStatus(req.user.sub, body.status);
   }
   
   // RESTAURANT

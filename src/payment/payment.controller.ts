@@ -13,7 +13,15 @@ export class PaymentController{
   @Post('vnpay')
   async getVnpayLink(@Req() req: RequestWithUser, @Ip() ip: string, @Body() body: { amount: number, returnUrl: string }){
     try {
-      return this.paymentService.getURLVnPay(ip, body.amount, new Date().getTime().toString(), body.returnUrl);
+      return this.paymentService.createURLVnPay(ip, body.amount, new Date().getTime().toString(), body.returnUrl);
+    } catch (e) {
+      return e;
+    }
+  }
+  @Post('vnpay/refund')
+  async getRefundUrl(@Req() req: RequestWithUser, @Ip() ip: string, @Body() body: { amount: number, orderId: string, transDate: string }){
+    try {
+      return this.paymentService.createRefundUrlVNPay(body.orderId, body.amount, body.transDate)
     } catch (e) {
       return e;
     }

@@ -100,6 +100,11 @@ export class SocketGateway implements NestGateway {
     await this.driverService.updateDriverLocation(payload.driver, payload.location);
   }
 
+  @SubscribeMessage('test')
+  test(){
+    this.server.emit(`restaurant.6640631fc9edf07952c1683e.new_order`, `You have a new order`)
+  }
+
 
   // // DELIVERY ORDER
   // @OnEvent('order.food.created')

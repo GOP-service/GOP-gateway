@@ -4,6 +4,7 @@ import { CustomerController } from './customer.controller';
 import { Customer, CustomerSchema } from './entities/customer.schema';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PaymentModule } from 'src/payment/payment.module';
+import { OrderModule } from 'src/order/order.module';
 
 
 @Module({
@@ -11,7 +12,7 @@ import { PaymentModule } from 'src/payment/payment.module';
     MongooseModule.forFeature([
       { name: Customer.name, schema: CustomerSchema, },
     ]),
-    PaymentModule
+    PaymentModule,
   ],
   controllers: [CustomerController],
   providers: [CustomerService],

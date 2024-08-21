@@ -19,6 +19,7 @@ import { FoodItemService } from './food_item.service';
 import { VietMapModule } from 'src/utils/map-api/viet-map.module';
 import { PaymentModule } from 'src/payment/payment.module';
 import { FirebaseModule } from 'src/utils/firebase/firebase.module';
+import { Review, ReviewSchema } from './entities/review.schema';
 
 @Module({
   imports: [

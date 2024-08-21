@@ -28,7 +28,7 @@ export class PaymentService {
       @InjectModel(Campaign.name) private readonly campaignModel: Model<Campaign>
     ) {}
 
-  getURLVnPay(ip: string, amount: number, orderId: string, url: string) {
+  createURLVnPay(ip: string, amount: number, orderId: string, url: string) {
       const date = new Date();
       let tmnCode = '0NDLY2ZY';
       let secretKey = 'DGCULOB4IRXO70APD55EP36RID3LL2LJ';
@@ -49,7 +49,7 @@ export class PaymentService {
       vnp_Params['vnp_Amount'] = amount*100;
       vnp_Params['vnp_ReturnUrl'] = returnUrl;
       vnp_Params['vnp_IpAddr'] = ip;
-      vnp_Params['vnp_CreateDate'] = format(date, 'yyyyMMddHHmmss');;
+      vnp_Params['vnp_CreateDate'] = format(date, 'yyyyMMddHHmmss');
       vnp_Params['vnp_BankCode'] = 'NCB';
   
       vnp_Params = this.sortObject(vnp_Params);
@@ -61,7 +61,30 @@ export class PaymentService {
       vnpUrl += '?' + qs.stringify(vnp_Params, { encode: false });
   
       return vnpUrl;
-    }
+  }
+
+  createRefundUrlVNPay(orderId: string, amount: number, transDate: string) {
+    const date = new Date();
+    let secretKey = 'DGCULOB4IRXO70APD55EP36RID3LL2LJ';
+    let vnp_ApiUrl = 'https://sandbox.vnpayment.vn/merchant_webapi/api/transaction';
+    const vnp_Params = {};
+
+    vnp_Params["vnp_Version"] = '2.1.0',
+    vnp_Params["vnp_Command"] = 'refund',
+    vnp_Params["vnp_TmnCode"] = '0NDLY2ZY',
+    vnp_Params["vnp_TxnRef"] = orderId,
+    vnp_Params["vnp_Amount"] = amount * 100,
+    vnp_Params["vnp_TransDate"] = transDate,
+    vnp_Params["vnp_CreateDate"] = format(date, 'yyyyMMddHHmmss'),
+
+    vnp_Params['vnp_SecureHashType'] = 'SHA256';
+    let signData = qs.stringify(vnp_Params, { encode: false });
+    let hmac = crypto.createHmac("sha512", secretKey);
+    let signed = hmac.update(Buffer.from(signData, 'utf-8')).digest("hex"); 
+    vnp_Params['vnp_SecureHash'] = signed;
+    const querystring = new URLSearchParams(vnp_Params).toString();
+    return `${vnp_ApiUrl}?${querystring}`;
+  }
   
   sortObject(obj) {
     let sorted = {};
@@ -220,6 +243,7 @@ export class PaymentService {
   }
 
   async createBill(createBillDto: CreateBillDto) {
+    console.log(createBillDto.payment_method)
     const initStatus = createBillDto.payment_method === PaymentMethod.CASH ? BillStatus.PENDING : BillStatus.PAID;
     const new_bill = new this.billModel({
       order: createBillDto.order,

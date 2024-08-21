@@ -8,7 +8,7 @@ import { RestaurantCategory, RestaurantCategoryDocument } from './entities/resta
 import { RestaurantFoodReview, RestaurantFoodReviewDocument, } from './entities/restaurant_food_review.schema';
 import { CreateRestaurantCategoryDto } from './dto/create-restaurant-category.dto';
 import { RestaurantDto } from './dto/restaurant.dto';
-import { OTPType, OTPVerifyStatus, RestaurantTier, VehicleType } from 'src/utils/enums';
+import { OTPType, OTPVerifyStatus, RestaurantStatus, RestaurantTier, VehicleType } from 'src/utils/enums';
 import { UpdateItemsRestaurantDto } from './dto/update-item-restaurant-category.dto';
 import { ModifierGroup, ModifierGroupDocument } from './entities/modifier_groups.schema';
 import { Modifier, ModifierDocument } from './entities/modifier.schema';
@@ -34,12 +34,14 @@ import { LocationObject } from 'src/utils/subschemas/location.schema';
 import { UpdateFoodItemDto } from './dto/update-food-item.dto';
 import { ModifierDto } from './dto/modifier.dto';
 import { FirebaseService } from 'src/utils/firebase/firebase.service';
-
+import { ReviewDto } from './dto/review.dto';
+import { ObjectId } from 'mongodb';
 @Injectable()
 export class RestaurantService extends AccountServiceAbstract<Restaurant>{
 
   constructor(
     @InjectModel(Restaurant.name) private readonly restaurantModel: Model<Restaurant>,
+    @InjectModel(RestaurantFoodReview.name) private readonly reviewModel: Model<RestaurantFoodReview>,
     private readonly restaurantCategoryService: RestaurantCategoryService,
     private readonly foodItemService: FoodItemService,
     private readonly modifierGroupService: ModifierGroupService,
@@ -49,6 +51,57 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
     private firebaseService: FirebaseService
   ) {
     super(restaurantModel);
+  }
+
+  async getFoodItems(page: number, limit: number, category_id: string = '') {
+    let foods; 
+    if(category_id === ''){
+      foods = await this.foodItemService.getFoodItems(page, limit);
+    }
+    else {
+      const foodItems = await this.restaurantCategoryService.getFoodItems(page, limit, category_id)
+      foods = foodItems[0]["food_items"]
+    }
+    return {
+      totalPage: 0,
+      foodItems: foods
+    };
+  }
+
+  async getReivewsByRes(resId: string) {
+    const objectId = new ObjectId(resId);
+    const reviews = await this.reviewModel.aggregate([
+      {
+        $match: {
+          reviewable_id: objectId
+        },
+      },
+      {
+        $lookup: {
+          from: 'customers',
+          localField: 'owner_id',
+          foreignField: '_id',
+          as: 'customer',
+          pipeline: [
+            {
+              $project: {
+                "full_name": 1,
+                "avatar": 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $unwind: '$customer'
+      }
+    ])
+    return reviews;
+  }
+
+  async createReview(dto: ReviewDto) {
+    const review = new this.reviewModel(dto).save();
+    return review;
   }
 
   async findFoodDetailsFromOrder(orderFoodItems: OrderFoodItems[]) {
@@ -72,6 +125,14 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
     return restaurant;
   }
 
+  async updateActiveStatus(id: string, status: RestaurantStatus) {
+    await this.update(id, { status })
+
+    return {
+      msg: 'update successfully'
+    }
+  }
+
   async findCategoryByRestaurant(id: string) {
     const restaurant = await this.restaurantModel.findById(id)
     .populate({
@@ -80,6 +141,48 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
     })
     .exec();
     return restaurant.restaurant_categories;
+  }
+
+  async findCategoriesByCustomer(id: string) {
+    const objectId = new ObjectId(id);
+    const categories = await this.restaurantModel.aggregate([
+      {
+        $match: {
+          _id: objectId
+        }
+      },
+      {
+        $unwind: '$restaurant_categories'
+      },
+      {
+        $lookup: {
+          from: 'restaurantcategories',
+          localField: 'restaurant_categories',
+          foreignField: '_id',
+          as: 'restaurantCategories',
+          pipeline: [
+            {
+              $project: {
+                "image": 1,
+                "name": 1
+              }
+            }
+          ]
+        }
+      }, 
+      {
+        $unwind: '$restaurantCategories'
+      },
+      {
+        $group: {
+          _id: '$_id',
+          restaurant_categories: {
+            $push: '$restaurantCategories'
+          }
+        }
+      }
+    ])
+    return categories[0].restaurant_categories;
   }
 
   async addCategory(restaurant_id: string, dto: CreateRestaurantCategoryDto): Promise<RestaurantCategory> {
@@ -157,6 +260,14 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
   async updateFoodItemImg(foodItem_id: string, img: Express.Multer.File){
     const url = await this.firebaseService.uploadFile(foodItem_id,  img);
     await this.foodItemService.updateFoodItemImg(foodItem_id, url)
+    return {
+      imgUrl: url
+    }
+  }
+
+  async updateCategoryImg(cate_id: string, img: Express.Multer.File){
+    const url = await this.firebaseService.uploadFile(cate_id,  img);
+    await this.restaurantCategoryService.updateImage(cate_id, url)
     return {
       imgUrl: url
     }

@@ -11,7 +11,9 @@ import { UpdateFoodItemDto } from "./dto/update-food-item.dto";
 import { ModifierGroupsDto } from "./dto/modifier-groups.dto";
 import { ModifierDto } from "./dto/modifier.dto";
 import { log } from "console";
-
+import { Review } from "./entities/review.schema";
+import { ReviewDto } from "./dto/review.dto";
+import { ObjectId } from 'mongodb';
 @Injectable()
 export class FoodItemService extends BaseServiceAbstract<FoodItem> {
     constructor(
@@ -19,6 +21,69 @@ export class FoodItemService extends BaseServiceAbstract<FoodItem> {
         private readonly modiferGroupService: ModifierGroupService
     ){
         super(foodItemModel);
+    }
+
+
+    async getReviews(id: string) {
+        const objectId = new ObjectId(id);
+        const review = await this.foodItemModel.aggregate([
+            {
+                $match: {
+                    _id: objectId
+                }
+            },      
+            {
+                $unwind: "$reviews"
+            },
+            {
+                $lookup: {
+                    from: "customers", // Tên của collection khách hàng
+                    localField: "reviews.owner_id",
+                    foreignField: "_id",
+                    as: "customerInfo",
+                    pipeline: [{
+                        $project: {
+                            "avatar": 1,
+                            "full_name": 1
+                        }
+                    }]
+                }
+            },
+            {
+                $unwind: "$customerInfo"
+            },
+            {
+                $group: {         
+                    _id: "$_id",           
+                    reviews: {
+                        $push: {
+                            content: "$reviews.content",
+                            rating: "$reviews.rating",
+                            createdAt: "$reviews.createdAt",
+                            customerInfo: "$customerInfo"
+                        }
+                    }
+                }
+            }          
+        ])
+
+        return review[0]["reviews"];
+    }
+
+    // async createReview(dto: ReviewDto) {
+    //     const foodItem = await this.foodItemModel.findById(dto.restaurant_id);
+    //     const review = new Review()
+    //     review.owner_id = new ObjectId(dto.owner_id);
+    //     review.content = dto.content;
+    //     review.rating = dto.rating;
+    //     review.createdAt = new Date();
+    //     await foodItem.save();
+    //     return foodItem;
+    // }
+
+    async getFoodItems(page: number, limit: number): Promise<FoodItem[]> {
+        const skip = (page - 1) * limit;
+        return this.foodItemModel.find().skip(skip).limit(limit).exec();
     }
 
     async createFoodItem(dto: CreateFoodItemDto) {

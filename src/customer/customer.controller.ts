@@ -25,7 +25,7 @@ import { UpdateCustomerDto } from './dto/update-customer.dto';
 export class CustomerController implements ICustomerController {
   constructor(
     private readonly customerService: CustomerService,
-    private readonly paymentService: PaymentService
+    private readonly paymentService: PaymentService,
   ) {}
 
   // CAMPAIGNS
@@ -82,5 +82,4 @@ export class CustomerController implements ICustomerController {
   async deleteReview(@Req() req: RequestWithUser,@Param() id: any, @Res() res: Response,) {
     
   }
-
 }

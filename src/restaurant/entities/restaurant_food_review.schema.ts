@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document, HydratedDocument } from "mongoose";
+import { Document, HydratedDocument, SchemaTypes } from "mongoose";
 import { OrderType } from "src/utils/enums";
 import { BaseEntity } from "src/utils/repository/base.entity";
 
@@ -13,7 +13,7 @@ export type RestaurantFoodReviewDocument = HydratedDocument<RestaurantFoodReview
     timestamps: true,
 })
 export class RestaurantFoodReview extends BaseEntity {
-    @Prop({ })
+    @Prop({ type: SchemaTypes.ObjectId })
     owner_id: string
 
     @Prop({ })
@@ -25,7 +25,7 @@ export class RestaurantFoodReview extends BaseEntity {
     @Prop({ min: 0, max: 5 })
     rating: number
 
-    @Prop({ })
+    @Prop({ type: SchemaTypes.ObjectId })
     reviewable_id: string
 }
 
