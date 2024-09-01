@@ -20,7 +20,7 @@ import { UpdateCustomerDto } from './dto/update-customer.dto';
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'),RolesGuard)
 @ApiTags('Customer')
-@Controller('customer')
+@Controller('api/v1/customer')
 @Roles(RoleType.CUSTOMER)
 export class CustomerController implements ICustomerController {
   constructor(

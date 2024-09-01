@@ -1,66 +1,55 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateRestaurantDto } from './dto/create-restaurant.dto';
-import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
-import { Restaurant, RestaurantDocument } from './entities/restaurant.schema';
-import { FilterQuery, Model, QueryOptions } from 'mongoose';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { RestaurantCategory, RestaurantCategoryDocument } from './entities/restaurant_category.schema';
-import { RestaurantFoodReview, RestaurantFoodReviewDocument, } from './entities/restaurant_food_review.schema';
-import { CreateRestaurantCategoryDto } from './dto/create-restaurant-category.dto';
-import { RestaurantDto } from './dto/restaurant.dto';
-import { OTPType, OTPVerifyStatus, RestaurantStatus, RestaurantTier, VehicleType } from 'src/utils/enums';
-import { UpdateItemsRestaurantDto } from './dto/update-item-restaurant-category.dto';
-import { ModifierGroup, ModifierGroupDocument } from './entities/modifier_groups.schema';
-import { Modifier, ModifierDocument } from './entities/modifier.schema';
-import { Otp, OtpDocument } from 'src/auth/entities/otp.schema';
-import { AzureStorageService } from 'src/utils/auzre/storage-blob.service';
-import { FoodItem, FoodItemDocument } from './entities/food_item.schema';
-import { FoodItemDto } from './dto/food-item.dto';
-import { CreateFoodItemDto } from './dto/create-food-item.dto';
-import { ModifierGroupsDto } from './dto/modifier-groups.dto';
+import { ObjectId } from 'mongodb';
+import { Model, Types } from 'mongoose';
 import { AccountServiceAbstract } from 'src/auth/account.abstract.service';
-import { BaseServiceAbstract } from 'src/utils/repository/base.service';
-import { FoodItemService } from './food_item.service';
-import { RestaurantCategoryService } from './restaurant_category.service';
-import { ModifierGroupService } from './modifier_groups.service';
-import { ModifierService } from './modifier.service';
-import { UpdateRestaurantCategoryDto } from './dto/update-restaurant-category.dto';
 import { OrderFoodItems } from 'src/order/entities/order_food_items.schema';
-import { limits } from 'argon2';
-import { count, log } from 'console';
-import { FindAllResponse } from 'src/utils/interfaces';
+import { AzureStorageService } from 'src/utils/auzre/storage-blob.service';
+import { RestaurantStatus, VehicleType } from 'src/utils/enums';
+import { FirebaseService } from 'src/utils/firebase/firebase.service';
 import { VietMapService } from 'src/utils/map-api/viet-map.service';
 import { LocationObject } from 'src/utils/subschemas/location.schema';
-import { UpdateFoodItemDto } from './dto/update-food-item.dto';
-import { ModifierDto } from './dto/modifier.dto';
-import { FirebaseService } from 'src/utils/firebase/firebase.service';
+import { CreateFoodItemDto } from './dto/create-food-item.dto';
+import { CreateRestaurantCategoryDto } from './dto/create-restaurant-category.dto';
 import { ReviewDto } from './dto/review.dto';
-import { ObjectId } from 'mongodb';
+import { UpdateFoodItemDto } from './dto/update-food-item.dto';
+import { UpdateRestaurantCategoryDto } from './dto/update-restaurant-category.dto';
+import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
+import { CuisineCategories } from './entities/cuisine_categories.schema';
+import { Restaurant, RestaurantDocument } from './entities/restaurant.schema';
+import { RestaurantCategory } from './entities/restaurant_category.schema';
+import { Review } from './entities/review.schema';
+import { FoodItemService } from './food_item.service';
+import { ModifierService } from './modifier.service';
+import { ModifierGroupService } from './modifier_groups.service';
+import { RestaurantCategoryService } from './restaurant_category.service';
+import { GetRestaurantsQueryDto } from './dto/get-restaurant-query.dto';
+import { limits } from 'argon2';
 @Injectable()
-export class RestaurantService extends AccountServiceAbstract<Restaurant>{
+export class RestaurantService extends AccountServiceAbstract<Restaurant> {
 
   constructor(
     @InjectModel(Restaurant.name) private readonly restaurantModel: Model<Restaurant>,
-    @InjectModel(RestaurantFoodReview.name) private readonly reviewModel: Model<RestaurantFoodReview>,
+    @InjectModel(Review.name) private readonly reviewModel: Model<Review>,
+    @InjectModel(CuisineCategories.name) private readonly cuisineModel: Model<CuisineCategories>,
     private readonly restaurantCategoryService: RestaurantCategoryService,
     private readonly foodItemService: FoodItemService,
     private readonly modifierGroupService: ModifierGroupService,
     private readonly modifierService: ModifierService,
-    private azureStorage: AzureStorageService,
     private vietmapService: VietMapService,
-    private firebaseService: FirebaseService
+    private firebaseService: FirebaseService,
   ) {
     super(restaurantModel);
   }
 
   async getFoodItems(page: number, limit: number, category_id: string = '') {
-    let foods; 
-    if(category_id === ''){
+    let foods;
+    if (category_id === '') {
       foods = await this.foodItemService.getFoodItems(page, limit);
     }
     else {
-      const foodItems = await this.restaurantCategoryService.getFoodItems(page, limit, category_id)
-      foods = foodItems[0]["food_items"]
+      const foodItems = await this.restaurantCategoryService.getFoodItems(page, limit, category_id);
+      foods = foodItems[0]["food_items"];
     }
     return {
       totalPage: 0,
@@ -95,7 +84,7 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
       {
         $unwind: '$customer'
       }
-    ])
+    ]);
     return reviews;
   }
 
@@ -105,41 +94,41 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
   }
 
   async findFoodDetailsFromOrder(orderFoodItems: OrderFoodItems[]) {
-    const newOrderFoodItems = await Promise.all( 
+    const newOrderFoodItems = await Promise.all(
       orderFoodItems.map(async (item) => {
-      const food = await this.foodItemService.findOneById(item.food_id);
-    
-      return {
-        food_id: item.food_id,
-        quantity: item.food_id,
-        image: food.image,
-        name: food.name
-      }
-    }))
+        const food = await this.foodItemService.findOneById(item.food_id);
+
+        return {
+          food_id: item.food_id,
+          quantity: item.food_id,
+          image: food.image,
+          name: food.name
+        };
+      }));
 
     return newOrderFoodItems;
   }
 
   async updateRestaurant(id: string, dto: UpdateRestaurantDto): Promise<Restaurant> {
-    const restaurant = await this.update(id, dto as Partial<UpdateRestaurantDto>)
+    const restaurant = await this.update(id, dto as Partial<UpdateRestaurantDto>);
     return restaurant;
   }
 
   async updateActiveStatus(id: string, status: RestaurantStatus) {
-    await this.update(id, { status })
+    await this.update(id, { status });
 
     return {
       msg: 'update successfully'
-    }
+    };
   }
 
   async findCategoryByRestaurant(id: string) {
     const restaurant = await this.restaurantModel.findById(id)
-    .populate({
-      path: 'restaurant_categories',
-      model: 'RestaurantCategory',
-    })
-    .exec();
+      .populate({
+        path: 'restaurant_categories',
+        model: 'RestaurantCategory',
+      })
+      .exec();
     return restaurant.restaurant_categories;
   }
 
@@ -169,7 +158,7 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
             }
           ]
         }
-      }, 
+      },
       {
         $unwind: '$restaurantCategories'
       },
@@ -181,15 +170,15 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
           }
         }
       }
-    ])
+    ]);
     return categories[0].restaurant_categories;
   }
 
   async addCategory(restaurant_id: string, dto: CreateRestaurantCategoryDto): Promise<RestaurantCategory> {
     const category = await this.restaurantCategoryService.createCategory(dto);
 
-    await this.restaurantModel.findByIdAndUpdate(restaurant_id, 
-      { 
+    await this.restaurantModel.findByIdAndUpdate(restaurant_id,
+      {
         $push: {
           restaurant_categories: category._id
         }
@@ -201,17 +190,17 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
   }
 
   async food_calculateFare(dto: OrderFoodItems): Promise<number> {
-    let fare = await this.foodItemService.getFoodItemPrice(dto.food_id)
-    
+    let fare = await this.foodItemService.getFoodItemPrice(dto.food_id);
+
     for (const item of dto.modifiers as string[]) {
-      fare += await this.modifierService.getModifierPrice(item)
+      fare += await this.modifierService.getModifierPrice(item);
     }
-    fare = fare * dto.quantity
+    fare = fare * dto.quantity;
     return fare;
-}
+  }
 
   async updateCategory(restaurant_id: string, cate_id: string, dto: UpdateRestaurantCategoryDto): Promise<any> {
-    const restaurant = await this.findOneByCondition({ _id: restaurant_id, restaurant_categories: cate_id })
+    const restaurant = await this.findOneByCondition({ _id: restaurant_id, restaurant_categories: cate_id });
     if (!restaurant) {
       throw new NotFoundException('Restaurant or Category not found');
     }
@@ -219,58 +208,58 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
     if (!category) {
       throw new NotFoundException('Category not found');
     }
-    return category
+    return category;
   }
 
   async deleteCategory(category_id: string, restaurant_id: string) {
-    const restaurant = await this.findOneByCondition({ _id: restaurant_id, restaurant_categories: category_id })
+    const restaurant = await this.findOneByCondition({ _id: restaurant_id, restaurant_categories: category_id });
     if (!restaurant) {
       throw new NotFoundException('Restaurant or Category not found');
     }
 
-    const new_cate = restaurant.restaurant_categories.filter(cate_id => cate_id != category_id) as RestaurantCategory[]
+    const new_cate = restaurant.restaurant_categories.filter(cate_id => cate_id != category_id) as RestaurantCategory[];
 
     await this.update(restaurant_id, {
       restaurant_categories: new_cate
-    })
-    
-    return await this.restaurantCategoryService.deleteCategory(category_id)
-  }
-  
-  async getFooditemDetails(id: string) {
-    const foodDetails = await this.foodItemService.getFoodItemDetails(id);
-    return foodDetails
+    });
+
+    return await this.restaurantCategoryService.deleteCategory(category_id);
   }
 
-  async createFoodItem(restaurant_id: string, dto: CreateFoodItemDto){
-    const restaurant = await this.findOneById(restaurant_id);
-    if(restaurant) {
-      const foodItem = await this.foodItemService.createFoodItem(dto);
-      await this.restaurantCategoryService.addFoodItem(foodItem._id, dto.category_id)
-      return foodItem
-    }
-    else throw new NotFoundException("Restaurant not found")
+  async getFooditemDetails(id: string) {
+    const foodDetails = await this.foodItemService.getFoodItemDetails(id);
+    return foodDetails;
   }
-  
-  async getRestaurantLocation(restaurant_id: string){
-    const restaurant = await this.findOneById(restaurant_id)
+
+  async createFoodItem(restaurant_id: string, dto: CreateFoodItemDto) {
+    const restaurant = await this.findOneById(restaurant_id);
+    if (restaurant) {
+      const foodItem = await this.foodItemService.createFoodItem(dto);
+      await this.restaurantCategoryService.addFoodItem(foodItem._id, dto.category_id);
+      return foodItem;
+    }
+    else throw new NotFoundException("Restaurant not found");
+  }
+
+  async getRestaurantLocation(restaurant_id: string) {
+    const restaurant = await this.findOneById(restaurant_id);
     return restaurant.location;
   }
 
-  async updateFoodItemImg(foodItem_id: string, img: Express.Multer.File){
-    const url = await this.firebaseService.uploadFile(foodItem_id,  img);
-    await this.foodItemService.updateFoodItemImg(foodItem_id, url)
+  async updateFoodItemImg(foodItem_id: string, img: Express.Multer.File) {
+    const url = await this.firebaseService.uploadFile(foodItem_id, img);
+    await this.foodItemService.updateFoodItemImg(foodItem_id, url);
     return {
       imgUrl: url
-    }
+    };
   }
 
-  async updateCategoryImg(cate_id: string, img: Express.Multer.File){
-    const url = await this.firebaseService.uploadFile(cate_id,  img);
-    await this.restaurantCategoryService.updateImage(cate_id, url)
+  async updateCategoryImg(cate_id: string, img: Express.Multer.File) {
+    const url = await this.firebaseService.uploadFile(cate_id, img);
+    await this.restaurantCategoryService.updateImage(cate_id, url);
     return {
       imgUrl: url
-    }
+    };
   }
 
   async updateFoodItem(foodItem: UpdateFoodItemDto) {
@@ -283,7 +272,7 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
   }
 
   async deleteFoodItem(restaurant_id: string, category_id, food_id: string) {
-    const restaurant = await this.findOneByCondition({ _id: restaurant_id, restaurant_categories: category_id })
+    const restaurant = await this.findOneByCondition({ _id: restaurant_id, restaurant_categories: category_id });
     if (!restaurant) {
       throw new NotFoundException('Restaurant or Category not found');
     }
@@ -293,61 +282,248 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
     return newFoodItem;
   }
 
-  async getRestaurantsByCustomer(coordinates: number[]) {
-    const options = {
-      projection: { 
-        refresh_token: 0,
-        balance: 0,
-        deleted_at: 0,
-        email: 0,
-        password: 0,
-        full_name: 0,
-        verified: 0,
-        tier: 0,
-        createdAt: 0,
-        updatedAt: 0,
-        _v: 0
-      },
-      limit: 10
-    };
-    const restaurtants = await this.findAll({}, options);
-    
-    const recommendedRes = await Promise.all(
-      (restaurtants.items as RestaurantDocument[]).map(async (res) => {
-        const customerLocation = new LocationObject(coordinates, '');
-        const rating = 0;
-        const {distance, duration} = await this.vietmapService.getDistanceNDuration(res.location, customerLocation, VehicleType.BIKE);
-        return { ...res.toObject(), distance, duration, rating };
-      })
-    )
-    return {
-      count: restaurtants.count,
-      items: recommendedRes
+  async getRestaurantsByCustomer(dto: GetRestaurantsQueryDto) {
+    let matchConditions: any = {};
+
+    if (dto.categoryId) {
+      if (!Types.ObjectId.isValid(dto.categoryId)) {
+        throw new BadRequestException('Invalid category ID');
+      }
+      matchConditions.cuisine_categories = new Types.ObjectId(dto.categoryId);
     }
+  
+    if (dto.searchQuery) {
+      const searchRegex = new RegExp(dto.searchQuery, 'i'); 
+      matchConditions.$or = [
+        { restaurant_name: { $regex: searchRegex } },
+        { bio: { $regex: searchRegex } },
+      ];
+    }
+    const restaurants = await this.restaurantModel.aggregate([
+      { $match: matchConditions },
+      {
+        $lookup: {
+          from: 'reviews',
+          localField: '_id',
+          foreignField: 'reviewable_id',
+          as: 'ratings',
+        },
+      },
+      {
+        $unwind: {
+          path: '$ratings',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $group: {
+          _id: '$_id',
+          restaurant_name: { $first: '$restaurant_name' },
+          bio: { $first: '$bio' },
+          cuisine_categories: { $first: "$cuisine_categories" },
+          avatar: { $first: '$avatar' },
+          location: { $first: '$location' },
+          rating: { $avg: '$ratings.rating' },
+          ratingCount: { $sum: { $cond: ['$ratings.rating', 1, 0] } },
+        },
+      },
+      {
+        $lookup: {
+          from: 'campaigns',
+          localField: '_id',
+          foreignField: 'restaurant_id',
+          as: 'campaigns',
+          pipeline: [{ $match: { deleted_at: null } }]
+        },
+      },
+      {
+        $unwind: {
+          path: '$campaigns',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $group: {
+          _id: '$_id',
+          restaurant_name: { $first: '$restaurant_name' },
+          bio: { $first: '$bio' },
+          cuisine_categories: { $first: '$cuisine_categories' },
+          avatar: { $first: '$avatar' },
+          location: { $first: '$location' },
+          rating: { $first: '$rating' },
+          ratingCount: { $first: '$ratingCount' },
+          campaigns: { $push: '$campaigns' },
+        },
+      },
+      {
+        $lookup: {
+          from: 'cuisinecategories',
+          localField: 'cuisine_categories',
+          foreignField: '_id',
+          as: 'cuisine_categories_details',
+        },
+      },
+      {
+        $addFields: {
+          cuisine_categories: '$cuisine_categories_details.name',
+        },
+      },
+      {
+        $sort: {
+          rating: -1, 
+          ratingCount: -1, 
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          restaurant_name: 1,
+          bio: 1,
+          cuisine_categories: 1,
+          avatar: 1,
+          location: 1,
+          campaign_count: { $size: { $ifNull: ['$campaigns', []] } },
+          rating: { $ifNull: ['$rating', 0] },
+        },
+      },
+      { $skip: (dto.page - 1) * dto.limit },
+    { $limit: dto.limit },
+    ]);
+
+    const recommendedRes = await Promise.all(
+      (restaurants as Restaurant[]).map(async (res) => {
+        const customerLocation = new LocationObject(dto.coordinates, '');
+        const { distance, duration } = await this.vietmapService.getDistanceNDuration(res.location, customerLocation, VehicleType.BIKE);
+        const { location, ...newRes } = { ...res };
+        return { ...newRes, distance, duration };
+      })
+    );
+
+    return {
+      totalPage: Math.ceil(restaurants.length / dto.limit),
+      data: recommendedRes
+    };
   }
 
   async getMenu(id: string) {
     const restaurant = await this.findOneById(id);
     const menu = await Promise.all(
       restaurant.restaurant_categories.map(async (cate_id) => await this.restaurantCategoryService.getMenuDetails(cate_id))
-    )
-    return menu
+    );
+    return menu;
   }
 
-  async getInfoByCustomer(id: string, coordinates: number[]){
-    const restaurant = await this.findOneById(id)
-    const {balance, verified, deleted_at, email, password, refresh_token, full_name, ...restaurant_info} = (restaurant as RestaurantDocument).toObject()
+  async getInfoByCustomer(id: string, coordinates: number[]) {
     const customerLocation = new LocationObject(coordinates, '');
-    const {distance, duration} = await this.vietmapService.getDistanceNDuration(restaurant.location, customerLocation, VehicleType.BIKE);
-    const rating = 4;
+    // const restaurant = await this.restaurantModel.findById(id, {
+    //   balance: 0,
+    //   verified: 0,
+    //   deleted_at: 0,
+    //   email: 0,
+    //   password: 0,
+    //   refresh_token: 0,
+    //   full_name: 0,
+    // }).lean();
+    const objectId = new ObjectId(id);
+    const restaurant = await this.restaurantModel.aggregate([
+      {
+        $match: {
+          _id: objectId
+        }
+      },
+      {
+        $lookup: {
+          from: 'cuisinecategories',
+          localField: 'cuisine_categories',
+          foreignField: '_id',
+          as: 'cuisine_categories_details',
+        },
+      },
+      {
+        $addFields: {
+          cuisine_categories: '$cuisine_categories_details.name',
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          restaurant_categories: 1,
+          status: 1,
+          restaurant_name: 1,
+          bio: 1,
+          tier: 1,
+          location: 1,
+          avatar: 1,
+          cover_image: 1,
+          cuisine_categories: 1,
+        }
+      }
+    ])
+
+    const [{ distance, duration }, ratingResult] = await Promise.all([
+      this.vietmapService.getDistanceNDuration(restaurant[0].location, customerLocation, VehicleType.BIKE),
+      this.reviewModel.aggregate([
+        { $match: { reviewable_id: new Types.ObjectId(id) } },
+        {
+          $group: {
+            _id: null,
+            averageRating: { $avg: '$rating' },
+          },
+        }
+      ]),
+    ]);
+
+    const rating = ratingResult.length > 0 ? ratingResult[0].averageRating : 0;
+
     return {
-      ...restaurant_info, distance, duration, rating
-    }
+      ...restaurant[0],
+      distance,
+      duration,
+      rating,
+    };
   }
+
+
+  async createCuisineCategory(dto: { name: string, slug: string; }) {
+    const cuisine = new this.cuisineModel(dto);
+    return await cuisine.save();
+  }
+
+  async getCuisineCategories() {
+    const cuisines = await this.cuisineModel.find();
+    return cuisines;
+  }
+
+  // async getInfoByCustomer(id: string, coordinates: number[]){
+  //   const restaurant = await this.restaurantModel.findById(id, {
+  //     balance: 0,
+  //     verified: 0,
+  //     deleted_at: 0,
+  //     email: 0,
+  //     password: 0,
+  //     refresh_token: 0,
+  //     full_name: 0,
+  //   }).lean();
+
+  //   const customerLocation = new LocationObject(coordinates, '');
+
+  //   const [{ distance, duration }, reviews] = await Promise.all([
+  //     this.vietmapService.getDistanceNDuration(restaurant.location, customerLocation, VehicleType.BIKE),
+  //     this.reviewModel.find({ reviewable_id: id })
+  //   ]);
+
+  //   const rating = reviews.reduce((total, curr) => {
+  //     return total + curr.rating;
+  //   }, 0)
+
+  //   return {
+  //     ...restaurant, distance, duration, rating: (reviews.length > 0 ? rating/reviews.length : 0)
+  //   }
+  // }
 
   async getInfo(id: string) {
-    const restaurant = await this.findOneById(id)
-    const {verified, email, full_name, ...restaurant_info} = (restaurant as RestaurantDocument).toJSON();
+    const restaurant = await this.findOneById(id);
+    const { verified, email, full_name, ...restaurant_info } = (restaurant as RestaurantDocument).toJSON();
     return restaurant_info;
   }
   // // async addCategory(id: string, dto: CreateRestaurantCategoryDto): Promise<RestaurantDocument> {
@@ -417,7 +593,7 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
 
   // async fetchRestaurantMenu(restaurant_id: string) {
   //   const restaurant = await this.restaurantModel.findById(restaurant_id).exec();
-  
+
   //   const restaurantMenu = restaurant.restaurant_categories.map(async (cate_id) => {
   //     const restaurant_category = await this.restaurantCategoryModel.findById(cate_id).exec();
 
@@ -427,7 +603,7 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
   //       const modifier_groups = await Promise.all(food_item.modifier_groups.map(async (modifierGr_id) => {
   //         const modifier_group = await this.modifieGroupModel.findById(modifierGr_id).exec()
   //         const modifiers = await Promise.all(modifier_group.modifier.map(async (modifier_id) => await this.modifierModel.findById(modifier_id)))
-          
+
   //         return { ...modifier_group.toObject(), modifier: modifiers }
   //       }))
 
@@ -436,7 +612,7 @@ export class RestaurantService extends AccountServiceAbstract<Restaurant>{
 
   //     return {...restaurant_category.toObject(), food_items: foodItems};
   //   });
-  
+
   //   const menu = await Promise.all(restaurantMenu);
   //   return menu;
   // }

@@ -8,7 +8,7 @@ import { CustomerService } from 'src/customer/customer.service';
 import { OrderService } from 'src/order/order.service';
 import { RestaurantService } from 'src/restaurant/restaurant.service';
 
-@Controller('admin')
+@Controller('api/v1/admin')
 export class AdminController implements IAdminController, ICampaign{
   constructor(
     private readonly adminService: AdminService,

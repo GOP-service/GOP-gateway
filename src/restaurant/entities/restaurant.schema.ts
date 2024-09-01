@@ -17,11 +17,12 @@ export type RestaurantDocument = HydratedDocument<Restaurant>;
     timestamps: true,
 })
 export class Restaurant extends Account{
-    @Prop({ enum: CuisinesCategory , type: [String]})
-    cuisine_categories: CuisinesCategory[]
+    @Prop({ type: [SchemaTypes.ObjectId], ref: 'CuisineCategories'})
+    cuisine_categories: string[]
 
     @Prop({ type: [SchemaTypes.ObjectId], ref: 'RestaurantCategory'})
     restaurant_categories: RestaurantCategory[] | string[]
+   
     @Prop({ enum: RestaurantStatus, default: RestaurantStatus.CLOSED })
     status: RestaurantStatus
 

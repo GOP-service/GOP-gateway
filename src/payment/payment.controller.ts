@@ -4,7 +4,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { RequestWithUser } from 'src/utils/interfaces';
 
 @ApiTags('Bill')
-@Controller('bill')
+@Controller('api/v1/bill')
 export class PaymentController{
   constructor(
     private readonly paymentService: PaymentService,

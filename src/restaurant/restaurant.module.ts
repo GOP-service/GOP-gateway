@@ -4,7 +4,6 @@ import { RestaurantController } from './restaurant.controller';
 import { Restaurant, RestaurantSchema } from './entities/restaurant.schema';
 import { MongooseModule } from '@nestjs/mongoose';
 import { RestaurantCategory, RestaurantCategorySchema } from './entities/restaurant_category.schema';
-import { RestaurantFoodReview, RestaurantFoodReviewSchema } from './entities/restaurant_food_review.schema';
 import { FoodItem, FoodItemSchema } from './entities/food_item.schema';
 import { ModifierGroup, ModifierGroupSchema } from './entities/modifier_groups.schema';
 import { Modifier, ModifierSchema } from './entities/modifier.schema';
@@ -20,12 +19,14 @@ import { VietMapModule } from 'src/utils/map-api/viet-map.module';
 import { PaymentModule } from 'src/payment/payment.module';
 import { FirebaseModule } from 'src/utils/firebase/firebase.module';
 import { Review, ReviewSchema } from './entities/review.schema';
+import { CuisineCategories, CuisineCategoriesSchema } from './entities/cuisine_categories.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Restaurant.name, schema: RestaurantSchema, },
-      { name: RestaurantFoodReview.name, schema: RestaurantFoodReviewSchema, },
+      { name: Review.name, schema: ReviewSchema, },
+      { name: CuisineCategories.name, schema: CuisineCategoriesSchema, },
       { name: RestaurantCategory.name, schema: RestaurantCategorySchema, },
       { name : FoodItem.name, schema: FoodItemSchema,},
       { name : ModifierGroup.name, schema: ModifierGroupSchema,},

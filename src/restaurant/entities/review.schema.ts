@@ -1,5 +1,9 @@
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose"
-import { SchemaTypes, Types } from "mongoose"
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { Document, HydratedDocument, SchemaTypes } from "mongoose";
+import { OrderType } from "src/utils/enums";
+import { BaseEntity } from "src/utils/repository/base.entity";
+
+export type ReviewDocument = HydratedDocument<Review>;
 
 @Schema({
     toJSON: {
@@ -8,17 +12,21 @@ import { SchemaTypes, Types } from "mongoose"
     },
     timestamps: true,
 })
-export class Review{
-    @Prop({ type: Types.ObjectId, ref: 'Customer' })
-    owner_id: Types.ObjectId
+export class Review extends BaseEntity {
+    @Prop({ type: SchemaTypes.ObjectId,  ref: 'Customer' })
+    owner_id: string
 
     @Prop({ })
     content: string
 
+    @Prop({ default: OrderType.DELIVERY })
+    type: OrderType
+
     @Prop({ min: 0, max: 5 })
     rating: number
 
-    createdAt: Date
+    @Prop({ type: SchemaTypes.ObjectId, ref: 'Restaurant' })
+    reviewable_id: string
 }
 
-export const ReviewSchema = SchemaFactory.createForClass(Review)
+export const ReviewSchema = SchemaFactory.createForClass(Review);
