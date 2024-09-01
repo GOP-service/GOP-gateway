@@ -4,6 +4,7 @@ import { BaseEntity } from "src/utils/repository/base.entity";
 import { CampaignCondition } from "./campaign_condition.schema";
 import { CampaignDiscount } from "./campaign_discount.shema";
 import { CampaignQuotas } from "./campaign_quotas.schema";
+import { SchemaTypes } from "mongoose";
 export type CampaignDocument = Campaign & Document
 
 @Schema({
@@ -15,7 +16,7 @@ export type CampaignDocument = Campaign & Document
 })
 export class Campaign extends BaseEntity{
 
-    @Prop({ default: null })
+    @Prop({ type: SchemaTypes.ObjectId, default: null, ref: 'Restaurant' })
     restaurant_id: string
 
     @Prop({ required: true })

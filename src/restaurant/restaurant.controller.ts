@@ -23,18 +23,38 @@ import { PaymentService } from 'src/payment/payment.service';
 import { CreateCampaignDto } from 'src/payment/dto/create-campaign.dto';
 import { UpdateCampaignnDto } from 'src/payment/dto/update-campaign.dto';
 import { ReviewDto } from './dto/review.dto';
-import e from 'express';
+import { GetRestaurantsQueryDto } from './dto/get-restaurant-query.dto';
 
 
 @ApiBearerAuth()
 @ApiTags('Restaurants')
-@Controller('restaurant')
+@Controller('api/v1/restaurant')
 export class RestaurantController implements IRestaurantController, ICampaign{
   constructor(
     private readonly restaurantService: RestaurantService,
     private readonly eventEmitter: EventEmitter2,
     private readonly paymentService: PaymentService
   ) {}
+
+  @Get('cuisine-categories')
+  fetchCuisineCategories() {
+    try { 
+      const cuisines = this.restaurantService.getCuisineCategories();
+      return cuisines;
+    } catch (error) {
+      throw new Error(error)
+    }
+  }
+
+  @Post('cuisine-category')
+  createCuisineCategory(@Body() body: { name: string, slug: string }) {
+    try {
+      const cuisine = this.restaurantService.createCuisineCategory(body);
+      return cuisine;
+    } catch (error) {
+      throw new Error(error)
+    }
+  }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleType.CUSTOMER)
@@ -82,8 +102,8 @@ export class RestaurantController implements IRestaurantController, ICampaign{
   }
 
   @Post('recommended')
-  async getRestaurants(@Body() body:  { coordinates: number[] }) {
-    const res = await this.restaurantService.getRestaurantsByCustomer(body.coordinates);
+  async getRestaurants(@Body() body: GetRestaurantsQueryDto) {
+    const res = await this.restaurantService.getRestaurantsByCustomer(body);
     return res;
   }
 

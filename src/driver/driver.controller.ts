@@ -18,7 +18,7 @@ import { AssignDriverDto } from './dto/assign-driver.dto';
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'),RolesGuard)
 @ApiTags('Driver')
-@Controller('driver')
+@Controller('api/v1/driver')
 export class DriverController implements IDriverController{
   constructor(
     private readonly driverService: DriverService,

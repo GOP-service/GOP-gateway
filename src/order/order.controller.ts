@@ -20,7 +20,7 @@ import { log } from 'console';
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @ApiTags('Order')
-@Controller('order')
+@Controller('api/v1/order')
 export class OrderController implements IOrderController {
   constructor(
     private readonly orderService: OrderService,

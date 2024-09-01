@@ -10,6 +10,7 @@ import { CancelOrderDto } from "src/order/dto/cancel-order.dto";
 import { UpdateFoodItemDto } from "src/restaurant/dto/update-food-item.dto";
 import { CreateCampaignDto } from "src/payment/dto/create-campaign.dto";
 import { UpdateCampaignnDto } from "src/payment/dto/update-campaign.dto";
+import { GetRestaurantsQueryDto } from "src/restaurant/dto/get-restaurant-query.dto";
 export interface JwtPayload {
     sub: string
     role: RoleType
@@ -71,7 +72,7 @@ export interface IRestaurantController {
 
     updateProfile(): Promise<any>
 
-    getRestaurants(body: { coordinates: number[] }): Promise<any>
+    getRestaurants(body: GetRestaurantsQueryDto): Promise<any>
 
     createMenu(): Promise<any>
 

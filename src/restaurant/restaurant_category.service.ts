@@ -39,7 +39,7 @@ export class RestaurantCategoryService extends BaseServiceAbstract<RestaurantCat
                     _id: 0,
                     food_items: '$food_items_details'
                 }
-              }
+            }
         ])
         return foodItems
     }

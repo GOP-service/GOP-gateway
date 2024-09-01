@@ -1,18 +1,14 @@
 import { BaseServiceAbstract } from "src/utils/repository/base.service";
-import { FoodItem, FoodItemDocument } from "./entities/food_item.schema";
+import { FoodItem } from "./entities/food_item.schema";
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { Model, Types } from "mongoose";
+import { Model } from "mongoose";
 import { InjectModel } from "@nestjs/mongoose";
 import { CreateFoodItemDto } from "./dto/create-food-item.dto";
 import { ModifierGroupService } from "./modifier_groups.service";
-import { FoodItemDto } from "./dto/food-item.dto";
 import { ModifierGroup } from "./entities/modifier_groups.schema";
 import { UpdateFoodItemDto } from "./dto/update-food-item.dto";
 import { ModifierGroupsDto } from "./dto/modifier-groups.dto";
-import { ModifierDto } from "./dto/modifier.dto";
-import { log } from "console";
-import { Review } from "./entities/review.schema";
-import { ReviewDto } from "./dto/review.dto";
+
 import { ObjectId } from 'mongodb';
 @Injectable()
 export class FoodItemService extends BaseServiceAbstract<FoodItem> {

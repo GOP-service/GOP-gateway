@@ -25,7 +25,7 @@ import { ForgotPasswordRequestDto } from './dto/forgot-req.dto';
 
 @ApiBearerAuth()
 @ApiTags('Authentications')
-@Controller('auth')
+@Controller('api/v1/auth')
 export class AuthController {
   constructor(
     private readonly accountService: AuthService,
